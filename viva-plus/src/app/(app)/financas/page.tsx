@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function Page() {
   const supabase = await createClient();
-  const { data } = await supabase.from("transactions").select("*").order("occurred_on",{ascending:false}).limit(60);
+  const { data } = await supabase.from("viva_transactions").select("*").order("occurred_on",{ascending:false}).limit(60);
   const rows=data||[];
   const sum=(kind:string)=>rows.filter(x=>x.kind===kind).reduce((a,x)=>a+Number(x.amount),0);
   const income=sum("income"), expense=sum("expense"), balance=income-expense;
