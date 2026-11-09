@@ -13,7 +13,7 @@ export default function RecordForm({table,fields,submitLabel="Salvar",onSaved}:{
    const supabase=createClient();const payload:Record<string,unknown>={};
    fields.forEach(f=>{const value=values[f.name];if(value!==undefined&&value!=="")payload[f.name]=f.type==="number"?Number(value):value;});
    if(table==="transactions"&&payload.amount!==undefined)payload.amount=Math.abs(Number(payload.amount));
-   const {error}=await supabase.from(table).insert(payload);if(error)throw error;
+   const {error}=await supabase.from(`viva_${table}`).insert(payload);if(error)throw error;
    setValues({});setMsg("Registro salvo com sucesso.");setSuccess(true);onSaved?.();
   }catch(error){setMsg(error instanceof Error?error.message:"Não foi possível salvar. Tente novamente.");}
   finally{setBusy(false);}
