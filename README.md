@@ -6,29 +6,25 @@ Identidade visual: roxo saturado `#7028D8`, amarelo `#FFD43B` e branco acinzenta
 - Next.js 15, React 19 e TypeScript
 - Tailwind CSS 4
 - Supabase Auth e PostgreSQL com Row Level Security
-- Vercel
+- Vercel (Node.js 24.x)
 
 ## Executar localmente
-1. Instale Node.js 20.9 ou superior.
+1. Instale Node.js 24 LTS.
 2. Execute `npm install`.
 3. Copie `.env.example` para `.env.local`.
-4. Preencha `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` com os dados do projeto Supabase.
-5. Execute o SQL de `supabase/migrations/0001_viva_foundation.sql` no SQL Editor do Supabase.
+4. Preencha `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+5. Execute `supabase/migrations/0001_viva_foundation.sql` no SQL Editor do Supabase.
 6. Execute `npm run dev` e abra http://localhost:3000.
 
 ## Publicar na Vercel
-1. Importe este repositório no painel da Vercel.
-2. Framework: Next.js; Root Directory: `./`.
-3. Configure as duas variáveis públicas do Supabase no ambiente Production e Preview.
-4. Faça o deploy.
-5. No Supabase Auth, ajuste Site URL e Redirect URLs para o domínio publicado.
+O projeto está configurado para Next.js e Node.js 24.x. Importe este repositório, mantenha Root Directory na raiz e configure as duas variáveis do Supabase em Production e Preview. No Supabase Auth, configure Site URL e Redirect URLs para o domínio Vercel.
 
-## O que já está no repositório
-- Landing page responsiva com paleta oficial VIVA+.
-- Páginas de cadastro e login ligadas ao Supabase Auth.
+## Incluído
+- Landing page responsiva com paleta oficial.
+- Cadastro/login preparados para Supabase Auth.
 - Área inicial autenticada.
-- Migração inicial com perfis, tarefas, eventos e transações e políticas RLS.
+- Migração inicial com perfis, tarefas, eventos, transações e RLS.
 - Manifest básico para instalação como PWA.
 
-## Limites desta primeira entrega
-A agenda e o controle financeiro ainda não possuem todas as telas de CRUD; comparação de preços, listas inteligentes, notificações e IA ainda não estão implementadas. O deploy também depende da configuração do Supabase. Nunca publique chaves secretas no GitHub; use apenas variáveis de ambiente da Vercel.
+## Próximas implementações
+Agenda e finanças ainda precisam de CRUD completo; comparação real de preços, listas inteligentes, notificações e IA não estão implementadas. O banco só funciona após executar a migração e configurar as variáveis. Não publique chaves secretas no GitHub.
