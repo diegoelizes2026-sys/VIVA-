@@ -26,7 +26,9 @@ export async function middleware(request: NextRequest) {
     error,
   } = await supabase.auth.getUser();
 
-  if (error) {
+  // A missing session is expected for visitors who are not logged in.
+  // Keep logging unexpected Supabase auth failures only.
+  if (error && error.message !== "Auth session missing!") {
     console.error("Falha ao validar sessão Supabase no middleware:", error.message);
   }
 
