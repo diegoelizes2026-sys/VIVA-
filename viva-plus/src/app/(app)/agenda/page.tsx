@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function Page() {
   const supabase = await createClient();
-  const { data } = await supabase.from("events").select("*").order("start_at").limit(50);
+  const { data } = await supabase.from("viva_events").select("*").order("start_at").limit(50);
   const events = data || [];
   const today = new Date(); today.setHours(0,0,0,0);
   const upcoming = events.filter(e => new Date(e.start_at) >= today);
