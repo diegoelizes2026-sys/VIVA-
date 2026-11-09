@@ -5,9 +5,9 @@ export const metadata: Metadata = {
   title: "VIVA+ | Sua vida mais inteligente",
   description: "Organize sua rotina, cuide do seu dinheiro e descubra oportunidades para economizar.",
   manifest: "/manifest.webmanifest",
-  themeColor: "#7028D8"
+  themeColor: "#6410C9"
 };
 
-export default function RootLayout({ children }: Readonly<{children: React.ReactNode}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="pt-BR"><body>{children}</body></html>;
 }
