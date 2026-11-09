@@ -1,13 +1,23 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "VIVA+ | Sua vida mais inteligente",
-  description: "Organize sua rotina, cuide do seu dinheiro e descubra oportunidades para economizar.",
+  description:
+    "Organize sua rotina, cuide do seu dinheiro e descubra oportunidades para economizar.",
   manifest: "/manifest.webmanifest",
-  themeColor: "#6410C9"
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="pt-BR"><body>{children}</body></html>;
+export const viewport: Viewport = {
+  themeColor: "#6410C9",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="pt-BR">
+      <body>{children}</body>
+    </html>
+  );
 }
