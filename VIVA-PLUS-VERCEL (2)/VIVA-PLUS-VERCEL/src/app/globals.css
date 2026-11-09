@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+:root {
+  --purple: #7028D8;
+  --purple-dark: #5720AD;
+  --purple-soft: #EEE5FA;
+  --yellow: #FFD43B;
+  --paper: #F4F3F6;
+  --line: #E4E1E9;
+  --ink: #26212E;
+  --muted: #777180;
+  --white: #FFFFFF;
+}
+* { box-sizing: border-box; }
+html { min-height:100%; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:Arial,Helvetica,sans-serif; }
+button,input,textarea,select { font:inherit; }
+a { color:inherit; text-decoration:none; }
+::selection { background:#E3D1FA; }
+.card { background:var(--white); border:1px solid var(--line); border-radius:20px; }
+.btn-primary { background:var(--purple); color:white; border-radius:12px; padding:11px 16px; font-weight:700; transition:.18s; }
+.btn-primary:hover { background:var(--purple-dark); }
+.btn-yellow { background:var(--yellow); color:#302817; border-radius:12px; padding:11px 16px; font-weight:800; }
+.field { width:100%; border:1px solid var(--line); background:white; border-radius:12px; padding:12px 14px; outline:none; }
+.field:focus { border-color:var(--purple); box-shadow:0 0 0 3px #7028D81A; }
