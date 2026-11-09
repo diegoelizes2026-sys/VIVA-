@@ -1,0 +1,8 @@
+create extension if not exists pgcrypto;
+create table if not exists public.profiles(id uuid primary key references auth.users(id) on delete cascade,full_name text,created_at timestamptz not null default now());
+create table if not exists public.tasks(id uuid primary key default gen_random_uuid(),user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,title text not null,is_done boolean not null default false,created_at timestamptz not null default now());
+create table if not exists public.events(id uuid primary key default gen_random_uuid(),user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,title text not null,start_at timestamptz not null,created_at timestamptz not null default now());
+create table if not exists public.transactions(id uuid primary key default gen_random_uuid(),user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,kind text not null check(kind in('income','expense')),description text not null,amount numeric(14,2) not null check(amount>=0),occurred_on date not null default current_date,created_at timestamptz not null default now());
+do $$ declare t text; begin foreach t in array array['tasks','events','transactions'] loop execute format('alter table public.%I enable row level security',t); execute format('create policy owner_access on public.%I for all using(auth.uid()=user_id) with check(auth.uid()=user_id)',t); end loop; end $$;
+alter table public.profiles enable row level security;
+create policy profile_owner on public.profiles for all using(auth.uid()=id) with check(auth.uid()=id);
