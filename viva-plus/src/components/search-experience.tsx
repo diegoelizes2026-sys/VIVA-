@@ -15,11 +15,11 @@ export default function SearchExperience(){
   setBusy(true);setError("");setSearched(true);
   try{
    const supabase=createClient();const safe=q.replace(/[,%()]/g," ").replace(/\s+/g," ").trim();
-   const {data,error:queryError}=await supabase.from("products").select("id,name,brand,model,image_url").or("name.ilike.%"+safe+"%,brand.ilike.%"+safe+"%,model.ilike.%"+safe+"%").limit(24);
+   const {data,error:queryError}=await supabase.from("viva_products").select("id,name,brand,model,image_url").or("name.ilike.%"+safe+"%,brand.ilike.%"+safe+"%,model.ilike.%"+safe+"%").limit(24);
    if(queryError)throw queryError;
    const found=(data||[]) as Product[];setProducts(found);
    if(found.length){
-    const {data:observations,error:priceError}=await supabase.from("price_observations").select("id,product_id,price,currency,observed_at,source_name,product_url,store:stores(name,city,state,address)").in("product_id",found.map(p=>p.id)).order("price",{ascending:true}).limit(120);
+    const {data:observations,error:priceError}=await supabase.from("viva_price_observations").select("id,product_id,price,currency,observed_at,source_name,product_url,store:viva_stores(name,city,state,address)").in("product_id",found.map(p=>p.id)).order("price",{ascending:true}).limit(120);
     if(priceError)throw priceError;setPrices((observations||[]) as unknown as Price[]);
    }else setPrices([]);
   }catch(err){setProducts([]);setPrices([]);setError(err instanceof Error?err.message:"Não foi possível pesquisar agora.");}
