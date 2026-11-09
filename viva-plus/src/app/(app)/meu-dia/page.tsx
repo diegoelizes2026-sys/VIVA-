@@ -11,9 +11,9 @@ export default async function Page() {
   const end = new Date(); end.setHours(23,59,59,999);
   const monthStart = new Date(); monthStart.setDate(1);
   const [{data:events},{data:tasks},{data:tx}] = await Promise.all([
-    supabase.from("events").select("id,title,start_at").gte("start_at",start.toISOString()).lte("start_at",end.toISOString()).order("start_at").limit(4),
-    supabase.from("tasks").select("id,title,due_at,is_done").eq("is_done",false).order("due_at",{ascending:true}).limit(4),
-    supabase.from("transactions").select("kind,amount,description,occurred_on").gte("occurred_on",monthStart.toISOString().slice(0,10)).order("occurred_on",{ascending:false}).limit(5)
+    supabase.from("viva_events").select("id,title,start_at").gte("start_at",start.toISOString()).lte("start_at",end.toISOString()).order("start_at").limit(4),
+    supabase.from("viva_tasks").select("id,title,due_at,is_done").eq("is_done",false).order("due_at",{ascending:true}).limit(4),
+    supabase.from("viva_transactions").select("kind,amount,description,occurred_on").gte("occurred_on",monthStart.toISOString().slice(0,10)).order("occurred_on",{ascending:false}).limit(5)
   ]);
   const income=(tx||[]).filter(x=>x.kind==="income").reduce((a,x)=>a+Number(x.amount),0);
   const expense=(tx||[]).filter(x=>x.kind==="expense").reduce((a,x)=>a+Number(x.amount),0);
