@@ -18,6 +18,8 @@ export default function AppShell({ children, email }: { children: React.ReactNod
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const mobileTitle = path.startsWith("/agenda") ? "Agenda financeira" : path.startsWith("/assistente") ? "Assistente VIVA+" : path.startsWith("/financas") ? "Finanças" : path.startsWith("/economizar") ? "Economizar" : "Boa tarde!";
+  const mobileSubtitle = path.startsWith("/agenda") ? "Toque em um dia para ver detalhes" : path.startsWith("/assistente") ? "Sempre por perto para ajudar" : "Seu resumo financeiro e sua rotina";
 
   async function logout() {
     if (loggingOut) return;
@@ -63,19 +65,19 @@ export default function AppShell({ children, email }: { children: React.ReactNod
 
     {open && <button aria-label="Fechar menu" onClick={() => setOpen(false)} className="fixed inset-0 z-30 bg-black/30 md:hidden"/>}
     <main className="min-w-0 flex-1 md:ml-[286px]">
-      <header className="sticky top-0 z-20 flex h-[68px] items-center justify-between border-b bg-white/95 px-4 backdrop-blur-xl md:px-9" style={{ borderColor: "var(--color-gray)" }}>
+      <header className="desktop-topbar sticky top-0 z-20 flex h-[68px] items-center justify-between border-b bg-white/95 px-4 backdrop-blur-xl md:px-9" style={{ borderColor: "var(--color-gray)" }}>
         <button className="rounded-xl p-2 text-neutral-600 hover:bg-neutral-100 md:hidden" onClick={() => setOpen(true)} aria-label="Abrir menu"><Menu size={21}/></button>
         <div className="hidden text-sm font-medium text-neutral-500 md:block">Seu espaço pessoal</div>
         <div className="ml-auto flex items-center gap-2 rounded-full bg-neutral-50 px-3 py-2 text-xs font-semibold text-neutral-600">
           <span className="h-2 w-2 rounded-full bg-emerald-500"/> Conta conectada
         </div>
       </header>
-      <div className="mx-auto max-w-7xl p-4 pb-28 md:p-9">{children}</div>
-      <nav aria-label="Navegação principal" className="fixed bottom-0 left-0 right-0 z-20 grid grid-cols-5 border-t bg-white/95 px-1 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl md:hidden" style={{ borderColor: "var(--color-gray)" }}>
-        {links.map(({ href, label, icon: Icon }) => {
+      <div className="mobile-brand-header md:hidden"><div className="flex items-center justify-between"><Link href="/meu-dia" className="text-[28px] font-black tracking-tight text-white">VIVA+</Link><Link href="/perfil" className="grid h-10 w-10 place-items-center rounded-full bg-white/20 text-sm font-bold text-white">M</Link></div><h1 className="mt-3 text-xl font-bold text-white">{mobileTitle}</h1><p className="mt-0.5 text-xs text-white/75">{mobileSubtitle}</p></div><div className="app-content mx-auto max-w-7xl p-4 pb-28 md:p-9">{children}</div>
+      <nav aria-label="Navegação principal" className="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-20 grid grid-cols-3 border-t bg-white px-3 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 md:hidden" style={{ borderColor: "var(--color-gray)" }}>
+        {[links[0], links[1], links[4]].map(({ href, label, icon: Icon }) => {
           const active = path === href || (href !== "/meu-dia" && path.startsWith(href + "/"));
-          return <Link key={href} href={href} aria-current={active ? "page" : undefined} className="flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold transition-colors" style={{ color: active ? "var(--color-primary)" : "var(--color-muted)" }}>
-            <Icon size={19} strokeWidth={active ? 2.5 : 1.8}/>{label === "Assistente IA" ? "IA" : label}
+          return <Link key={href} href={href} aria-current={active ? "page" : undefined} className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-colors" style={{ color: active ? "var(--color-primary)" : "var(--color-muted)" }}>
+            <Icon size={21} strokeWidth={active ? 2.5 : 1.8}/>{href === "/meu-dia" ? "Início" : href === "/agenda" ? "Agenda" : "Assistente"}
           </Link>;
         })}
       </nav>
