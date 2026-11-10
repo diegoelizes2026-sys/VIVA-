@@ -17,12 +17,12 @@ export default async function Page() {
   const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   return <div>
-    <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-semibold capitalize text-neutral-500">{today}</p><h1 className="mt-2 text-3xl font-black tracking-tight text-neutral-950 md:text-4xl">Olá, {first}!</h1><p className="mt-2 text-sm text-neutral-500">Vamos organizar seu dia?</p></div><Link href="/agenda" className="btn-primary">Novo compromisso <ArrowRight size={16}/></Link></div>
+    <div className="mb-5 hidden items-center justify-between gap-4 md:flex"><div><p className="text-sm font-semibold capitalize text-neutral-500">{today}</p><h1 className="mt-2 text-3xl font-black tracking-tight text-neutral-950 md:text-4xl">Olá, {first}!</h1><p className="mt-2 text-sm text-neutral-500">Vamos organizar seu dia?</p></div><Link href="/agenda" className="btn-primary">Novo compromisso <ArrowRight size={16}/></Link></div>
 
-    <div className="mt-8 grid gap-4 md:grid-cols-3">
-      <div className="rounded-2xl p-5 text-white shadow-[0_12px_30px_rgba(100,16,201,.16)]" style={{ background: "var(--color-primary)" }}><div className="flex items-center justify-between"><span className="text-sm text-white/75">Saldo do mês</span><Wallet size={20}/></div><p className="mt-5 text-3xl font-black">{brl(income-expense)}</p><p className="mt-2 text-xs text-white/75">Receitas menos despesas registradas</p></div>
-      <div className="card p-5"><p className="text-sm text-neutral-500">Receitas do mês</p><p className="mt-5 text-2xl font-extrabold text-neutral-900">{brl(income)}</p><p className="mt-2 text-xs text-emerald-700">Dados dos seus lançamentos</p></div>
-      <div className="card p-5"><p className="text-sm text-neutral-500">Despesas do mês</p><p className="mt-5 text-2xl font-extrabold text-neutral-900">{brl(expense)}</p><p className="mt-2 text-xs text-neutral-500">Dados dos seus lançamentos</p></div>
+    <div className="mt-0 grid grid-cols-2 gap-3 md:mt-8 md:grid-cols-3 md:gap-4">
+      <div className="mobile-balance-card card col-span-2 p-5 md:col-span-1"><div className="flex items-center justify-between"><span className="text-sm text-neutral-500">Saldo previsto</span><Wallet size={20} style={{color:"var(--color-primary)"}}/></div><p className="mt-4 text-3xl font-black md:mt-5" style={{color:"var(--color-primary)"}}>{brl(income-expense)}</p><p className="mt-2 text-xs text-neutral-500">Receitas − despesas do mês</p></div>
+      <div className="mobile-stat-card card p-4 md:p-5"><p className="text-sm text-neutral-500">Receitas</p><p className="mt-5 text-2xl font-extrabold text-neutral-900">{brl(income)}</p><p className="mt-2 text-xs text-emerald-700">Dados dos seus lançamentos</p></div>
+      <div className="mobile-stat-card card p-4 md:p-5"><p className="text-sm text-neutral-500">Despesas</p><p className="mt-5 text-2xl font-extrabold text-neutral-900">{brl(expense)}</p><p className="mt-2 text-xs text-neutral-500">Dados dos seus lançamentos</p></div>
     </div>
 
     <div className="mt-5 grid gap-5 lg:grid-cols-2">
