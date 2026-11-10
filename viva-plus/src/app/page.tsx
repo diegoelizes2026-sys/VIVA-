@@ -1,20 +1,41 @@
 import Link from "next/link";
-import { ArrowUpRight, CalendarDays, Wallet, Search, Sparkles, ShieldCheck, Check } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Wallet, ShoppingBag, Sparkles, Check, ShieldCheck } from "lucide-react";
 
-const features=[
- {title:"Sua rotina",description:"Compromissos e prioridades em uma visão simples.",Icon:CalendarDays},
- {title:"Seu dinheiro",description:"Receitas e despesas organizadas com clareza.",Icon:Wallet},
- {title:"Suas escolhas",description:"Pesquise no catálogo e compare preços registrados.",Icon:Search},
- {title:"Assistente VIVA+",description:"Uma conversa para pensar e planejar melhor.",Icon:Sparkles},
+const features = [
+  { title: "Minha vida", description: "Agenda, tarefas e hábitos.", Icon: CalendarDays },
+  { title: "Meu dinheiro", description: "Receitas, despesas e metas.", Icon: Wallet },
+  { title: "Minhas economias", description: "Compras com mais consciência.", Icon: ShoppingBag },
+  { title: "Assistente VIVA+", description: "Ideias para organizar decisões.", Icon: Sparkles }
 ];
-export default function Home(){
- return <main className="min-h-screen overflow-hidden bg-white">
-  <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 md:px-8"><Link href="/" className="brand-mark text-[29px]">VIVA<span>+</span></Link><nav className="flex items-center gap-2"><Link href="/login" className="rounded-xl px-4 py-3 text-sm font-semibold text-neutral-600 hover:text-[var(--viva-purple)]">Entrar</Link><Link href="/cadastro" className="btn-primary">Começar <ArrowUpRight size={16}/></Link></nav></header>
-  <section className="mx-auto grid max-w-7xl items-center gap-12 px-5 pb-20 pt-10 md:grid-cols-[1.05fr_.95fr] md:px-8 md:pb-28 md:pt-20">
-   <div><p className="page-eyebrow">UM JEITO MAIS LEVE DE ORGANIZAR A VIDA</p><h1 className="mt-5 max-w-2xl text-[clamp(2.9rem,6.2vw,5.5rem)] font-extrabold leading-[1.02] tracking-[-.065em] text-neutral-950">Mais clareza para <span className="text-[var(--viva-purple)]">viver.</span></h1><p className="mt-6 max-w-xl text-base leading-8 text-neutral-500 md:text-lg">Sua rotina, seu dinheiro e suas escolhas em um só lugar. Uma experiência simples para cuidar do que importa, todos os dias.</p><div className="mt-8 flex flex-wrap gap-3"><Link href="/cadastro" className="btn-primary">Criar minha conta <ArrowUpRight size={17}/></Link><Link href="/login" className="btn-secondary">Já tenho uma conta</Link></div><div className="mt-8 flex flex-wrap gap-x-5 gap-y-3 text-xs font-medium text-neutral-500">{["Organização diária","Visão financeira","Busca com dados reais"].map(item=><span key={item} className="inline-flex items-center gap-2"><Check size={14} className="text-[var(--viva-purple)]"/>{item}</span>)}</div></div>
-   <div className="relative mx-auto w-full max-w-[520px]"><div className="rounded-[28px] border bg-[#FBFAFC] p-4 shadow-[0_24px_70px_rgba(25,21,31,.08)] sm:p-6" style={{borderColor:"var(--viva-line)"}}><div className="flex items-center justify-between"><span className="brand-mark text-xl">VIVA+</span><span className="text-[10px] font-bold tracking-[.16em] text-neutral-400">SEU ESPAÇO</span></div><div className="mt-6 rounded-[20px] bg-[#6410C9] p-5 text-white sm:p-6"><p className="text-[10px] font-bold tracking-[.16em] text-white/65">VISÃO DO MÊS</p><p className="mt-4 text-3xl font-bold tracking-tight">Tudo em perspectiva.</p><p className="mt-2 text-sm text-white/70">Um lugar para organizar o que importa.</p><div className="mt-6 flex items-center gap-2 text-xs text-white/75"><ShieldCheck size={15}/> Seu espaço pessoal</div></div><div className="mt-4 grid grid-cols-2 gap-3">{features.map(({title,description,Icon})=><article key={title} className="rounded-2xl border bg-white p-4" style={{borderColor:"var(--viva-line)"}}><span className="icon-surface h-9 w-9"><Icon size={18}/></span><h2 className="mt-3 text-sm font-bold text-neutral-900">{title}</h2><p className="mt-1 text-[11px] leading-5 text-neutral-500">{description}</p></article>)}</div></div></div>
-  </section>
-  <section className="border-t bg-[#F8F7FA] px-5 py-16 md:px-8" style={{borderColor:"var(--viva-line)"}}><div className="mx-auto max-w-6xl"><p className="page-eyebrow text-center">MENOS RUÍDO. MAIS CLAREZA.</p><h2 className="mt-3 text-center text-2xl font-bold tracking-tight text-neutral-900 md:text-3xl">Tudo começa com um próximo passo.</h2><div className="mt-9 grid gap-4 md:grid-cols-3">{[["01","Organize","Veja seus compromissos e mantenha prioridades visíveis."],["02","Acompanhe","Registre receitas e despesas sem complicação."],["03","Escolha melhor","Compare preços cadastrados e consulte o Assistente VIVA+."]].map(([n,t,d])=><article key={n} className="rounded-2xl border bg-white p-6" style={{borderColor:"var(--viva-line)"}}><span className="text-xs font-bold text-[var(--viva-purple)]">{n}</span><h3 className="mt-3 text-lg font-bold text-neutral-900">{t}</h3><p className="mt-2 text-sm leading-6 text-neutral-500">{d}</p></article>)}</div></div></section>
-  <footer className="px-5 py-8 text-center text-xs text-neutral-400">VIVA+ · Sua vida mais inteligente.</footer>
- </main>;
+
+export default function Home() {
+  return <main className="min-h-screen overflow-hidden bg-white"><section className="viva-mobile-welcome md:hidden"><div className="welcome-orbit orbit-one"/><div className="welcome-orbit orbit-two"/><div className="welcome-status"><span>9:41</span><span>▮▮▮ ▰</span></div><div className="welcome-brand"><span className="welcome-emblem">V<sup>+</sup></span><strong>V I V A</strong><small>ASSISTENTE FINANCEIRA PREMIUM</small></div><div className="welcome-balance"><span>Saldo previsto</span><strong>R$ 2.800,10</strong><small>+12% no mês</small><svg viewBox="0 0 180 62" aria-hidden="true"><path d="M3 54 L29 37 L49 45 L70 23 L91 30 L116 12 L142 20 L166 2" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="166" cy="2" r="5" fill="white"/></svg></div><div className="welcome-copy"><h1>Seu dinheiro e sua agenda,<br/><span>em perfeita harmonia.</span></h1><p>Planeje, acompanhe e conquiste com uma assistente que entende o seu ritmo.</p><div className="welcome-dots"><i/><i/><i/></div></div><div className="welcome-actions"><Link href="/login" className="welcome-enter">Entrar</Link><Link href="/cadastro" className="welcome-signup">Criar conta</Link></div></section><div className="hidden md:block">
+    <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 md:px-8">
+      <Link href="/" className="brand-mark text-3xl">VIVA<span>+</span></Link>
+      <nav className="flex items-center gap-2"><Link href="/login" className="rounded-xl px-4 py-3 text-sm font-bold text-neutral-600 transition-colors hover:text-[var(--color-primary)]">Entrar</Link><Link href="/cadastro" className="btn-primary text-sm">Começar agora <ArrowUpRight size={16}/></Link></nav>
+    </header>
+
+    <section className="mx-auto grid max-w-7xl items-center gap-12 px-5 pb-20 pt-10 md:grid-cols-[1.05fr_.95fr] md:px-8 md:pb-28 md:pt-20">
+      <div>
+        <span className="inline-flex items-center gap-2 rounded-full bg-neutral-100 px-4 py-2 text-xs font-bold tracking-wide" style={{ color: "var(--color-primary)" }}><Sparkles size={14}/> SUA VIDA, EM HARMONIA</span>
+        <h1 className="mt-7 max-w-2xl text-[clamp(2.8rem,6vw,5.4rem)] font-black leading-[1.02] tracking-[-.055em] text-neutral-950">Mais clareza para <span style={{ color: "var(--color-primary)" }}>viver.</span><br/>Mais leveza para escolher.</h1>
+        <p className="mt-7 max-w-xl text-base leading-8 text-neutral-500 md:text-lg">Organize sua rotina, acompanhe seu dinheiro e planeje suas compras. Tudo em um espaço simples, seguro e feito para você.</p>
+        <div className="mt-9 flex flex-wrap gap-3"><Link href="/cadastro" className="btn-primary">Criar minha conta <ArrowUpRight size={18}/></Link><Link href="/login" className="rounded-xl border px-5 py-3 text-sm font-bold text-neutral-700 transition-colors hover:bg-neutral-50" style={{ borderColor: "var(--color-gray)" }}>Já tenho uma conta</Link></div>
+        <div className="mt-8 flex flex-wrap gap-x-5 gap-y-3 text-xs font-medium text-neutral-500">{["Simples de usar", "Seus dados protegidos", "Feito para o seu dia"].map(item => <span key={item} className="inline-flex items-center gap-2"><Check size={15} style={{ color: "var(--color-primary)" }}/>{item}</span>)}</div>
+      </div>
+
+      <div className="relative">
+        <div className="absolute -inset-5 rounded-[36px] bg-neutral-100"/>
+        <div className="relative rounded-[30px] border bg-white p-5 shadow-[0_24px_70px_rgba(25,21,31,.09)] md:p-7" style={{ borderColor: "var(--color-gray)" }}>
+          <div className="flex items-center justify-between"><span className="brand-mark text-2xl">VIVA+</span><span className="rounded-full bg-neutral-100 px-3 py-1.5 text-[10px] font-bold tracking-wider text-neutral-500">VISÃO GERAL</span></div>
+          <div className="mt-8 rounded-2xl p-5 text-white" style={{ background: "var(--color-primary)" }}><p className="text-xs font-semibold text-white/75">UM NOVO DIA, NOVAS POSSIBILIDADES</p><h2 className="mt-3 text-2xl font-extrabold leading-tight md:text-3xl">Tudo que importa,<br/>em um só lugar.</h2><div className="mt-5 flex items-center gap-2 text-xs text-white/80"><ShieldCheck size={15}/> Seu espaço pessoal</div></div>
+          <div className="mt-4 grid grid-cols-2 gap-3">{features.map(({ title, description, Icon }) => <article key={title} className="interactive-card rounded-2xl border p-4" style={{ borderColor: "var(--color-gray)" }}><span className="icon-surface h-10 w-10"><Icon size={19}/></span><h3 className="mt-4 text-sm font-extrabold text-neutral-900">{title}</h3><p className="mt-1 text-xs leading-5 text-neutral-500">{description}</p></article>)}</div>
+          <p className="mt-4 rounded-xl bg-neutral-100 px-4 py-3 text-center text-xs font-semibold text-neutral-600">Organize hoje. Viva melhor amanhã.</p>
+        </div>
+      </div>
+    </section>
+
+    <section className="border-t bg-neutral-50 px-5 py-16 md:px-8" style={{ borderColor: "var(--color-gray)" }}><div className="mx-auto max-w-7xl"><p className="text-center text-xs font-bold tracking-[.2em]" style={{ color: "var(--color-primary)" }}>UM ESPAÇO PARA SUA VIDA</p><h2 className="mt-3 text-center text-2xl font-black tracking-tight text-neutral-900 md:text-3xl">Organização que acompanha você.</h2><div className="mt-9 grid gap-4 md:grid-cols-3">{[["01", "Sua rotina", "Tenha uma visão clara de compromissos e prioridades."], ["02", "Seu dinheiro", "Acompanhe seus lançamentos e cuide dos seus objetivos."], ["03", "Suas escolhas", "Planeje compras e encontre oportunidades com fontes confiáveis."]].map(([number, title, description]) => <article key={number} className="card interactive-card p-6"><span className="text-sm font-black" style={{ color: "var(--color-primary)" }}>{number}</span><h3 className="mt-4 text-lg font-extrabold text-neutral-900">{title}</h3><p className="mt-2 text-sm leading-6 text-neutral-500">{description}</p></article>)}</div></div></section>
+    <footer className="px-5 py-8 text-center text-xs text-neutral-400">VIVA+ · Sua vida mais inteligente.</footer>
+  </div></main>;
 }
