@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 export default function RecordForm({table,fields,submitLabel="Salvar",onSaved}:{table:"events"|"tasks"|"transactions";fields:{name:string;label:string;type?:string;required?:boolean;options?:string[]}[];submitLabel?:string;onSaved?:()=>void}) {
  const [values,setValues]=useState<Record<string,string>>({});const [msg,setMsg]=useState("");const [busy,setBusy]=useState(false);
  async function submit(e:FormEvent){e.preventDefault();setBusy(true);setMsg("");
- try{const s=createClient();let payload:Record<string,unknown>={};
+ try{const s=createClient();const payload:Record<string,unknown>={};
  fields.forEach(f=>{const v=values[f.name];if(v!==undefined&&v!=="")payload[f.name]=f.type==="number"?Number(v):v;});
  if(table==="transactions"&&payload.amount!==undefined)payload.amount=Math.abs(Number(payload.amount));
  const {error}=await s.from(table).insert(payload);if(error)throw error;
