@@ -9,7 +9,7 @@ const features = [
 ];
 
 export default function Home() {
-  return <main className="min-h-screen overflow-hidden bg-white">
+  return <main className="min-h-screen overflow-hidden bg-white"><section className="viva-mobile-welcome md:hidden"><div className="welcome-orbit orbit-one"/><div className="welcome-orbit orbit-two"/><div className="welcome-status"><span>9:41</span><span>▮▮▮ ▰</span></div><div className="welcome-brand"><span className="welcome-emblem">V<sup>+</sup></span><strong>V I V A</strong><small>ASSISTENTE FINANCEIRA PREMIUM</small></div><div className="welcome-balance"><span>Saldo previsto</span><strong>R$ 2.800,10</strong><small>+12% no mês</small><svg viewBox="0 0 180 62" aria-hidden="true"><path d="M3 54 L29 37 L49 45 L70 23 L91 30 L116 12 L142 20 L166 2" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="166" cy="2" r="5" fill="white"/></svg></div><div className="welcome-copy"><h1>Seu dinheiro e sua agenda,<br/><span>em perfeita harmonia.</span></h1><p>Planeje, acompanhe e conquiste com uma assistente que entende o seu ritmo.</p><div className="welcome-dots"><i/><i/><i/></div></div><div className="welcome-actions"><Link href="/login" className="welcome-enter">Entrar</Link><Link href="/cadastro" className="welcome-signup">Criar conta</Link></div></section><div className="hidden md:block">
     <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 md:px-8">
       <Link href="/" className="brand-mark text-3xl">VIVA<span>+</span></Link>
       <nav className="flex items-center gap-2"><Link href="/login" className="rounded-xl px-4 py-3 text-sm font-bold text-neutral-600 transition-colors hover:text-[var(--color-primary)]">Entrar</Link><Link href="/cadastro" className="btn-primary text-sm">Começar agora <ArrowUpRight size={16}/></Link></nav>
@@ -37,5 +37,5 @@ export default function Home() {
 
     <section className="border-t bg-neutral-50 px-5 py-16 md:px-8" style={{ borderColor: "var(--color-gray)" }}><div className="mx-auto max-w-7xl"><p className="text-center text-xs font-bold tracking-[.2em]" style={{ color: "var(--color-primary)" }}>UM ESPAÇO PARA SUA VIDA</p><h2 className="mt-3 text-center text-2xl font-black tracking-tight text-neutral-900 md:text-3xl">Organização que acompanha você.</h2><div className="mt-9 grid gap-4 md:grid-cols-3">{[["01", "Sua rotina", "Tenha uma visão clara de compromissos e prioridades."], ["02", "Seu dinheiro", "Acompanhe seus lançamentos e cuide dos seus objetivos."], ["03", "Suas escolhas", "Planeje compras e encontre oportunidades com fontes confiáveis."]].map(([number, title, description]) => <article key={number} className="card interactive-card p-6"><span className="text-sm font-black" style={{ color: "var(--color-primary)" }}>{number}</span><h3 className="mt-4 text-lg font-extrabold text-neutral-900">{title}</h3><p className="mt-2 text-sm leading-6 text-neutral-500">{description}</p></article>)}</div></div></section>
     <footer className="px-5 py-8 text-center text-xs text-neutral-400">VIVA+ · Sua vida mais inteligente.</footer>
-  </main>;
+  </div></main>;
 }
