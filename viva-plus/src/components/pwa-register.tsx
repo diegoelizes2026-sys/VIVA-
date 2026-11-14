@@ -9,7 +9,7 @@ export default function PwaRegister(){
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);const standalone=window.matchMedia("(display-mode: standalone)").matches||("standalone" in navigator&&(navigator as Navigator&{standalone?:boolean}).standalone===true);
   const visits=Number(localStorage.getItem("viva-visits")||"0")+1;localStorage.setItem("viva-visits",String(visits));
   if(ios&&!standalone&&!sessionStorage.getItem("viva-ios-guide-dismissed"))setShowIos(true);
-  const onPrompt=(event:Event)=>{event.preventDefault();setInstallEvent(event as InstallPromptEvent);if(visits>=2&&!localStorage.getItem("viva-install-dismissed"))setShowAndroid(true)};
+  const onPrompt=(event:Event)=>{event.preventDefault();setInstallEvent(event as InstallPromptEvent);if(window.matchMedia("(max-width: 768px)").matches&&visits>=2&&!localStorage.getItem("viva-install-dismissed"))setShowAndroid(true)};
   window.addEventListener("beforeinstallprompt",onPrompt);
   const onInstalled=()=>{setShowAndroid(false);setShowIos(false);setInstallEvent(null)};
   window.addEventListener("appinstalled",onInstalled);
