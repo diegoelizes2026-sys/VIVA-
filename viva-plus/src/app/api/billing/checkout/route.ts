@@ -16,7 +16,10 @@ export async function POST(req: Request) {
     if (!plan) return NextResponse.json({ error: "Plano indisponível." }, { status: 404 });
     const amount = Number(interval === "annual" ? plan.annual_price_brl : plan.monthly_price_brl);
     if (!Number.isFinite(amount) || amount <= 0) return NextResponse.json({ error: "Preço inválido." }, { status: 400 });
-    const token = process.env.MERCADOPAGO_ACCESS_TOKEN;\n    // Em testes, use o e-mail da conta compradora de teste do Mercado Pago.\n    // Em produção, deixe MERCADOPAGO_TEST_PAYER_EMAIL vazio.\n    const payerEmail = process.env.MERCADOPAGO_TEST_PAYER_EMAIL || user.email;
+    const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    // Em testes, use o e-mail da conta compradora de teste do Mercado Pago.
+    // Em produção, deixe MERCADOPAGO_TEST_PAYER_EMAIL vazio.
+    const payerEmail = process.env.MERCADOPAGO_TEST_PAYER_EMAIL || user.email;
     if (!token) return NextResponse.json({ error: "Mercado Pago não configurado." }, { status: 503 });
     const origin = new URL(req.url).origin;
     const external_reference = `viva_${user.id}_${randomUUID()}`;
