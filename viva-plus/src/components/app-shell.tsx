@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, Wallet, ShoppingBag, Sparkles, LayoutDashboard, UserRound, LogOut, Menu, X } from "lucide-react";
+import { CalendarDays, Wallet, ShoppingBag, Sparkles, LayoutDashboard, UserRound, LogOut, Menu, X, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -73,6 +73,7 @@ export default function AppShell({ children, email }: { children: React.ReactNod
         </div>
       </header>
       <div className="mobile-brand-header md:hidden"><div className="flex items-center justify-between"><Link href="/meu-dia" className="text-[28px] font-black tracking-tight text-white">VIVA+</Link><Link href="/perfil" className="grid h-10 w-10 place-items-center rounded-full bg-white/20 text-sm font-bold text-white">M</Link></div><h1 className="mt-3 text-xl font-bold text-white">{mobileTitle}</h1><p className="mt-0.5 text-xs text-white/75">{mobileSubtitle}</p></div><div className="app-content mx-auto max-w-7xl p-4 pb-28 md:p-9">{children}</div>
+      <Link href="/assistente" aria-label="Conversar com a VIVA+" title="Conversar com a VIVA+" className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl transition-transform hover:scale-105 md:bottom-8 md:right-8" style={{ background: "var(--color-primary)" }}><MessageCircle size={25}/><span className="absolute -left-28 top-1/2 -translate-y-1/2 rounded-full bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white shadow-lg">Fale com a VIVA</span></Link>
       <nav aria-label="Navegação principal" className="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-20 grid grid-cols-3 border-t bg-white px-3 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 md:hidden" style={{ borderColor: "var(--color-gray)" }}>
         {[links[0], links[1], links[4]].map(({ href, label, icon: Icon }) => {
           const active = path === href || (href !== "/meu-dia" && path.startsWith(href + "/"));
