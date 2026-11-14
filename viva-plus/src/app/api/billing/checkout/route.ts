@@ -16,14 +16,14 @@ export async function POST(req: Request) {
     if (!plan) return NextResponse.json({ error: "Plano indisponível." }, { status: 404 });
     const amount = Number(interval === "annual" ? plan.annual_price_brl : plan.monthly_price_brl);
     if (!Number.isFinite(amount) || amount <= 0) return NextResponse.json({ error: "Preço inválido." }, { status: 400 });
-    const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    const token = process.env.MERCADOPAGO_ACCESS_TOKEN;\n    // Em testes, use o e-mail da conta compradora de teste do Mercado Pago.\n    // Em produção, deixe MERCADOPAGO_TEST_PAYER_EMAIL vazio.\n    const payerEmail = process.env.MERCADOPAGO_TEST_PAYER_EMAIL || user.email;
     if (!token) return NextResponse.json({ error: "Mercado Pago não configurado." }, { status: 503 });
     const origin = new URL(req.url).origin;
     const external_reference = `viva_${user.id}_${randomUUID()}`;
     const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
     if (method === "card") {
       const mp = await fetch("https://api.mercadopago.com/preapproval", { method: "POST", headers, cache: "no-store", body: JSON.stringify({
-        reason: `VIVA+ - Plano ${plan.name}`, external_reference, payer_email: user.email,
+        reason: `VIVA+ - Plano ${plan.name}`, external_reference, payer_email: payerEmail,
         back_url: `${origin}/planos?checkout=return`, status: "pending",
         auto_recurring: { frequency: interval === "annual" ? 12 : 1, frequency_type: "months", transaction_amount: amount, currency_id: "BRL" },
         notification_url: `${origin}/api/billing/webhook`
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     }
     const mp = await fetch("https://api.mercadopago.com/v1/payments", { method: "POST", headers: { ...headers, "X-Idempotency-Key": external_reference }, cache: "no-store", body: JSON.stringify({
       transaction_amount: amount, description: `VIVA+ - Plano ${plan.name}`, payment_method_id: "pix",
-      payer: { email: user.email }, external_reference, notification_url: `${origin}/api/billing/webhook`
+      payer: { email: payerEmail }, external_reference, notification_url: `${origin}/api/billing/webhook`
     })});
     const payment = await mp.json();
     const tx = payment.point_of_interaction?.transaction_data;
