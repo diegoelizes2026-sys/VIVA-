@@ -19,7 +19,8 @@
   --ink: var(--color-ink);
   --muted: var(--color-muted);
   --white: var(--color-white);
-  --yellow: #FFD43B;\n  --color-accent: #FFD43B;
+  --yellow: #FFD43B;
+  --color-accent: #FFD43B;
 }
 
 * { box-sizing: border-box; }
