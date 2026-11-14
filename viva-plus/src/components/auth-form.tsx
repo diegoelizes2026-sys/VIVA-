@@ -21,7 +21,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
     try {
       const supabase = createClient();
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { data: { full_name: name.trim() }, emailRedirectTo: `${location.origin}/auth/callback` } });
+        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { data: { full_name: name.trim(), app_source: "viva_plus" }, emailRedirectTo: `${location.origin}/auth/callback` } });
         if (error) {
           if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already exists") || error.message.toLowerCase().includes("user_already_exists")) {
             setMessage("Este e-mail já tem uma conta no VIVA+. Entre pelo login ou use “Esqueci a senha” para recuperar o acesso.");
@@ -38,12 +38,22 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
         const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
         if (data.user) {
-          const fullName = typeof data.user.user_metadata?.full_name === "string" ? data.user.user_metadata.full_name.trim() : "";
-          const { error: profileError } = await supabase.from("viva_profiles").upsert(
-            { id: data.user.id, ...(fullName ? { full_name: fullName } : {}) },
-            { onConflict: "id" }
-          );
-          if (profileError) throw new Error("Login realizado, mas não foi possível preparar seu perfil. Tente novamente em instantes.");
+          const { data: vivaProfile, error: profileError } = await supabase
+            .from("viva_profiles")
+            .select("id")
+            .eq("id", data.user.id)
+            .maybeSingle();
+
+          if (profileError) {
+            await supabase.auth.signOut();
+            throw new Error("Não foi possível validar seu cadastro no VIVA+. Tente novamente.");
+          }
+
+          if (!vivaProfile) {
+            await supabase.auth.signOut();
+            setMessage("Este e-mail existe no acesso compartilhado do Meniuza, mas ainda não tem cadastro no VIVA+. Para criar seu espaço VIVA+, use um e-mail que ainda não esteja cadastrado nesse acesso.");
+            return;
+          }
         }
         router.replace(params.get("next") || "/meu-dia"); router.refresh();
       } else {
