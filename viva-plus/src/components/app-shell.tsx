@@ -37,7 +37,7 @@ export default function AppShell({ children, email }: { children: React.ReactNod
   return <div className="min-h-screen bg-white md:flex">
     <aside className={`fixed inset-y-0 left-0 z-40 flex w-[286px] flex-col border-r bg-white p-5 transition-transform duration-200 md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`} style={{ borderColor: "var(--color-gray)" }}>
       <div className="flex items-center justify-between px-2 py-3">
-        <Link href="/meu-dia" className="brand-mark text-[30px]">VIVA<span className="text-[var(--color-primary)]">+</span></Link>
+        <Link href="/assistente" className="brand-mark text-[30px]">VIVA<span className="text-[var(--color-primary)]">+</span></Link>
         <button className="rounded-xl p-2 text-neutral-500 hover:bg-neutral-100 md:hidden" onClick={() => setOpen(false)} aria-label="Fechar menu"><X size={20}/></button>
       </div>
       <p className="mb-3 mt-9 px-3 text-[10px] font-bold tracking-[.2em] text-neutral-400">SEU ESPAÇO</p>
@@ -72,7 +72,7 @@ export default function AppShell({ children, email }: { children: React.ReactNod
           <span className="h-2 w-2 rounded-full bg-emerald-500"/> Conta conectada
         </div>
       </header>
-      <div className="mobile-brand-header md:hidden"><div className="flex items-center justify-between"><Link href="/meu-dia" className="text-[28px] font-black tracking-tight text-white">VIVA+</Link><Link href="/perfil" className="grid h-10 w-10 place-items-center rounded-full bg-white/20 text-sm font-bold text-white">M</Link></div><h1 className="mt-3 text-xl font-bold text-white">{mobileTitle}</h1><p className="mt-0.5 text-xs text-white/75">{mobileSubtitle}</p></div><div className="app-content mx-auto max-w-7xl p-4 pb-28 md:p-9">{children}</div>
+      <div className="mobile-brand-header md:hidden"><div className="flex items-center justify-between"><Link href="/assistente" className="text-[28px] font-black tracking-tight text-white">VIVA+</Link><Link href="/perfil" className="grid h-10 w-10 place-items-center rounded-full bg-white/20 text-sm font-bold text-white">M</Link></div><h1 className="mt-3 text-xl font-bold text-white">{mobileTitle}</h1><p className="mt-0.5 text-xs text-white/75">{mobileSubtitle}</p></div><div className="app-content mx-auto max-w-7xl p-4 pb-28 md:p-9">{children}</div>
       <Link href="/assistente" aria-label="Conversar com a VIVA+" title="Conversar com a VIVA+" className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl transition-transform hover:scale-105 md:bottom-8 md:right-8" style={{ background: "var(--color-primary)" }}><MessageCircle size={25}/><span className="absolute -left-28 top-1/2 -translate-y-1/2 rounded-full bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white shadow-lg">Fale com a VIVA</span></Link>
       <nav aria-label="Navegação principal" className="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-20 grid grid-cols-3 border-t bg-white px-3 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 md:hidden" style={{ borderColor: "var(--color-gray)" }}>
         {[links[0], links[1], links[4]].map(({ href, label, icon: Icon }) => {
