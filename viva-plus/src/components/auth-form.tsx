@@ -24,13 +24,13 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
         const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { data: { full_name: name.trim(), app_source: "viva_plus" }, emailRedirectTo: `${location.origin}/auth/callback` } });
         if (error) {
           if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already exists") || error.message.toLowerCase().includes("user_already_exists")) {
-            setMessage("Este e-mail já tem uma conta no VIVA+. Entre pelo login ou use “Esqueci a senha” para recuperar o acesso.");
+            setMessage("Este e-mail já está cadastrado no acesso compartilhado do Meniuza. Se você já possui perfil no VIVA+, entre pelo login; caso contrário, use outro e-mail para criar sua conta VIVA+.");
             return;
           }
           throw error;
         }
         if (data.user && data.user.identities?.length === 0) {
-          setMessage("Este e-mail já tem uma conta no VIVA+. Entre pelo login ou recupere sua senha.");
+          setMessage("Este e-mail já está cadastrado no acesso compartilhado do Meniuza. Se você já possui perfil no VIVA+, entre pelo login; caso contrário, use outro e-mail para criar sua conta VIVA+.");
           return;
         }
         setMessage("Cadastro recebido! Confira seu e-mail para confirmar a conta. Seu perfil será criado automaticamente no VIVA+.");
