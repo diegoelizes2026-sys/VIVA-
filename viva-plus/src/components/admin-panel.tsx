@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useState} from "react";
+import AdminUsers from "@/components/admin-users";
 type Plan={id:string;name:string;monthly_price_brl:number;annual_price_brl:number;daily_credits:number;max_output_tokens:number;history_messages:number;model_key:string;radar_enabled:boolean;voice_enabled:boolean;photo_enabled:boolean;priority_enabled:boolean;enabled:boolean};
 type Settings={ai_paused:boolean;automatic_mode:boolean;global_daily_budget_brl:number;usd_brl_rate:number;alert_threshold_percent:number;extra_credit_price_brl:number;extra_credit_amount:number};
 type AdminAlert={id:string;alert_type:string;detail:string;created_at:string};
@@ -10,6 +11,7 @@ export default function AdminPanel({plans,settings,stats}:{plans:Plan[];settings
  const brl=(v:number)=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
  return <div className="viva-admin"><div className="viva-admin-heading"><div><span className="viva-eyebrow">CONTROLE DA PLATAFORMA</span><h1>Painel administrativo</h1><p>Planos, limites e custo da IA em um só lugar.</p></div><span className="viva-admin-tag">ADMIN</span></div>
  {alerts.length>0&&<section className="viva-admin-card" style={{marginBottom:20,borderColor:"#f2c879"}}><h2 style={{fontWeight:800,marginBottom:10}}>Alertas técnicos</h2>{alerts.map(a=><article key={a.id} style={{padding:"10px 0",borderTop:"1px solid #eee"}}><strong>{a.alert_type}</strong><p style={{fontSize:13,overflowWrap:"anywhere"}}>{a.detail}</p><small>{new Date(a.created_at).toLocaleString("pt-BR")}</small></article>)}</section>}
+ <AdminUsers/>
  <div className="viva-admin-stats"><article><span>Custo estimado hoje</span><strong>{brl(stats.today)}</strong></article><article><span>Custo estimado no mês</span><strong>{brl(stats.month)}</strong></article><article><span>Mensagens processadas</span><strong>{stats.messages}</strong></article><article><span>Usuários ativos no período</span><strong>{stats.users}</strong></article></div>
  <section className="viva-admin-section"><div className="viva-admin-section-title"><div><h2>Proteção de custos</h2><p>Controles de emergência e orçamento global.</p></div></div>
  <div className="viva-admin-settings-grid"><label className="viva-admin-toggle"><span><b>Pausar IA para todos</b><small>Bloqueia novas chamadas imediatamente.</small></span><input type="checkbox" checked={s.ai_paused} onChange={e=>setS({...s,ai_paused:e.target.checked})}/></label><label className="viva-admin-toggle"><span><b>Roteamento automático</b><small>Usa o modelo econômico por padrão.</small></span><input type="checkbox" checked={s.automatic_mode} onChange={e=>setS({...s,automatic_mode:e.target.checked})}/></label>
