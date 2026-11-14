@@ -21,12 +21,30 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
     try {
       const supabase = createClient();
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name }, emailRedirectTo: `${location.origin}/auth/callback` } });
-        if (error) throw error;
-        setMessage("Cadastro enviado. Confira seu e-mail para confirmar a conta, se a confirmação estiver ativada.");
+        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { data: { full_name: name.trim() }, emailRedirectTo: `${location.origin}/auth/callback` } });
+        if (error) {
+          if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already exists") || error.message.toLowerCase().includes("user_already_exists")) {
+            setMessage("Este e-mail já tem uma conta no VIVA+. Entre pelo login ou use “Esqueci a senha” para recuperar o acesso.");
+            return;
+          }
+          throw error;
+        }
+        if (data.user && data.user.identities?.length === 0) {
+          setMessage("Este e-mail já tem uma conta no VIVA+. Entre pelo login ou recupere sua senha.");
+          return;
+        }
+        setMessage("Cadastro recebido! Confira seu e-mail para confirmar a conta. Seu perfil será criado automaticamente no VIVA+.");
       } else if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
+        if (data.user) {
+          const fullName = typeof data.user.user_metadata?.full_name === "string" ? data.user.user_metadata.full_name.trim() : "";
+          const { error: profileError } = await supabase.from("viva_profiles").upsert(
+            { id: data.user.id, ...(fullName ? { full_name: fullName } : {}) },
+            { onConflict: "id" }
+          );
+          if (profileError) throw new Error("Login realizado, mas não foi possível preparar seu perfil. Tente novamente em instantes.");
+        }
         router.replace(params.get("next") || "/meu-dia"); router.refresh();
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/login` });
