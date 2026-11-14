@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const normalizeModelId=(value:string)=>value.trim().toLowerCase().replace(/-\d{4}-\d{2}-\d{2}$/,"").trim();
 
-const schema=z.object({)
+const schema=z.object({
  message:z.string().trim().min(1).max(4000),
  history:z.array(z.object({role:z.enum(["user","assistant"]),content:z.string().max(4000)})).max(12).optional(),
  feature:z.enum(["chat","voice","photo","radar"]).optional(),
