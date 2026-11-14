@@ -9,7 +9,21 @@ const schema=z.object({
  feature:z.enum(["chat","voice","photo","radar"]).optional(),
 });
 
-export async function GET(){\n try{const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)return NextResponse.json({error:"Não autenticado."},{status:401});const {data,error}=await supabase.rpc("viva_get_ai_quota");if(error)throw error;return NextResponse.json(data);}catch(error){console.error("VIVA quota status error",error);return NextResponse.json({error:"Não foi possível consultar seus créditos."},{status:500});}\n}\n\nexport async function POST(request:Request){
+export async function GET(){
+ try{
+  const supabase=await createClient();
+  const {data:{user}}=await supabase.auth.getUser();
+  if(!user)return NextResponse.json({error:"Não autenticado."},{status:401});
+  const {data,error}=await supabase.rpc("viva_get_ai_quota");
+  if(error)throw error;
+  return NextResponse.json(data);
+ }catch(error){
+  console.error("VIVA quota status error",error);
+  return NextResponse.json({error:"Não foi possível consultar seus créditos."},{status:500});
+ }
+}
+
+export async function POST(request:Request){
  let supabase:Awaited<ReturnType<typeof createClient>>|null=null;
  let reservationId:string|null=null;
  try{
@@ -22,7 +36,8 @@ export async function GET(){\n try{const supabase=await createClient();const {da
 
   const message=parsed.data.message;
   const feature=parsed.data.feature??(/\b(menor preço|pesquise.*preço|radar de preço|compare preços|onde está mais barato)\b/i.test(message)?"radar":"chat");
-  const estimatedInputTokens=Math.ceil((message.length+(parsed.data.history||[]).slice(-8).reduce((sum,item)=>sum+item.content.length,0)+900)/4);\n  const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:feature,p_estimated_input_tokens:estimatedInputTokens});
+  const estimatedInputTokens=Math.ceil((message.length+(parsed.data.history||[]).slice(-8).reduce((sum,item)=>sum+item.content.length,0)+900)/4);
+  const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:feature,p_estimated_input_tokens:estimatedInputTokens});
   if(guardError){console.error("VIVA quota reservation failed",guardError);return NextResponse.json({error:"Não foi possível validar seus créditos. Tente novamente."},{status:503});}
   if(!guard?.allowed){
    const reason=guard?.reason||"daily_limit";
