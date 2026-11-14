@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 
-const schema=z.object({
+const normalizeModelId=(value:string)=>value.trim().toLowerCase().replace(/-\d{4}-\d{2}-\d{2}$/,"").trim();
+
+const schema=z.object({)
  message:z.string().trim().min(1).max(4000),
  history:z.array(z.object({role:z.enum(["user","assistant"]),content:z.string().max(4000)})).max(12).optional(),
  feature:z.enum(["chat","voice","photo","radar"]).optional(),
@@ -48,16 +50,22 @@ export async function POST(request:Request){
   }
   reservationId=guard.reservation_id;
   const modelKey=String(guard.model_key||"cheap");
-  const configuredModel=modelKey==="balanced"?(process.env.OPENAI_MODEL_BALANCED||"gpt-6.1-terra"):(process.env.OPENAI_MODEL_CHEAP||"gpt-6-luna");
-  if(configuredModel!==guard.model_id){
+  const envKey=modelKey==="balanced"?"OPENAI_MODEL_BALANCED":"OPENAI_MODEL_CHEAP";
+  const configuredModel=process.env[envKey]||"";
+  const normalizedConfigured=normalizeModelId(configuredModel);
+  const normalizedPriced=normalizeModelId(String(guard.model_id||""));
+  if(!normalizedConfigured||!normalizedPriced||normalizedConfigured!==normalizedPriced){
+   const detail=`modelo sem preço cadastrado: ${configuredModel||"(variável ausente)"}; tamanho=${configuredModel.length}; variável=${envKey}; chave=${modelKey}; modelo_precificado=${String(guard.model_id||"(não encontrado)")}; tamanho_precificado=${String(guard.model_id||"").length}`;
+   console.error("VIVA model/pricing mismatch",{configuredModel:`"${configuredModel}"`,configuredLength:configuredModel.length,pricedModel:`"${String(guard.model_id||"")}"`,pricedLength:String(guard.model_id||"").length,modelKey});
+   try{await supabase.rpc("viva_log_admin_alert",{p_alert_type:"model_pricing_mismatch",p_detail:detail});}catch(alertError){console.error("VIVA admin alert failed",alertError);}
    await supabase.rpc("viva_release_ai_reservation",{p_reservation_id:reservationId});
    reservationId=null;
-   return NextResponse.json({error:"O modelo configurado no servidor não corresponde ao preço cadastrado. Atualize OPENAI_MODEL_CHEAP/OPENAI_MODEL_BALANCED e o cadastro de preços antes de liberar a IA."},{status:503});
+   return NextResponse.json({error:"A VIVA está em manutenção rápida. Tente novamente em instantes."},{status:503});
   }
   const history=(parsed.data.history||[]).slice(-Math.max(1,Math.min(8,Number(guard.history_messages)||8))).map(item=>({role:item.role,content:item.content}));
   const client=new OpenAI({apiKey:process.env.OPENAI_API_KEY});
   const response=await client.responses.create({
-   model:configuredModel,
+   model:configuredModel.trim(),
    instructions:"Você é VIVA+, uma assistente pessoal acolhedora e prática. Responda em português brasileiro. Ajude a organizar agenda, hábitos, finanças pessoais e compras. Nunca invente dados nem afirme que registrou algo sem confirmação explícita. Antes de qualquer lançamento financeiro ou compromisso, apresente os dados para confirmação do usuário. Não afirme que pesquisou preços sem uma pesquisa real. Você não substitui consultoria financeira profissional.",
    input:history.length?history:[{role:"user",content:message}],
    max_output_tokens:Math.max(64,Math.min(16000,Number(guard.max_output_tokens)||300)),
