@@ -2,7 +2,7 @@ import {redirect} from "next/navigation";
 import {createClient} from "@/lib/supabase/server";
 import AdminPanel from "@/components/admin-panel";
 export default async function AdminPage(){
- const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)redirect("/login");
+ const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)redirect("/login?next=%2Fadmin");
  const {data:isAdmin}=await supabase.rpc("viva_is_admin");if(!isAdmin)return <div className="viva-admin-denied"><h1>Acesso restrito</h1><p>Seu usuário ainda não está autorizado como administrador da VIVA+.</p></div>;
  const [{data:plans},{data:settings},{data:logs}]=await Promise.all([
   supabase.from("viva_plans").select("*").order("monthly_price_brl"),
