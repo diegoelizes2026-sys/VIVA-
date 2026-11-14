@@ -51,7 +51,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
         if (error) throw error;
         setMessage("Se o endereço estiver cadastrado, você receberá as instruções de recuperação.");
       }
-    } catch (err) { setMessage(err instanceof Error ? err.message : "Não foi possível concluir."); }
+    } catch (err) { const raw = err instanceof Error ? err.message : ""; const normalized = raw.toLowerCase(); setMessage(normalized.includes("invalid login credentials") || normalized.includes("invalid_credentials") ? "E-mail ou senha incorretos. Se você já criou sua conta e não lembra a senha, clique em “Esqueci a senha” para receber um link de recuperação." : raw || "Não foi possível concluir. Tente novamente."); }
     finally { setBusy(false); }
   }
 
