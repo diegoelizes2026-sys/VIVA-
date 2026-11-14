@@ -9,7 +9,7 @@ const schema=z.object({
  feature:z.enum(["chat","voice","photo","radar"]).optional(),
 });
 
-export async function POST(request:Request){
+export async function GET(){\n try{const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)return NextResponse.json({error:"Não autenticado."},{status:401});const {data,error}=await supabase.rpc("viva_get_ai_quota");if(error)throw error;return NextResponse.json(data);}catch(error){console.error("VIVA quota status error",error);return NextResponse.json({error:"Não foi possível consultar seus créditos."},{status:500});}\n}\n\nexport async function POST(request:Request){
  let supabase:Awaited<ReturnType<typeof createClient>>|null=null;
  let reservationId:string|null=null;
  try{
