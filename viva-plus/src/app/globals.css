@@ -435,3 +435,45 @@ a { color: inherit; text-decoration: none; }
  .viva-composer-wrap-mobile{display:none!important}
  .viva-composer-wrap-desktop{display:block}
 }
+
+/* Ajustes pontuais da autenticação VIVA+ */
+.auth-wordmark { white-space:nowrap; }
+.auth-wordmark-main { display:inline-flex;align-items:baseline;white-space:nowrap; }
+.auth-wordmark-main > span { display:inline-block; }
+.auth-options { display:flex;align-items:center;justify-content:space-between;gap:12px; }
+.auth-options .auth-remember { display:flex;align-items:center;gap:9px;min-height:44px;padding:0 4px;cursor:pointer;font-size:13px;letter-spacing:normal;text-transform:none; }
+.auth-remember input { width:18px;height:18px;flex:0 0 18px;margin:0;accent-color:#6410C9; }
+.auth-options > a { display:inline-flex;align-items:center;justify-content:flex-end;min-height:44px;color:#6410C9;font-weight:800;white-space:nowrap; }
+.auth-form .relative > .auth-password-toggle { position:absolute;z-index:2;top:50%;right:4px;transform:translateY(-50%);display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:12px;background:transparent;color:#81768f;cursor:pointer; }
+.auth-form .relative > .auth-password-toggle:hover { background:#f3ebfd;color:#6410C9; }
+.auth-form .auth-password-input { padding-right:54px!important; }
+.auth-form .relative > svg { top:50%;transform:translateY(-50%); }
+.auth-form .field:focus { border-color:#6410C9;background:#F3EBFD;box-shadow:0 0 0 3px rgba(100,16,201,.12); }
+.auth-form .field:-webkit-autofill,.auth-form .field:-webkit-autofill:hover,.auth-form .field:-webkit-autofill:focus,.auth-form .field:-webkit-autofill:active { -webkit-text-fill-color:#19151F!important;caret-color:#19151F;-webkit-box-shadow:0 0 0 1000px #F3EBFD inset!important;box-shadow:0 0 0 1000px #F3EBFD inset!important;border:1px solid #ded4ee;transition:background-color 9999s ease-out 0s; }
+.auth-form .field:-webkit-autofill:focus { border-color:#6410C9;-webkit-box-shadow:0 0 0 1000px #F3EBFD inset,0 0 0 3px rgba(100,16,201,.12)!important;box-shadow:0 0 0 1000px #F3EBFD inset,0 0 0 3px rgba(100,16,201,.12)!important; }
+.auth-brand-index { color:rgba(255,255,255,.72);font-size:12px; }
+.auth-brand-stats { color:#f5edff;font-size:12px;letter-spacing:.08em; }
+.viva-admin-mascot { position:fixed;z-index:30;right:18px;bottom:18px;width:32px;height:32px;display:grid;place-items:center;opacity:.35;transition:opacity .18s ease,transform .18s ease;border-radius:50%;filter:drop-shadow(0 2px 5px rgba(34,12,60,.16)); }
+.viva-admin-mascot svg { display:block;width:32px;height:32px; }
+.viva-admin-mascot:hover,.viva-admin-mascot:focus-visible,.viva-admin-mascot:active { opacity:1;transform:scale(1.08); }
+@media(max-width:768px) {
+ .auth-page { height:100dvh;min-height:100dvh;padding:0!important;padding-top:env(safe-area-inset-top)!important;background:#451080!important;overflow:hidden; }
+ .auth-page > div { display:flex;flex-direction:column;width:100%;height:100%;min-height:0;max-width:none;overflow:hidden; }
+ .auth-mobile-hero { flex:0 0 auto;min-height:0!important;padding:12px 24px 20px!important;border-radius:0 0 25px 25px; }
+ .auth-mobile-hero .auth-mobile-brand { margin:0 0 12px!important;gap:11px; }
+ .auth-mobile-hero .auth-mobile-emblem { width:44px;height:44px;font-size:24px; }
+ .auth-mobile-hero .auth-mobile-brand strong { font-size:24px; }
+ .auth-mobile-hero .auth-mobile-brand small { font-size:8px; }
+ .auth-mobile-hero h2 { font-size:18px;line-height:1.25; }
+ .auth-mobile-hero p { display:none; }
+ .auth-form-panel { flex:1 1 auto;min-height:0!important;height:auto;overflow-y:auto;padding:18px 24px calc(24px + env(safe-area-inset-bottom))!important;border-radius:26px 26px 0 0; }
+ .auth-form-panel:before { margin-bottom:16px; }
+ .auth-heading { margin:0 4px 18px!important; }
+ .auth-form { gap:10px!important; }
+ .auth-form .field,.auth-form input { font-size:16px!important; }
+ .auth-form .field { min-height:54px; }
+ .auth-options { gap:8px;margin:2px 0 8px; }
+ .auth-options .auth-remember { min-height:44px;gap:8px;font-size:12px!important; }
+ .auth-options > a { min-height:44px;font-size:12px; }
+ .viva-admin-mascot { right:14px;bottom:calc(12px + env(safe-area-inset-bottom)); }
+}
