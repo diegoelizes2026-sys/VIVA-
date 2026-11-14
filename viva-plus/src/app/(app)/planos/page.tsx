@@ -1,5 +1,6 @@
 import {createClient} from "@/lib/supabase/server";
-type PublicPlan={id:string;name:string;monthly_price_brl:number;daily_credits:number;history_messages:number;radar_enabled:boolean;voice_enabled:boolean;photo_enabled:boolean;annual_price_brl:number};\nexport default async function PlansPage(){
+type PublicPlan={id:string;name:string;monthly_price_brl:number;daily_credits:number;history_messages:number;radar_enabled:boolean;voice_enabled:boolean;photo_enabled:boolean;annual_price_brl:number};
+export default async function PlansPage(){
  const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)return null;
  const {data,error}=await supabase.rpc("viva_get_public_plans");const payload=data as {plans?:PublicPlan[];extra_credits?:{amount:number;price_brl:number}}|null;const plans=payload?.plans??[];const extra=payload?.extra_credits??{amount:100,price_brl:4.90};
  const money=(v:number)=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
