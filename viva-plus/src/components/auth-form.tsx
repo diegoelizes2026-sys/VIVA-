@@ -40,11 +40,20 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
   const title = mode === "signup" ? "Crie sua conta" : mode === "reset" ? "Recuperar senha" : "Que bom ter você de volta";
   return <main className="auth-page grid min-h-[100svh] place-items-center bg-white px-4 py-8">
     <div className="grid w-full max-w-5xl overflow-hidden rounded-[28px] border bg-white shadow-[0_24px_80px_rgba(25,21,31,.08)] md:grid-cols-[.9fr_1.1fr]" style={{ borderColor: "var(--color-gray)" }}><div className="auth-mobile-hero md:hidden"><div className="auth-mobile-orbit"/><div className="auth-mobile-brand"><span className="auth-mobile-emblem">V<sup>+</sup></span><span><strong>VIVA</strong><small>VIDA EM MOVIMENTO</small></span></div><h2>{mode === "signup" ? "Seu próximo capítulo começa aqui." : mode === "reset" ? "Vamos recuperar seu acesso." : "Que bom ter você de volta."}</h2><p>{mode === "signup" ? "Um espaço só seu para organizar escolhas, planos e conquistas." : mode === "reset" ? "Recupere seu acesso com segurança e continue de onde parou." : "Sua rotina e seus planos esperam por você."}</p></div>
-      <section className="relative hidden min-h-[620px] flex-col justify-between overflow-hidden p-10 text-white md:flex" style={{ background: "var(--color-primary)" }}>
-        <div className="absolute -right-28 -top-20 h-80 w-80 rounded-full border border-white/15"/><div className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full border border-white/15"/>
-        <Link href="/" className="relative text-3xl font-black tracking-tight">VIVA<span className="text-white/70">+</span></Link>
-        <div className="relative"><span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-2 text-xs font-semibold"><Sparkles size={14}/> SUA VIDA, EM HARMONIA</span><h2 className="mt-6 text-4xl font-black leading-tight">Mais clareza para viver. Mais leveza para escolher.</h2><p className="mt-5 max-w-sm leading-7 text-white/75">Sua rotina, seus objetivos e suas finanças em um só espaço.</p></div>
-        <p className="relative text-xs text-white/60">VIVA+ · Sua vida mais inteligente.</p>
+      <section className="auth-brand-panel relative hidden min-h-[680px] flex-col justify-between overflow-hidden p-10 md:flex">
+        <div className="auth-brand-grid" aria-hidden="true"/>
+        <Link href="/" className="auth-wordmark relative">VIVA<span>+</span><small>UM JEITO MAIS LEVE DE VIVER</small></Link>
+        <div className="auth-brand-story relative">
+          <span className="auth-kicker"><Sparkles size={14}/> SEU ESPAÇO. SEU RITMO.</span>
+          <h2>{mode === "signup" ? <>Sua vida não cabe em uma planilha.<br/><em>Ela merece um lugar inteiro.</em></> : mode === "reset" ? <>Seu caminho continua.<br/><em>Vamos abrir a próxima porta.</em></> : <>Tudo o que importa,<br/><em>mais perto de você.</em></>}</h2>
+          <p>{mode === "signup" ? "Organize compromissos, acompanhe seu dinheiro e transforme planos em pequenas conquistas diárias." : "Uma visão mais clara da sua rotina, das suas finanças e das escolhas que fazem sentido para você."}</p>
+        </div>
+        <div className="auth-brand-stats relative">
+          <span><CalendarDays size={17}/> ROTINA COM INTENÇÃO</span>
+          <span><Wallet size={17}/> FINANÇAS COM CLAREZA</span>
+          <span><ShieldCheck size={17}/> SEU ESPAÇO PESSOAL</span>
+        </div>
+        <span className="auth-brand-index" aria-hidden="true">V+ / 01</span>
       </section>
       <section className="auth-form-panel p-6 sm:p-10 md:p-14">
         <Link href="/" className="auth-back inline-flex items-center gap-2 text-sm font-semibold text-neutral-500 hover:text-neutral-900"><ArrowLeft size={16}/> Voltar ao início</Link>
