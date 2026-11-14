@@ -402,3 +402,24 @@ a { color: inherit; text-decoration: none; }
  }
 }
 @media(prefers-reduced-motion:reduce){@media(max-width:768px){.viva-drawer{animation:none!important;transition:none!important}}}
+
+
+@media(max-width:768px){
+ .viva-install-layer{position:fixed;inset:0;z-index:120;display:flex;align-items:flex-end}
+ .viva-install-backdrop{position:absolute;inset:0;border:0;background:rgba(21,10,35,.42);backdrop-filter:blur(3px)}
+ .viva-install-sheet{position:relative;width:100%;padding:12px 24px calc(22px + env(safe-area-inset-bottom));border-radius:28px 28px 0 0;background:#fff;color:#281b36;box-shadow:0 -15px 55px rgba(28,10,50,.18);animation:vivaSheetIn .25s ease}
+ .viva-install-handle{width:42px;height:4px;margin:0 auto 18px;border-radius:99px;background:#ddd5e5}
+ .viva-install-brand{display:grid;place-items:center;width:48px;height:48px;margin-bottom:17px;border-radius:15px;background:#6410C9;color:#fff;font-size:26px;font-weight:950}
+ .viva-install-brand span{color:#e9d7ff}
+ .viva-install-kicker{color:#6410C9;font-size:10px;font-weight:900;letter-spacing:.15em}
+ .viva-install-sheet h2{margin-top:8px;font-size:23px;font-weight:900;letter-spacing:-.04em}
+ .viva-install-sheet p{margin-top:9px;color:#71677d;font-size:14px;line-height:1.6}
+ .viva-ios-steps{display:grid;gap:9px;margin:17px 0}
+ .viva-ios-steps span{display:flex;align-items:center;gap:10px;padding:12px;border-radius:13px;background:#f6f1fb;color:#6410C9;font-size:13px}
+ .viva-ios-steps b{color:#392a49}
+ .viva-ios-steps i{margin-left:auto;font-style:normal;font-size:19px}
+ .viva-install-primary,.viva-install-later{width:100%;min-height:50px;margin-top:14px;border:0;border-radius:15px;font-size:14px;font-weight:850}
+ .viva-install-primary{background:#6410C9;color:#fff}
+ .viva-install-later{margin-top:6px;background:transparent;color:#81768d}
+}
+@keyframes vivaSheetIn{from{transform:translateY(30px);opacity:.7}to{transform:translateY(0);opacity:1}}
