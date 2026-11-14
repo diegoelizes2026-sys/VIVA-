@@ -37,8 +37,8 @@ export async function POST(request:Request){
   const message=parsed.data.message;
   const isRadarRequest=/\b(menor preço|pesquise.*preço|radar de preço|compare preços|onde está mais barato)\b/i.test(message);
   const feature=parsed.data.feature==="photo"?"photo":parsed.data.feature==="voice"?"voice":isRadarRequest?"radar":"chat";
-  const estimatedInputTokens=Math.ceil((message.length+(parsed.data.history||[]).slice(-8).reduce((sum,item)=>sum+item.content.length,0)+900)/4);
-  const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:feature,p_estimated_input_tokens:estimatedInputTokens});
+  const estimatedInputTokens=Math.ceil((message.length+(parsed.data.history||[]).slice(-8).reduce((sum,item)=>sum+item.content.length,0)+900)/4);\n  const preferCheap=/\\b(gastei|recebi|saldo|quanto sobra|quanto posso gastar|marca.*(hoje|amanhã)|compromisso|lembrete|anota.*(gasto|receita)|bom dia|boa tarde|boa noite|olá|ola)\\b/i.test(message);
+  const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:feature,p_estimated_input_tokens:estimatedInputTokens,p_prefer_cheap:preferCheap});
   if(guardError){console.error("VIVA quota reservation failed",guardError);return NextResponse.json({error:"Não foi possível validar seus créditos. Tente novamente."},{status:503});}
   if(!guard?.allowed){
    const reason=guard?.reason||"daily_limit";
