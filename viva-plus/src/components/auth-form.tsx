@@ -55,7 +55,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
             return;
           }
         }
-        router.replace(params.get("next") || "/meu-dia"); router.refresh();
+        router.replace(params.get("next") || "/assistente"); router.refresh();
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/auth/callback?next=/alterar-senha` });
         if (error) throw error;
