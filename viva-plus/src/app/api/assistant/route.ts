@@ -22,7 +22,7 @@ export async function POST(request:Request){
 
   const message=parsed.data.message;
   const feature=parsed.data.feature??(/\b(menor preço|pesquise.*preço|radar de preço|compare preços|onde está mais barato)\b/i.test(message)?"radar":"chat");
-  const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:feature});
+  const estimatedInputTokens=Math.ceil((message.length+(parsed.data.history||[]).slice(-8).reduce((sum,item)=>sum+item.content.length,0)+900)/4);\n  const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:feature,p_estimated_input_tokens:estimatedInputTokens});
   if(guardError){console.error("VIVA quota reservation failed",guardError);return NextResponse.json({error:"Não foi possível validar seus créditos. Tente novamente."},{status:503});}
   if(!guard?.allowed){
    const reason=guard?.reason||"daily_limit";
@@ -48,7 +48,7 @@ export async function POST(request:Request){
   const tokensIn=response.usage?.input_tokens??0;
   const tokensOut=response.usage?.output_tokens??0;
   const costUsd=(tokensIn*Number(guard.input_usd_per_million)+tokensOut*Number(guard.output_usd_per_million))/1_000_000;
-  const costBrl=costUsd*Number(guard.usd_brl_rate||0);
+  const costBrl=costUsd*Number(guard.usd_brl_rate||6.5)*1.25;
   const {error:settleError}=await supabase.rpc("viva_settle_ai_usage",{
    p_reservation_id:reservationId,p_model:configuredModel,p_tokens_in:tokensIn,p_tokens_out:tokensOut,p_cost_usd:costUsd,p_cost_brl:costBrl,
   });
