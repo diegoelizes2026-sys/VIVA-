@@ -1,99 +1,21 @@
 "use client";
-import { useState, type FormEvent } from "react";
-import { Sparkles, Send, Bot, LoaderCircle, UserRound, Mic, MicOff } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
-type Message = { role: "user" | "assistant"; content: string };
-type SpeechRecognitionLike = {
-  lang: string;
-  interimResults: boolean;
-  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
-  onerror: (() => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-};
-declare global {
-  interface Window {
-    SpeechRecognition?: new () => SpeechRecognitionLike;
-    webkitSpeechRecognition?: new () => SpeechRecognitionLike;
-  }
-}
-
-export default function Assistant() {
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Oi! Eu sou a VIVA+, sua companheira para organizar a vida. Pode falar comigo ou escrever. Posso ajudar com seu dia, suas contas, seus planos e suas escolhas. Por onde começamos?" },
-  ]);
-  const [busy, setBusy] = useState(false);
-  const [listening, setListening] = useState(false);
-
-  function toggleMic() {
-    if (listening) return;
-    const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Speech) {
-      setMessages(current => [...current, { role: "assistant", content: "Seu navegador não oferece reconhecimento de voz. Você pode digitar sua mensagem ou usar o Chrome atualizado." }]);
-      return;
-    }
-    const recognition = new Speech();
-    recognition.lang = "pt-BR";
-    recognition.interimResults = false;
-    recognition.onresult = event => {
-      const transcript = Array.from(event.results).map(result => result[0].transcript).join(" ");
-      setInput(current => current ? current + " " + transcript : transcript);
-    };
-    recognition.onerror = () => setMessages(current => [...current, { role: "assistant", content: "Não consegui entender o áudio. Tente novamente ou digite sua mensagem." }]);
-    recognition.onend = () => setListening(false);
-    setListening(true);
-    recognition.start();
-  }
-
-  async function send(e: FormEvent) {
-    e.preventDefault();
-    const message = input.trim();
-    if (!message || busy) return;
-    const history = [...messages, { role: "user" as const, content: message }];
-    setMessages(history);
-    setInput("");
-    setBusy(true);
-    try {
-      const res = await fetch("/api/assistant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, history: history.slice(-12) }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || `Falha ao consultar a VIVA+ (HTTP ${res.status}).`);
-      if (typeof data.answer !== "string" || !data.answer.trim()) throw new Error("Não consegui gerar uma resposta agora.");
-      setMessages(current => [...current, { role: "assistant", content: data.answer }]);
-    } catch (err) {
-      setMessages(current => [...current, { role: "assistant", content: err instanceof Error ? err.message : "Não foi possível responder. Tente novamente." }]);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return <div className="card max-w-3xl overflow-hidden">
-    <div className="flex items-center gap-4 border-b p-5 md:p-7" style={{ borderColor: "var(--color-gray)" }}>
-      <span className="icon-surface h-12 w-12"><Sparkles size={23}/></span>
-      <div><p className="font-extrabold text-neutral-900">VIVA+ · Sua agente pessoal</p><p className="mt-1 text-xs text-neutral-500">Converse, planeje e cuide melhor da sua rotina.</p></div>
-      <span className="ml-auto rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-bold text-neutral-500">IA</span>
-    </div>
-    <div className="max-h-[520px] min-h-64 space-y-4 overflow-y-auto p-5 md:p-7" aria-live="polite">
-      {messages.map((item, index) => <div key={index} className={`flex gap-3 ${item.role === "user" ? "justify-end" : "justify-start"}`}>
-        {item.role === "assistant" && <span className="icon-surface mt-1 h-8 w-8 shrink-0 rounded-xl"><Bot size={17}/></span>}
-        <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-7 whitespace-pre-wrap ${item.role === "user" ? "bg-[var(--color-primary)] text-white" : "border text-neutral-700"}`} style={item.role === "assistant" ? { borderColor: "var(--color-gray)", background: "#FAFAFB" } : undefined}>
-          {item.role === "assistant" && <div className="mb-1 flex items-center gap-2 text-[10px] font-bold" style={{ color: "var(--color-primary)" }}><Sparkles size={13}/> VIVA+</div>}
-          {item.content}
-        </div>
-        {item.role === "user" && <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600"><UserRound size={17}/></span>}
-      </div>)}
-      {busy && <div className="flex items-center gap-2 text-sm text-neutral-500"><span className="icon-surface h-8 w-8 rounded-xl"><Bot size={17}/></span><LoaderCircle size={16} className="animate-spin"/> VIVA+ está pensando...</div>}
-    </div>
-    <form onSubmit={send} className="flex items-center gap-2 border-t bg-neutral-50 p-4 md:p-5" style={{ borderColor: "var(--color-gray)" }}>
-      <button type="button" onClick={toggleMic} disabled={busy} aria-label={listening ? "Microfone ativo" : "Falar com a VIVA+"} title="Falar com a VIVA+" className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${listening ? "border-red-300 bg-red-50 text-red-600" : "border-neutral-200 bg-white text-neutral-600"}`}>{listening ? <MicOff size={19}/> : <Mic size={19}/>}</button>
-      <input className="field bg-white" value={input} onChange={e => setInput(e.target.value)} placeholder={listening ? "Estou ouvindo..." : "Fale ou escreva para a VIVA..."} aria-label="Mensagem para a VIVA+" disabled={busy}/>
-      <button type="submit" disabled={busy || !input.trim()} className="btn-primary h-11 w-12 shrink-0 px-0" aria-label="Enviar mensagem">{busy ? <LoaderCircle size={18} className="animate-spin"/> : <Send size={18}/>}</button>
-    </form>
-    <p className="px-5 pb-4 text-[11px] text-neutral-400">A VIVA+ ajuda a organizar suas escolhas. Confirme antes de registrar ou executar ações importantes.</p>
-  </div>;
+type Message={role:"user"|"assistant";content:string};
+type SpeechRecognitionLike={lang:string;interimResults:boolean;onresult:((event:{results:ArrayLike<ArrayLike<{transcript:string}>>})=>void)|null;onerror:(()=>void)|null;onend:(()=>void)|null;start:()=>void;stop:()=>void};
+declare global{interface Window{SpeechRecognition?:new()=>SpeechRecognitionLike;webkitSpeechRecognition?:new()=>SpeechRecognitionLike}}
+function Orb({state="rest"}:{state?:"rest"|"think"|"listen"}){return <span className={`viva-orb viva-orb-${state}`} aria-label={state==="think"?"VIVA pensando":state==="listen"?"VIVA ouvindo":"VIVA"}><i/><b/></span>}
+function Icon({name}:{name:string}){return <svg viewBox="0 0 28 28" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">{name==="voice"?<><path d="M14 4a4 4 0 0 0-4 4v6a4 4 0 0 0 8 0V8a4 4 0 0 0-4-4Z"/><path d="M6 13v1a8 8 0 0 0 16 0v-1M14 22v3M10 25h8"/></>:name==="attach"?<path d="m10 14 7-7a4 4 0 0 1 6 6l-9 9a6 6 0 0 1-9-9l9-9"/>:name==="send"?<path d="m25 3-8 22-4-9-9-4 21-9ZM13 16 25 3"/>:name==="agenda"?<><path d="M4 8h20v16H4zM9 4v8M19 4v8M8 17l3 3 8-8"/></>:name==="money"?<><circle cx="14" cy="14" r="10"/><path d="M14 8v12M18 11c-1-2-7-2-7 1 0 4 8 1 8 5 0 3-6 4-9 1M22 6l2-2"/></>:<><path d="M5 22V8l9-4 9 4v14zM10 17l4-7 4 7M11 15h6"/></>}</svg>}
+const suggestions=["Lançar gasto","Meu dia","Achar menor preço","Quanto posso gastar hoje?"];
+export default function Assistant(){
+ const [input,setInput]=useState("");const [messages,setMessages]=useState<Message[]>([]);const [busy,setBusy]=useState(false);const [listening,setListening]=useState(false);const [attached,setAttached]=useState<File|null>(null);const endRef=useRef<HTMLDivElement>(null);const fileRef=useRef<HTMLInputElement>(null);
+ useEffect(()=>{const hour=new Date().getHours();const greeting=hour<12?"Bom dia":hour<18?"Boa tarde":"Boa noite";setMessages([{role:"assistant",content:`${greeting}! Eu sou a VIVA, sua assistente pessoal. 💜\n\nVamos cuidar do seu dia? Posso organizar seus compromissos, acompanhar seu dinheiro, registrar gastos e procurar formas de economizar. O que é mais importante agora?`}])},[]);
+ useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth",block:"end"})},[messages,busy]);
+ function toggleMic(){if(listening)return;const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;if(!Speech){setMessages(m=>[...m,{role:"assistant",content:"Seu navegador não oferece reconhecimento de voz. Você pode digitar sua mensagem."}]);return}const recognition=new Speech();recognition.lang="pt-BR";recognition.interimResults=false;recognition.onresult=e=>setInput(v=>v? v+" "+Array.from(e.results).map(x=>x[0].transcript).join(" "):Array.from(e.results).map(x=>x[0].transcript).join(" "));recognition.onerror=()=>setMessages(m=>[...m,{role:"assistant",content:"Não consegui entender. Vamos tentar mais uma vez?"}]);recognition.onend=()=>setListening(false);setListening(true);recognition.start()}
+ async function send(e?:FormEvent,override?:string){e?.preventDefault();const message=(override??input).trim();if(!message||busy)return;const history=[...messages,{role:"user" as const,content:message}];setMessages(history);setInput("");setBusy(true);try{const res=await fetch("/api/assistant",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message,history:history.slice(-12)})});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||"Não consegui responder agora.");setMessages(m=>[...m,{role:"assistant",content:data.answer||"Estou aqui. Me conte mais."}])}catch(err){setMessages(m=>[...m,{role:"assistant",content:err instanceof Error?err.message:"Não consegui responder agora."}])}finally{setBusy(false);setAttached(null)}}
+ return <section className="viva-chat">
+  <div className="viva-chat-heading"><div><span className="viva-eyebrow">SUA COMPANHEIRA DIGITAL</span><h1>Conversa com a VIVA</h1><p>Uma vida mais organizada começa com uma conversa.</p></div><div className="viva-status"><span/> online</div></div>
+  <div className="viva-thread" aria-live="polite">{messages.map((m,i)=><div key={i} className={`viva-message viva-message-${m.role}`}>{m.role==="assistant"&&<Orb/>}<div className="viva-bubble">{m.role==="assistant"&&<span className="viva-bubble-label">VIVA+</span>}{m.content}</div></div>)}{busy&&<div className="viva-message viva-message-assistant"><Orb state="think"/><div className="viva-typing"><span/><span/><span/> VIVA está pensando</div></div>}<div ref={endRef}/></div>
+  <div className="viva-composer-wrap"><div className="viva-suggestions">{suggestions.map(s=><button key={s} onClick={()=>send(undefined,s)} disabled={busy}>{s}</button>)}</div><form className="viva-composer" onSubmit={send}><button type="button" className={`viva-tool-button ${listening?"listening":""}`} onClick={toggleMic} aria-label="Falar com a VIVA"><Icon name="voice"/></button><button type="button" className="viva-tool-button" onClick={()=>fileRef.current?.click()} aria-label="Anexar foto ou documento"><Icon name="attach"/></button><input ref={fileRef} type="file" accept="image/*,.pdf" capture="environment" hidden onChange={e=>setAttached(e.target.files?.[0]||null)}/><input value={input} onChange={e=>setInput(e.target.value)} placeholder={listening?"Estou ouvindo você...":attached?attached.name:"Converse com a VIVA..."} aria-label="Mensagem" disabled={busy}/><button type="submit" className="viva-send" disabled={busy||!input.trim()} aria-label="Enviar mensagem"><Icon name="send"/></button></form><p className="viva-composer-note">A VIVA só registra alterações importantes depois de confirmar com você.</p></div>
+ </section>
 }
