@@ -12,5 +12,5 @@ export default async function AdminPage(){
  const todayKey=new Date().toLocaleDateString("en-CA",{timeZone:"America/Sao_Paulo"});
  const today=(logs||[]).filter(x=>new Date(x.created_at).toLocaleDateString("en-CA",{timeZone:"America/Sao_Paulo"})===todayKey);
  const stats={today:today.reduce((a,x)=>a+Number(x.cost_brl),0),month:(logs||[]).reduce((a,x)=>a+Number(x.cost_brl),0),messages:(logs||[]).length,users:new Set((logs||[]).map(x=>x.user_id)).size};
- return <AdminPanel plans={plans||[]} settings={settings||{ai_paused:false,automatic_mode:true,global_daily_budget_brl:50,usd_brl_rate:6.5,alert_threshold_percent:70}} stats={stats}/>;
+ return <AdminPanel plans={plans||[]} settings={settings||{ai_paused:false,automatic_mode:true,global_daily_budget_brl:50,usd_brl_rate:6.5,alert_threshold_percent:70,extra_credit_price_brl:4.90,extra_credit_amount:100}} stats={stats}/>;
 }
