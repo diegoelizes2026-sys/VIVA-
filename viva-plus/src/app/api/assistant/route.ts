@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { z } from "zod";
+import { z } from "zod";\nimport {parseTransactionIntent} from "@/lib/finance-intent";
 
 const normalizeModelId=(value:string)=>value.trim().toLowerCase().replace(/-\d{4}-\d{2}-\d{2}$/,"").trim();
 
@@ -36,7 +36,7 @@ export async function POST(request:Request){
   if(!parsed.success)return NextResponse.json({error:"Mensagem inválida. Use até 4.000 caracteres."},{status:400});
   if(!process.env.OPENAI_API_KEY)return NextResponse.json({error:"Assistente temporariamente indisponível."},{status:503});
 
-  const message=parsed.data.message;
+  const message=parsed.data.message;\n  const financialIntent=parseTransactionIntent(message);\n  if(financialIntent){if("clarification" in financialIntent)return NextResponse.json({clarification:true,amount:financialIntent.amount});return NextResponse.json(financialIntent);}
   const isRadarRequest=/\b(menor preço|pesquise.*preço|radar de preço|compare preços|onde está mais barato)\b/i.test(message);
   const feature=parsed.data.feature==="photo"?"photo":parsed.data.feature==="voice"?"voice":isRadarRequest?"radar":"chat";
   const estimatedInputTokens=Math.ceil((message.length+(parsed.data.history||[]).slice(-8).reduce((sum,item)=>sum+item.content.length,0)+900)/4);

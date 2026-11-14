@@ -1,0 +1,1 @@
+"use client";import {useEffect} from "react";import {useRouter} from "next/navigation";export default function FinanceRefresh(){const router=useRouter();useEffect(()=>{const refresh=()=>router.refresh();window.addEventListener("viva:transactions-updated",refresh);return()=>window.removeEventListener("viva:transactions-updated",refresh)},[router]);return null}
