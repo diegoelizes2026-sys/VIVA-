@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   description:
     "Organize sua rotina, cuide do seu dinheiro e descubra oportunidades para economizar.",
   manifest: "/manifest.webmanifest",
+  icons: { icon: [{ url: "/favicon.svg", type: "image/svg+xml" }], shortcut: "/favicon.svg", apple: "/favicon.svg" },
 };
 
 export const viewport: Viewport = {
