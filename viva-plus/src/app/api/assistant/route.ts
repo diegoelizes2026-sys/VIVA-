@@ -35,7 +35,7 @@ export async function POST(request:Request){
   if(!process.env.OPENAI_API_KEY)return NextResponse.json({error:"Assistente temporariamente indisponível."},{status:503});
 
   const message=parsed.data.message;
-  const feature=parsed.data.feature??(/\b(menor preço|pesquise.*preço|radar de preço|compare preços|onde está mais barato)\b/i.test(message)?"radar":"chat");
+  const isRadarRequest=/\b(menor preço|pesquise.*preço|radar de preço|compare preços|onde está mais barato)\b/i.test(message);\n  const feature=parsed.data.feature==="photo"?"photo":parsed.data.feature==="voice"?"voice":isRadarRequest?"radar":"chat";
   const estimatedInputTokens=Math.ceil((message.length+(parsed.data.history||[]).slice(-8).reduce((sum,item)=>sum+item.content.length,0)+900)/4);
   const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:feature,p_estimated_input_tokens:estimatedInputTokens});
   if(guardError){console.error("VIVA quota reservation failed",guardError);return NextResponse.json({error:"Não foi possível validar seus créditos. Tente novamente."},{status:503});}
