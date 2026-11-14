@@ -57,7 +57,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
         }
         router.replace(params.get("next") || "/meu-dia"); router.refresh();
       } else {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/login` });
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/auth/callback?next=/alterar-senha` });
         if (error) throw error;
         setMessage("Se o endereço estiver cadastrado, você receberá as instruções de recuperação.");
       }
