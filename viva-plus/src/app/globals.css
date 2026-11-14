@@ -423,3 +423,15 @@ a { color: inherit; text-decoration: none; }
  .viva-install-later{margin-top:6px;background:transparent;color:#81768d}
 }
 @keyframes vivaSheetIn{from{transform:translateY(30px);opacity:.7}to{transform:translateY(0);opacity:1}}
+
+
+.viva-composer-wrap-mobile{display:none}
+@media(max-width:768px){
+ .viva-composer-wrap-desktop{display:none!important}
+ .viva-composer-wrap-mobile{display:block}
+ .viva-chat-mobile .viva-composer textarea{font-family:inherit;font-size:16px}
+}
+@media(min-width:769px){
+ .viva-composer-wrap-mobile{display:none!important}
+ .viva-composer-wrap-desktop{display:block}
+}
