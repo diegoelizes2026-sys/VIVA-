@@ -1,0 +1,6 @@
+import {NextResponse} from "next/server";
+import {z} from "zod";
+import {createClient} from "@/lib/supabase/server";
+const schema=z.object({use_financial_data:z.boolean()});
+export async function GET(){const s=await createClient();const {data:{user}}=await s.auth.getUser();if(!user)return NextResponse.json({error:"Não autenticado."},{status:401});const {data,error}=await s.from("viva_finance_ai_preferences").select("use_financial_data").eq("user_id",user.id).maybeSingle();if(error)return NextResponse.json({error:"Não foi possível carregar a preferência."},{status:500});return NextResponse.json({use_financial_data:data?.use_financial_data??true})}
+export async function PATCH(request:Request){const s=await createClient();const {data:{user}}=await s.auth.getUser();if(!user)return NextResponse.json({error:"Não autenticado."},{status:401});const parsed=schema.safeParse(await request.json());if(!parsed.success)return NextResponse.json({error:"Preferência inválida."},{status:400});const {error}=await s.from("viva_finance_ai_preferences").upsert({user_id:user.id,...parsed.data,updated_at:new Date().toISOString()},{onConflict:"user_id"});if(error)return NextResponse.json({error:"Não foi possível salvar a preferência."},{status:500});return NextResponse.json({ok:true})}
