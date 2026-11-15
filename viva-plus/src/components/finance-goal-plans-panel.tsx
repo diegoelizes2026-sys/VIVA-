@@ -11,6 +11,7 @@ export default function FinanceGoalPlansPanel(){
  const [busy,setBusy]=useState("");
  const [error,setError]=useState("");
  const [notice,setNotice]=useState("");
+ const [contributions,setContributions]=useState<Record<string,string>>({});
  async function load(){
   setLoading(true);setError("");
   try{const r=await fetch("/api/finance-ai/goals",{cache:"no-store"});const d=await r.json();if(!r.ok){if(r.status===403||r.status===401){setGoals([]);setPlans([]);return}throw new Error(d.error||"Não foi possível carregar suas metas.")}setGoals(d.goals||[]);setPlans(d.plans||[])}
@@ -20,8 +21,21 @@ export default function FinanceGoalPlansPanel(){
  useEffect(()=>{void load()},[]);
  async function create(goal:Goal){
   setBusy(goal.id);setError("");setNotice("");
-  try{const r=await fetch("/api/finance-ai/goals",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({goal_id:goal.id})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Não foi possível criar o plano.");setPlans(old=>[d.plan,...old.filter(p=>p.goal_id!==goal.id)]);setNotice(d.message||"Plano criado com sucesso.")}
+  try{const r=await fetch("/api/finance-ai/goals",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({goal_id:goal.id})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Não foi possível criar o plano.");setPlans(old=>[d.plan,...old.filter(p=>p.goal_id!==goal.id)]);setNotice(d.explanation||d.message||"Plano criado com sucesso.")}
   catch(e){setError(e instanceof Error?e.message:"Não foi possível criar o plano.")}
+  finally{setBusy("")}
+ }
+ async function contribute(plan:Plan){
+  const amount=Number(contributions[plan.id]||0);
+  if(!Number.isFinite(amount)||amount<=0){setError("Informe um valor de aporte maior que zero.");return}
+  setBusy(plan.id);setError("");setNotice("");
+  try{
+   const r=await fetch("/api/finance-ai/goals",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({plan_id:plan.id,contribution_amount:amount})});
+   const d=await r.json();if(!r.ok)throw new Error(d.error||"Não foi possível registrar o aporte.");
+   setGoals(old=>old.map(g=>g.id===d.goal.id?d.goal:g));
+   setPlans(old=>old.map(p=>p.id===plan.id?d.plan:p));
+   setContributions(old=>({...old,[plan.id]:""}));setNotice(d.message||"Aporte registrado.");
+  }catch(e){setError(e instanceof Error?e.message:"Não foi possível registrar o aporte.")}
   finally{setBusy("")}
  }
  async function toggle(plan:Plan,index:number,done:boolean){
@@ -55,6 +69,10 @@ export default function FinanceGoalPlansPanel(){
       <div className="mt-2 grid grid-cols-2 gap-2">
        <div className="rounded-lg p-2" style={{background:"#F4EDFC"}}><span className="block text-[10px] text-neutral-500">Guardar por mês</span><b className="text-sm" style={{color:"#6410C9"}}>{money(Number(plan.monthly_target))}</b></div>
        <div className="rounded-lg p-2" style={{background:"#F4EDFC"}}><span className="block text-[10px] text-neutral-500">Guardar por semana</span><b className="text-sm" style={{color:"#6410C9"}}>{money(Number(plan.weekly_target))}</b></div>
+      </div>
+      <div className="mt-3 rounded-xl border p-3" style={{borderColor:"var(--line)"}}>
+       <label className="block text-xs font-semibold" style={{color:"var(--text)"}}>Registrar quanto você guardou</label>
+       <div className="mt-2 flex gap-2"><input type="number" min="0.01" step="0.01" inputMode="decimal" value={contributions[plan.id]||""} onChange={e=>setContributions(old=>({...old,[plan.id]:e.target.value}))} placeholder="Ex.: 100,00" className="field min-w-0 flex-1" aria-label={"Valor do aporte para "+goal.title}/><button type="button" disabled={busy===plan.id||!Number(contributions[plan.id])||Number(contributions[plan.id])<=0} onClick={()=>void contribute(plan)} className="shrink-0 rounded-lg px-3 text-xs font-bold text-white disabled:opacity-50" style={{background:"#6410C9"}}>{busy===plan.id?"Salvando…":"Registrar"}</button></div>
       </div>
       <div className="mt-3 grid gap-2">{plan.steps.map((step,index)=><label key={index} className="flex min-w-0 cursor-pointer items-start gap-2.5 rounded-lg p-2" style={{background:step.done?"#F0F8F2":"transparent"}}><input type="checkbox" checked={step.done} disabled={busy===plan.id+":"+index} onChange={e=>void toggle(plan,index,e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-purple-700"/><span className="min-w-0"><b className="block text-xs" style={{color:"var(--text)",textDecoration:step.done?"line-through":"none"}}>{step.title}</b><small className="mt-0.5 block text-[11px] leading-relaxed text-neutral-500">{step.detail}</small></span></label>)}</div>
      </div>:<div className="mt-3"><p className="text-xs leading-relaxed text-neutral-500">A VIVA pode montar um plano com valores semanais e mensais para você chegar nessa meta.</p><button type="button" disabled={Boolean(busy)} onClick={()=>void create(goal)} className="mt-3 min-h-10 w-full rounded-xl px-4 text-xs font-bold text-white disabled:opacity-60" style={{background:"#6410C9"}}>{busy===goal.id?"Calculando seu plano…":"Criar meu plano de ação"}</button></div>}
