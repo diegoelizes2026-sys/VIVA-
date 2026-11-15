@@ -684,3 +684,165 @@ a { color: inherit; text-decoration: none; }
 .viva-attach-bottom-sheet .viva-attach-pref input{width:17px;height:17px;accent-color:#6410C9}
 @keyframes vivaAttachSheetIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.viva-attach-bottom-sheet{animation:none}}
+
+
+/* Desktop-only attachment dialog: isolate it from the chat content */
+@media (min-width: 769px) {
+  .viva-composer-wrap-desktop.viva-desktop-attach-open {
+    z-index: 10060 !important;
+    isolation: isolate;
+  }
+  .viva-desktop-attach-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10060;
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    border: 0;
+    background: rgba(32, 17, 48, .42);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    cursor: default;
+  }
+  .viva-attach-sheet.viva-desktop-attach-sheet {
+    position: fixed !important;
+    z-index: 10061 !important;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: min(460px, calc(100vw - 48px)) !important;
+    max-height: min( min(680px, calc(100vh - 48px)) , 90vh) !important;
+    overflow-y: auto !important;
+    padding: 24px !important;
+    transform: translate(-50%, -50%) !important;
+    border: 1px solid #eee6f5 !important;
+    border-radius: 24px !important;
+    background: #fff !important;
+    color: #281b35 !important;
+    opacity: 1 !important;
+    box-shadow: 0 24px 80px rgba(24, 10, 40, .28) !important;
+    isolation: isolate;
+  }
+  .viva-desktop-attach-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 16px !important;
+    padding: 0 0 15px;
+    border-bottom: 1px solid #eee8f3;
+  }
+  .viva-desktop-attach-kicker {
+    display: block;
+    margin-bottom: 4px;
+    color: #8b3de8;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .14em;
+  }
+  .viva-desktop-attach-header h2 {
+    margin: 0;
+    color: #281b35;
+    font-size: 20px;
+    font-weight: 850;
+  }
+  .viva-desktop-attach-header > button {
+    display: grid;
+    width: 36px !important;
+    height: 36px !important;
+    flex: 0 0 36px;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: #f3ebfd;
+    color: #6410C9;
+    font-size: 24px;
+    line-height: 1;
+  }
+  .viva-desktop-attach-options {
+    display: grid;
+    gap: 6px;
+  }
+  .viva-desktop-attach-option {
+    display: flex;
+    width: 100%;
+    min-height: 68px;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 14px;
+    background: #fff;
+    color: #281b35;
+    text-align: left;
+  }
+  .viva-desktop-attach-option:hover,
+  .viva-desktop-attach-option:focus-visible {
+    background: #faf7fd;
+    outline: none;
+  }
+  .viva-desktop-attach-icon {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    place-items: center;
+    border-radius: 13px;
+    background: #F3EBFD;
+    color: #6410C9;
+  }
+  .viva-desktop-attach-icon svg {
+    width: 25px;
+    height: 25px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .viva-desktop-attach-option b,
+  .viva-desktop-attach-option small,
+  .viva-desktop-attach-pref b,
+  .viva-desktop-attach-pref small {
+    display: block;
+  }
+  .viva-desktop-attach-option b {
+    font-size: 15px;
+    font-weight: 800;
+  }
+  .viva-desktop-attach-option small {
+    margin-top: 3px;
+    color: #81758d;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .viva-desktop-attach-pref {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin: 14px 0 0 !important;
+    padding: 15px 4px 0;
+    border-top: 1px solid #eee8f3;
+    color: #281b35;
+    font-size: 13px;
+  }
+  .viva-desktop-attach-pref input {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 17px;
+    margin-top: 2px;
+    accent-color: #6410C9;
+  }
+  .viva-desktop-attach-pref b {
+    font-weight: 800;
+  }
+  .viva-desktop-attach-pref small {
+    margin-top: 4px;
+    color: #81758d;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+}
