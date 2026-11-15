@@ -24,9 +24,14 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
     try {
       const supabase = createClient();
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name, responsibility_terms_accepted: true, responsibility_terms_version: "1.0-2026-11-15", responsibility_terms_accepted_at: new Date().toISOString() }, emailRedirectTo: `${location.origin}/auth/callback` } });
+        const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name, responsibility_terms_accepted: true, responsibility_terms_version: "1.0-2026-11-15", responsibility_terms_accepted_at: new Date().toISOString() }, emailRedirectTo: `${location.origin}/auth/callback` } });
         if (error) throw error;
-        setMessage("Cadastro enviado. Confira seu e-mail para confirmar a conta, se a confirmação estiver ativada.");
+        if (data.session) {
+          router.replace("/meu-dia");
+          router.refresh();
+        } else {
+          setMessage("Cadastro criado. Para proteger sua conta, confirme seu e-mail e depois entre no VIVA+.");
+        }
       } else if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
