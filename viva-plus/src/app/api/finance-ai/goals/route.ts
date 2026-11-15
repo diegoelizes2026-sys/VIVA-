@@ -50,7 +50,7 @@ export async function POST(request:NextRequest){
    const target=Number(body.target_amount);
    const targetDate=body.target_date?String(body.target_date):null;
    if(!title||!Number.isFinite(target)||target<=0||target>100000000)return NextResponse.json({error:"Informe o nome da meta e um valor válido."},{status:400});
-   if(targetDate&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(targetDate))return NextResponse.json({error:"Informe um prazo válido."},{status:400});
+   if(targetDate&&!/^\d{4}-\d{2}-\d{2}$/.test(targetDate))return NextResponse.json({error:"Informe um prazo válido."},{status:400});
    const {data:created,error:createError}=await supabase.from("viva_financial_goals").insert({user_id:user.id,title,target_amount:target,current_amount:0,target_date:targetDate}).select("id").single();
    if(createError||!created)throw new Error("Não foi possível criar sua meta.");
    goalId=created.id;
