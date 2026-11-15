@@ -19,6 +19,7 @@ export default function FinanceGoalPlansPanel(){
   finally{setLoading(false)}
  }
  useEffect(()=>{void load()},[]);
+ useEffect(()=>{const refresh=()=>{void load()};window.addEventListener("viva:goals-updated",refresh);return()=>window.removeEventListener("viva:goals-updated",refresh)},[]);
  async function create(goal:Goal){
   setBusy(goal.id);setError("");setNotice("");
   try{const r=await fetch("/api/finance-ai/goals",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({goal_id:goal.id})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Não foi possível criar o plano.");setPlans(old=>[d.plan,...old.filter(p=>p.goal_id!==goal.id)]);setNotice(d.explanation||d.message||"Plano criado com sucesso.")}
