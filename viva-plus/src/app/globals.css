@@ -484,3 +484,27 @@ a { color: inherit; text-decoration: none; }
  .viva-finance-scroll section{min-width:0}
  .viva-finance-scroll .grid{min-width:0}
 }
+
+/* Planos VIVA+ — estilos isolados da área de planos */
+.viva-period-switch{display:flex;width:max-content;max-width:100%;gap:4px;margin:22px auto 0;padding:5px;border:1px solid #eadff5;border-radius:999px;background:#f7f2fc}
+.viva-period-switch button{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 17px;border:0;border-radius:999px;background:transparent;color:#695b78;font-size:12px;font-weight:800}
+.viva-period-switch button.active{background:#6410C9;color:#fff;box-shadow:0 3px 10px rgba(100,16,201,.2)}
+.viva-period-switch button span{padding:4px 7px;border-radius:999px;background:#f0e3ff;color:#6410C9;font-size:9px}.viva-period-switch button.active span{background:rgba(255,255,255,.2);color:#fff}
+.viva-plans-grid article{display:flex;flex-direction:column;min-width:0;height:100%;position:relative}
+.viva-plans-grid article>strong{margin-top:14px}.viva-plans-grid article>ul{flex:1;gap:11px}.viva-plans-grid li{display:flex;align-items:flex-start;gap:8px}.viva-plans-grid li:before{display:none}.viva-plans-grid li>span{flex:0 0 15px;font-weight:900}.viva-plans-grid li.included>span{color:#6410C9}.viva-plans-grid li.excluded{color:#a39aa9}.viva-plans-grid li.excluded>span{color:#aaa3b0}
+.viva-monthly-equivalent{margin-top:3px!important;color:#8a3ce0!important;font-size:11px!important;font-weight:750}
+.viva-popular{position:absolute;right:15px;top:14px;padding:5px 9px;border-radius:99px;background:#6410C9;color:#fff;font-size:9px;font-weight:900}
+.viva-plan-card-actions{display:grid;gap:10px;margin-top:auto;padding-top:15px}
+.viva-checkout-actions{display:grid;gap:10px;width:100%;margin:0!important}
+.viva-checkout-actions button,.viva-free-action,.viva-current-action{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:48px;padding:0 14px;border-radius:14px;font-size:12px;font-weight:850;text-align:center;transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
+.viva-checkout-actions button:active:not(:disabled){transform:translateY(1px)}.viva-checkout-actions button:focus-visible,.viva-free-action:focus-visible{outline:3px solid rgba(100,16,201,.28);outline-offset:3px}
+.viva-checkout-actions .viva-pay-pix{border:1px solid #6410C9;background:linear-gradient(110deg,#6410C9,#8B3DE8);color:#fff;box-shadow:0 4px 12px rgba(100,16,201,.13)}
+.viva-checkout-actions .viva-pay-card{border:1.5px solid #6410C9;background:#fff;color:#6410C9}
+.viva-checkout-actions .viva-pay-pix:hover:not(:disabled),.viva-checkout-actions .viva-pay-card:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 7px 17px rgba(100,16,201,.18)}
+.viva-checkout-actions button:disabled,.viva-current-action{border:1px solid #e5e1e9;background:#efedf1;color:#99919f;box-shadow:none;cursor:not-allowed}
+.viva-billing-caption{display:block;color:#92879d;font-size:10px;text-align:center}
+.viva-free-action{border:1px solid #6410C9;background:#6410C9;color:white;text-decoration:none}.viva-free-action.is-current,.viva-current-action{background:#f0edf3;color:#82798a;border-color:#e5e0e9}
+.viva-pay-spinner{width:17px;height:17px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:vivaPaySpin .7s linear infinite}@keyframes vivaPaySpin{to{transform:rotate(360deg)}}
+.viva-pay-error{margin:0;color:#b42318;font-size:11px;line-height:1.5}
+.viva-pix-layer{position:fixed;z-index:150;inset:0;display:grid;place-items:center;padding:20px}.viva-pix-backdrop{position:absolute;inset:0;border:0;background:rgba(24,12,37,.55);backdrop-filter:blur(4px)}.viva-pix-sheet{position:relative;width:min(440px,100%);max-height:min(90dvh,760px);overflow:auto;padding:28px;border:1px solid #eee5f6;border-radius:24px;background:#fff;color:#281b36;box-shadow:0 20px 70px rgba(25,10,45,.25);text-align:center}.viva-pix-sheet h2{font-size:22px;font-weight:900}.viva-pix-sheet p{margin:9px 0 17px;color:#776d83;font-size:12px;line-height:1.6}.viva-pix-sheet img{display:block;width:190px;height:190px;object-fit:contain;margin:0 auto 15px}.viva-pix-sheet textarea{width:100%;min-height:78px;padding:10px;border:1px solid #e5dceb;border-radius:10px;font-size:10px;resize:vertical}.viva-pix-sheet .viva-pix-copy{margin-top:10px;border:0;background:#6410C9;color:white}.viva-pix-sheet small,.viva-pix-sheet>b{display:block;margin-top:12px;color:#81758d;font-size:10px}.viva-pix-sheet>b{color:#6410C9;font-size:12px}.viva-pix-close{position:absolute;right:14px;top:10px;width:32px;height:32px;border:0;border-radius:50%;background:#f3edf8;color:#6410C9;font-size:22px}
+@media(max-width:700px){.viva-plans{padding:12px 0 calc(45px + env(safe-area-inset-bottom))}.viva-plans-grid{grid-template-columns:minmax(0,1fr);gap:13px}.viva-plans-grid article{min-height:0}.viva-period-switch{margin-top:18px}.viva-period-switch button{padding:0 13px}.viva-pix-layer{align-items:end;padding:0}.viva-pix-sheet{width:100%;max-height:90dvh;border-radius:25px 25px 0 0;padding:28px 22px calc(24px + env(safe-area-inset-bottom))}.viva-plan-card-actions{padding-top:12px}}
