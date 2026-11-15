@@ -39,19 +39,23 @@ export async function POST(req: Request) {
         const { error } = await db.from("viva_payments").update({status,paid_at:status==="approved"?(p.date_approved || new Date().toISOString()):null,refunded_at:status==="refunded"?new Date().toISOString():null,updated_at:new Date().toISOString()}).eq("id",paymentRow.id);
         if (error) throw error;
         if (status === "approved" && !paymentRow.subscription_id) {
-          const { data: existing } = await db.from("viva_subscriptions").select("id").eq("external_reference",paymentRow.external_reference).maybeSingle();
-          if (!existing) {
+          const { data: existing, error: existingError } = await db.from("viva_subscriptions").select("id").eq("external_reference",paymentRow.external_reference).maybeSingle();
+          if (existingError) throw existingError;
+          let subscriptionId = existing?.id as string | undefined;
+          if (!subscriptionId) {
             const now = new Date(), end = new Date(now);
-            end.setDate(end.getDate() + (paymentRow.metadata?.requested_interval === "annual" ? 365 : 30));
+            const interval = paymentRow.metadata?.requested_interval === "annual" ? "annual" : "monthly";
+            end.setDate(end.getDate() + (interval === "annual" ? 365 : 30));
             const { data: sub, error: subError } = await db.from("viva_subscriptions").insert({
-              user_id:paymentRow.user_id,plan_id:paymentRow.plan_id,status:"active",billing_interval:"one_time",
+              user_id:paymentRow.user_id,plan_id:paymentRow.plan_id,status:"active",billing_interval:interval,
               gateway:"mercadopago",payment_method:"pix",external_reference:paymentRow.external_reference,
               current_period_start:now.toISOString(),current_period_end:end.toISOString()
             }).select("id").single();
             if (subError) throw subError;
-            const { error: linkError } = await db.from("viva_payments").update({subscription_id:sub.id}).eq("id",paymentRow.id);
-            if (linkError) throw linkError;
+            subscriptionId = sub.id;
           }
+          const { error: linkError } = await db.from("viva_payments").update({subscription_id:subscriptionId}).eq("id",paymentRow.id);
+          if (linkError) throw linkError;
         }
       }
     } else if (type === "subscription_preapproval") {
