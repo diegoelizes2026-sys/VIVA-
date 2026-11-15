@@ -1,4 +1,4 @@
-const VERSION = "viva-pwa-v5";
+const VERSION = "viva-pwa-v6";
 const SHELL = ["/offline.html", "/favicon.svg", "/icons/viva-192.svg", "/icons/viva-512.svg"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(VERSION).then(cache => cache.addAll(SHELL)));
