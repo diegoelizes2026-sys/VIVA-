@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useState} from "react";
 type Tx={kind:string;amount:number;occurred_on:string;category:string|null};type Bill={id:string;name:string;amount:number;due_date:string;status:string};type Goal={id:string;title:string;target_amount:number;current_amount:number;target_date:string|null};type Budget={id:string;category:string;monthly_limit:number};type Card={id:string;name:string;brand:string;credit_limit:number;current_balance:number;closing_day:number;due_day:number};type CardPurchase={id:string;card_id:string;description:string;amount:number;purchase_date:string;installments:number};type Family={id:string;name:string;invite_code:string};type FamilyExpense={id:string;family_id:string;description:string;amount:number;category:string;expense_date:string};
 type Habit={id:string;title:string;frequency:string;reminder_time:string|null};type HabitLog={habit_id:string;completed_on:string};type Data={transactions:Tx[];bills:Bill[];goals:Goal[];budgets:Budget[];cards:Card[];cardPurchases:CardPurchase[];dailyLimit:{limit_amount:number;is_active:boolean}|null;habits:Habit[];habitLogs:HabitLog[];families:Family[];familyExpenses:FamilyExpense[]};
 const brl=(n:number)=>Number(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
