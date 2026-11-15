@@ -109,10 +109,10 @@ export async function POST(request:Request){
   if(settleError){console.error("VIVA usage settlement failed",settleError);return NextResponse.json({error:"A resposta foi gerada, mas não foi possível fechar o registro de consumo. Tente novamente mais tarde."},{status:503});}
   reservationId=null;
   if(imageDataUrl){
-   let extracted:any=null;
+   let extracted:Record<string,unknown>|null=null;
    try{extracted=JSON.parse(response.output_text||"{}");}catch(parseError){console.error("VIVA receipt extraction parse failed",parseError);}
    if(extracted&&Number(extracted.amount)>0&&/^\d{4}-\d{2}-\d{2}$/.test(String(extracted.occurred_on||""))){
-    return NextResponse.json({transactionDraft:{kind:extracted.kind==="income"?"income":"expense",amount:Number(extracted.amount),description:String(extracted.description||"Comprovante").slice(0,240),occurred_on:extracted.occurred_on,category:String(extracted.category||"Outros"),payment_method:String(extracted.payment_method||"Outro")},answer:"Identifiquei os dados da imagem. Confira e confirme antes de registrar.",usage:{credits:guard.credits_cost,daily_used:guard.daily_used,daily_limit:guard.daily_limit,warning_80:guard.warning_80,tokens_in:tokensIn,tokens_out:tokensOut}});
+    return NextResponse.json({transactionDraft:{kind:extracted.kind==="income"?"income":"expense",amount:Number(extracted.amount),description:String(extracted.description||"Comprovante").slice(0,240),occurred_on:String(extracted.occurred_on),category:String(extracted.category||"Outros"),payment_method:String(extracted.payment_method||"Outro")},answer:"Identifiquei os dados da imagem. Confira e confirme antes de registrar.",usage:{credits:guard.credits_cost,daily_used:guard.daily_used,daily_limit:guard.daily_limit,warning_80:guard.warning_80,tokens_in:tokensIn,tokens_out:tokensOut}});
    }
    return NextResponse.json({answer:"Não consegui extrair um valor confiável dessa imagem. Você pode digitar os dados ou enviar uma foto mais nítida.",usage:{credits:guard.credits_cost,daily_used:guard.daily_used,daily_limit:guard.daily_limit,warning_80:guard.warning_80,tokens_in:tokensIn,tokens_out:tokensOut}});
   }
