@@ -1,0 +1,23 @@
+-- VIVA+ receipt upload pipeline. Temporary files are deleted after analysis unless the user opts in.
+alter table public.viva_profiles add column if not exists save_receipts boolean not null default false;
+alter table public.viva_transactions add column if not exists receipt_path text;
+create table if not exists public.viva_receipt_uploads(id uuid primary key default gen_random_uuid(),user_id uuid not null references auth.users(id) on delete cascade,temp_path text not null unique,file_name text not null,mime_type text not null check(mime_type in ('image/jpeg','image/png','image/webp','application/pdf')),status text not null default 'uploaded' check(status in ('uploaded','processing','processed','saved','discarded','expired')),receipt_path text,created_at timestamptz not null default now(),expires_at timestamptz not null default (now()+interval '1 hour'));
+create index if not exists viva_receipt_uploads_expiry_idx on public.viva_receipt_uploads(status,expires_at);
+alter table public.viva_receipt_uploads enable row level security;
+drop policy if exists viva_receipt_uploads_owner_select on public.viva_receipt_uploads;
+create policy viva_receipt_uploads_owner_select on public.viva_receipt_uploads for select to authenticated using(user_id=(select auth.uid()));
+drop policy if exists viva_receipt_uploads_owner_insert on public.viva_receipt_uploads;
+create policy viva_receipt_uploads_owner_insert on public.viva_receipt_uploads for insert to authenticated with check(user_id=(select auth.uid()) and status='uploaded' and receipt_path is null and split_part(temp_path,'/',1)=(select auth.uid())::text);
+drop policy if exists viva_receipt_uploads_owner_delete on public.viva_receipt_uploads;
+create policy viva_receipt_uploads_owner_delete on public.viva_receipt_uploads for delete to authenticated using(user_id=(select auth.uid()));
+grant select,insert,delete on public.viva_receipt_uploads to authenticated;
+grant all on public.viva_receipt_uploads to service_role;
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values ('viva-receipt-temp','viva-receipt-temp',false,5242880,array['image/jpeg','image/png','image/webp','application/pdf']),('viva-receipts','viva-receipts',false,5242880,array['image/jpeg','image/png','image/webp','application/pdf']) on conflict(id) do update set public=false,file_size_limit=5242880,allowed_mime_types=excluded.allowed_mime_types;
+drop policy if exists viva_receipt_temp_insert_owner on storage.objects;
+create policy viva_receipt_temp_insert_owner on storage.objects for insert to authenticated with check(bucket_id='viva-receipt-temp' and (storage.foldername(name))[1]=(select auth.uid())::text);
+drop policy if exists viva_receipt_temp_select_owner on storage.objects;
+create policy viva_receipt_temp_select_owner on storage.objects for select to authenticated using(bucket_id='viva-receipt-temp' and (storage.foldername(name))[1]=(select auth.uid())::text);
+drop policy if exists viva_receipt_temp_delete_owner on storage.objects;
+create policy viva_receipt_temp_delete_owner on storage.objects for delete to authenticated using(bucket_id='viva-receipt-temp' and (storage.foldername(name))[1]=(select auth.uid())::text);
+drop policy if exists viva_receipts_select_owner on storage.objects;
+create policy viva_receipts_select_owner on storage.objects for select to authenticated using(bucket_id='viva-receipts' and (storage.foldername(name))[1]=(select auth.uid())::text);
