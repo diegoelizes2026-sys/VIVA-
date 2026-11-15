@@ -14,7 +14,7 @@ export async function GET(){try{const s=await createClient();const {data:{user}}
  s.from("viva_family_members").select("family_id,role").eq("user_id",user.id),
  s.from("viva_daily_limits").select("limit_amount,is_active").eq("user_id",user.id).maybeSingle(),
  s.from("viva_habits").select("id,title,frequency,reminder_time").eq("user_id",user.id).order("created_at"),
- s.from("viva_habit_logs").select("habit_id,completed_on").eq("user_id",user.id).eq("completed_on",new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo"}).format(new Date()))
+ s.from("viva_habit_logs").select("habit_id,completed_on").eq("user_id",user.id).eq("completed_on",new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date()))
  ]);
  for(const x of [tx,bills,goals,budgets,cards,members,dailyLimit,habits,habitLogs])if(x.error)throw x.error;
  const familyIds=(members.data||[]).map(x=>x.family_id);
