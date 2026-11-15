@@ -1,5 +1,5 @@
 "use client";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, LockKeyhole, Mail, Sparkles, Eye, EyeOff, ArrowRight, CalendarDays, Wallet, ShieldCheck } from "lucide-react";
@@ -15,25 +15,58 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsAttempted, setTermsAttempted] = useState(false);
+  const termsRef = useRef<HTMLInputElement>(null);
+  const signupFieldsValid = name.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && password.length >= 8;
 
   async function submit(e: FormEvent) {
-    e.preventDefault(); setBusy(true); setMessage("");
+    e.preventDefault(); setMessage("");
+    if (mode === "signup" && !termsAccepted) { setTermsAttempted(true); setMessage("Marque para continuar"); termsRef.current?.focus(); return; }
+    setBusy(true);
     try {
       const supabase = createClient(mode === "login" ? remember : true);
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { data: { full_name: name.trim(), app_source: "viva_plus" }, emailRedirectTo: `${location.origin}/auth/callback` } });
+        const acceptedAt = new Date().toISOString();
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(), password,
+          options: { data: {
+            full_name: name.trim(), app_source: "viva_plus",
+            terms_and_privacy_accepted: true,
+            terms_of_use_version: "2026-11-15-v1",
+            privacy_policy_version: "2026-11-15-v1",
+            terms_accepted_at: acceptedAt
+          }, emailRedirectTo: location.origin + "/auth/callback?next=/assistente" }
+        });
         if (error) {
-          if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already exists") || error.message.toLowerCase().includes("user_already_exists")) {
-            setMessage("Este e-mail já está cadastrado no acesso compartilhado do Meniuza. Se você já possui perfil no VIVA+, entre pelo login; caso contrário, use outro e-mail para criar sua conta VIVA+.");
+          const normalized = error.message.toLowerCase();
+          if (normalized.includes("already registered") || normalized.includes("already exists") || normalized.includes("user_already_exists")) {
+            setMessage("Este e-mail já está cadastrado. Entre com sua conta ou recupere sua senha.");
             return;
           }
           throw error;
         }
         if (data.user && data.user.identities?.length === 0) {
-          setMessage("Este e-mail já está cadastrado no acesso compartilhado do Meniuza. Se você já possui perfil no VIVA+, entre pelo login; caso contrário, use outro e-mail para criar sua conta VIVA+.");
+          setMessage("Este e-mail já está cadastrado. Entre com sua conta ou recupere sua senha.");
           return;
         }
-        setMessage("Cadastro recebido! Confira seu e-mail para confirmar a conta. Seu perfil será criado automaticamente no VIVA+.");
+        if (data.session) {
+          router.replace("/assistente");
+          router.refresh();
+          return;
+        }
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (!loginError) {
+          router.replace("/assistente");
+          router.refresh();
+          return;
+        }
+        const loginReason = loginError.message.toLowerCase();
+        if (loginReason.includes("email_not_confirmed") || loginReason.includes("email not confirmed")) {
+          setMessage("Sua conta foi criada. Para liberar o primeiro acesso, confirme o e-mail enviado pelo VIVA+ e abra o link recebido. Depois disso, você entrará diretamente na conversa com a VIVA.");
+          return;
+        }
+        throw new Error("Sua conta foi criada, mas não foi possível iniciar a sessão: " + loginError.message);
       } else if (mode === "login") {
         const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
@@ -88,12 +121,19 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
       <section className="auth-form-panel p-6 sm:p-10 md:p-14">
         <Link href="/" className="auth-back inline-flex items-center gap-2 text-sm font-semibold text-neutral-500 hover:text-neutral-900"><ArrowLeft size={16}/> Voltar ao início</Link>
         <div className="auth-heading mt-9 md:mt-12"><span className="auth-eyebrow">{mode === "signup" ? "COMECE POR VOCÊ" : mode === "reset" ? "ACESSO SEGURO" : "SEU ESPAÇO VIVA+"}</span><h1 className="mt-3 text-3xl font-black tracking-tight text-neutral-900">{mode === "login" ? "Entre no seu espaço." : mode === "signup" ? "Crie seu espaço." : title}</h1><p className="mt-2 text-sm leading-6 text-neutral-500">{mode === "login" ? "Continue seus planos de onde parou." : mode === "signup" ? "Poucos passos para começar a organizar o que importa." : "Informe seu e-mail para receber o link de recuperação."}</p></div>
-        <form onSubmit={submit} className="auth-form mt-8 space-y-5">
+        <form onSubmit={submit} onKeyDown={e => { if (mode === "signup" && e.key === "Enter" && !termsAccepted) { e.preventDefault(); setTermsAttempted(true); setMessage("Marque para continuar"); termsRef.current?.focus(); } }} className="auth-form mt-8 space-y-5">
           {mode === "signup" && <label className="auth-field-label block text-sm font-semibold text-neutral-800">Como podemos chamar você?<input className="field mt-2" autoComplete="name" required value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome completo"/></label>}
           <label className="auth-field-label block text-sm font-semibold text-neutral-800">Seu e-mail<span className="relative mt-2 block"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={17}/><input className="field pl-10" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="maria@email.com"/></span></label>
           {mode !== "reset" && <label className="auth-field-label block text-sm font-semibold text-neutral-800">Sua senha<span className="relative mt-2 block"><LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={17}/><input className="field auth-password-input pl-10 pr-12" type={showPassword ? "text" : "password"} autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={8} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo de 8 caracteres"/>{mode === "login" && <button type="button" className="auth-password-toggle" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"} title={showPassword ? "Ocultar senha" : "Mostrar senha"}>{showPassword ? <EyeOff size={19}/> : <Eye size={19}/>}</button>}</span></label>}
-          {mode === "signup" && <p className="auth-privacy-note"><ShieldCheck size={15}/> Seus dados são pessoais e protegidos.</p>}{mode === "login" && <div className="auth-options"><label className="auth-remember"><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}/> <span>Lembrar de mim</span></label><Link href="/recuperar-senha">Esqueci a senha</Link></div>}<button className="btn-primary auth-submit mt-2 w-full" disabled={busy}>{busy ? "Aguarde..." : mode === "signup" ? "Criar conta" : mode === "reset" ? "Enviar instruções" : <><span>Entrar</span><ArrowRight size={20}/></>}</button>
-          {message && <p role="status" className="rounded-xl border border-[var(--color-gray)] bg-neutral-50 p-3 text-sm leading-6 text-neutral-700">{message}</p>}
+          {mode === "signup" && <div className="rounded-xl border p-3" style={{borderColor: termsAttempted && !termsAccepted ? "#fca5a5" : "#e9d5ff", background: termsAttempted && !termsAccepted ? "#fef2f2" : "#fff"}}>
+            <label htmlFor="viva-terms-accept" className="flex min-h-11 cursor-pointer items-center gap-3 text-sm leading-6 text-neutral-800">
+              <input ref={termsRef} id="viva-terms-accept" type="checkbox" checked={termsAccepted} onChange={e => { setTermsAccepted(e.target.checked); if (e.target.checked) { setTermsAttempted(false); if (message === "Marque para continuar") setMessage(""); } }} aria-invalid={termsAttempted && !termsAccepted} aria-describedby={termsAttempted && !termsAccepted ? "viva-terms-error" : undefined} className="h-5 w-5 shrink-0 accent-[#6410C9]"/>
+              <span>Li e aceito os <a href="/termos" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="font-semibold text-[#6410C9] underline">Termos de Uso</a> e a <a href="/privacidade" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="font-semibold text-[#6410C9] underline">Política de Privacidade</a></span>
+            </label>
+            {termsAttempted && !termsAccepted && <p id="viva-terms-error" role="alert" className="mt-1 text-sm font-medium text-red-600">Marque para continuar</p>}
+          </div>}
+          {mode === "signup" && <p className="auth-privacy-note"><ShieldCheck size={15}/> Seus dados são pessoais e protegidos.</p>}{mode === "login" && <div className="auth-options"><label className="auth-remember"><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}/> <span>Lembrar de mim</span></label><Link href="/recuperar-senha">Esqueci a senha</Link></div>}<button className="btn-primary auth-submit mt-2 w-full disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-neutral-500 disabled:shadow-none" disabled={busy || (mode === "signup" && (!termsAccepted || !signupFieldsValid))}>{busy ? "Aguarde..." : mode === "signup" ? "Criar conta" : mode === "reset" ? "Enviar instruções" : <><span>Entrar</span><ArrowRight size={20}/></>}</button>
+          {message && <p role={message === "Marque para continuar" ? "alert" : "status"} className={`rounded-xl border p-3 text-sm leading-6 ${message === "Marque para continuar" ? "border-red-200 bg-red-50 text-red-700" : "border-[var(--color-gray)] bg-neutral-50 text-neutral-700"}`}>{message}</p>}
         </form>
         <div className="auth-alternatives mt-7 flex flex-wrap justify-between gap-3 text-sm font-medium text-neutral-500">
           {mode === "login" ? <><span>Novo por aqui? <Link className="font-bold text-[var(--color-primary)]" href="/cadastro">Criar conta</Link></span></> : <Link className="hover:text-[var(--color-primary)]" href="/login">Voltar ao login</Link>}

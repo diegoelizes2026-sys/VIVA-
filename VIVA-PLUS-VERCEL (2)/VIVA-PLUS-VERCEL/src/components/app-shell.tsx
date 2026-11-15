@@ -52,6 +52,11 @@ export default function AppShell({ children, email }: { children: React.ReactNod
           </Link>;
         })}
       </nav>
+      <div className="mt-6 rounded-2xl border border-purple-200 bg-purple-50 p-4">
+        <p className="text-sm font-extrabold text-purple-900">Desbloqueie mais do VIVA+</p>
+        <p className="mt-1 text-xs leading-5 text-purple-800">Conheça os planos Essencial e Pro e escolha os recursos ideais para sua rotina.</p>
+        <a href="https://viva-plus-fundacao-mvp-1.vercel.app/planos" className="mt-3 flex items-center justify-center rounded-xl bg-purple-700 px-3 py-2.5 text-xs font-bold text-white transition hover:bg-purple-800" onClick={() => setOpen(false)}>Conhecer os planos</a>
+      </div>
       <div className="mt-auto pt-6">
         <Link href="/perfil" className="flex items-center gap-3 rounded-xl border p-3 transition-colors hover:bg-neutral-50" style={{ borderColor: "var(--color-gray)" }}>
           <span className="icon-surface h-9 w-9 shrink-0"><UserRound size={18}/></span>
@@ -72,7 +77,7 @@ export default function AppShell({ children, email }: { children: React.ReactNod
           <span className="h-2 w-2 rounded-full bg-emerald-500"/> Conta conectada
         </div>
       </header>
-      <div className="mobile-brand-header md:hidden"><div className="flex items-center justify-between"><Link href="/meu-dia" className="text-[28px] font-black tracking-tight text-white">VIVA+</Link><Link href="/perfil" className="grid h-10 w-10 place-items-center rounded-full bg-white/20 text-sm font-bold text-white">M</Link></div><h1 className="mt-3 text-xl font-bold text-white">{mobileTitle}</h1><p className="mt-0.5 text-xs text-white/75">{mobileSubtitle}</p></div><div className="app-content mx-auto max-w-7xl p-4 pb-28 md:p-9">{children}</div>
+      <div className="mobile-brand-header md:hidden"><div className="flex items-center justify-between"><Link href="/meu-dia" className="text-[28px] font-black tracking-tight text-white">VIVA+</Link><Link href="/perfil" className="grid h-10 w-10 place-items-center rounded-full bg-white/20 text-sm font-bold text-white">M</Link></div><h1 className="mt-3 text-xl font-bold text-white">{mobileTitle}</h1><p className="mt-0.5 text-xs text-white/75">{mobileSubtitle}</p></div><div className="mx-4 mt-4 flex flex-col gap-3 rounded-2xl border border-purple-200 bg-purple-50 p-4 sm:mx-9 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-extrabold text-purple-950">Conheça os planos VIVA+</p><p className="mt-1 text-xs text-purple-800">Mais créditos, Radar de Preços, voz e recursos extras. Escolha seu plano.</p></div><a href="https://viva-plus-fundacao-mvp-1.vercel.app/planos" className="inline-flex shrink-0 items-center justify-center rounded-xl bg-purple-700 px-4 py-2.5 text-xs font-bold text-white hover:bg-purple-800">Ver planos</a></div><div className="app-content mx-auto max-w-7xl p-4 pb-28 md:p-9">{children}</div>
       <nav aria-label="Navegação principal" className="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-20 grid grid-cols-3 border-t bg-white px-3 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 md:hidden" style={{ borderColor: "var(--color-gray)" }}>
         {[links[0], links[1], links[4]].map(({ href, label, icon: Icon }) => {
           const active = path === href || (href !== "/meu-dia" && path.startsWith(href + "/"));

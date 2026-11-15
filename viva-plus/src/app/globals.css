@@ -885,3 +885,101 @@ a { color: inherit; text-decoration: none; }
     padding: 18px 15px calc(28px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+
+/* VIVA+ chat polish: contained layout, readable radar and safe composer spacing */
+.viva-chat-mobile,
+.viva-chat-mobile * { box-sizing: border-box; }
+.viva-chat-mobile { width: 100%; max-width: 100%; min-width: 0; overflow-x: clip; }
+.viva-chat-mobile .viva-thread { width: 100%; min-width: 0; min-height: 0; overflow-x: hidden; overscroll-behavior-x: none; }
+.viva-chat-mobile .viva-message,
+.viva-chat-mobile .viva-bubble { min-width: 0; max-width: 100%; }
+.viva-chat-mobile .viva-bubble { overflow-wrap: anywhere; }
+.viva-chat-mobile .viva-composer-wrap { width: 100%; min-width: 0; max-width: 100%; }
+.viva-chat-mobile .viva-credit-row { min-width: 0; gap: 12px; }
+.viva-chat-mobile .viva-credit-row span { min-width: 0; overflow-wrap: anywhere; }
+.viva-chat-mobile .viva-suggestions { max-width: 100%; min-width: 0; }
+.viva-chat-mobile .viva-jump-bottom { right: 16px; }
+.viva-chat-mobile .viva-message-assistant .viva-bubble > section { width: 100%; min-width: 0; max-width: 100%; }
+.viva-chat-mobile .viva-message-assistant .viva-bubble > section > div { min-width: 0; }
+.viva-chat-mobile .viva-message-assistant .viva-bubble > section p { overflow-wrap: anywhere; }
+
+@media (min-width: 769px) {
+  .viva-chat-mobile { min-height: calc(100svh - 145px); }
+  .viva-chat-mobile .viva-thread { max-height: min(58svh, 680px); padding-bottom: 34px; }
+  .viva-chat-mobile .viva-chat-heading { padding-top: clamp(22px, 4vh, 42px) !important; }
+  .viva-chat-mobile .viva-composer-wrap { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .viva-chat-mobile .viva-suggestions { flex-wrap: wrap; }
+}
+@media (max-width: 768px) {
+  .viva-main:has(.viva-chat-mobile) { width: 100%; max-width: 100%; overflow: hidden; }
+  .viva-chat-mobile { height: 100%; min-height: 0; }
+  .viva-chat-mobile .viva-thread { padding: 16px 14px 34px; scroll-padding-bottom: 34px; }
+  .viva-chat-mobile .viva-composer-wrap-mobile { padding: 9px 12px calc(12px + env(safe-area-inset-bottom)); }
+  .viva-chat-mobile .viva-credit-row { font-size: 10px; }
+  .viva-chat-mobile .viva-suggestions { padding-bottom: 9px; }
+  .viva-chat-mobile .viva-composer { width: 100%; min-width: 0; }
+  .viva-chat-mobile .viva-composer textarea { min-width: 0; }
+  .viva-chat-mobile .viva-message-assistant .viva-bubble { line-height: 1.62; }
+}
+@media (prefers-color-scheme: dark) {
+  .viva-chat-mobile .viva-composer-wrap-mobile { background: rgba(23,18,31,.96); border-color: rgba(255,255,255,.09); }
+}
+
+
+/* VIVA+ conversation workspace — refined desktop composition */
+@media (min-width: 769px) {
+  .viva-main:has(.viva-chat-mobile) {
+    width: min(100%, 1280px);
+    max-width: 1280px;
+    padding: 22px clamp(22px, 3vw, 42px) 28px;
+  }
+  .viva-chat-mobile {
+    width: 100%;
+    min-height: calc(100svh - 124px);
+    gap: 0;
+  }
+  .viva-chat-mobile .viva-chat-heading {
+    align-items: center;
+    padding: 18px 4px 20px !important;
+  }
+  .viva-chat-mobile .viva-chat-heading h1 {
+    margin-top: 5px;
+    font-size: clamp(27px, 2.5vw, 34px);
+  }
+  .viva-chat-mobile .viva-chat-heading p { margin-top: 6px; }
+  .viva-chat-mobile .viva-thread {
+    flex: 1 1 auto;
+    min-height: 340px;
+    max-height: min(64svh, 620px);
+    padding: 22px clamp(18px, 4vw, 42px) 36px;
+    border-left: 1px solid #f0ebf5;
+    border-right: 1px solid #f0ebf5;
+    scrollbar-gutter: stable;
+    scroll-behavior: smooth;
+  }
+  .viva-chat-mobile .viva-message-assistant .viva-bubble {
+    max-width: min(100%, 980px);
+    line-height: 1.7;
+  }
+  .viva-chat-mobile .viva-message-user .viva-bubble { max-width: min(76%, 760px); }
+  .viva-chat-mobile .viva-composer-wrap-desktop {
+    position: sticky;
+    bottom: 0;
+    z-index: 6;
+    padding: 12px 0 8px;
+    background: linear-gradient(180deg, rgba(255,255,255,0), #fff 16%);
+  }
+  .viva-chat-mobile .viva-suggestions { padding: 7px 0 12px; }
+  .viva-chat-mobile .viva-composer {
+    min-height: 68px;
+    border-radius: 22px;
+    padding: 9px 12px;
+  }
+  .viva-chat-mobile .viva-composer-note { padding-top: 8px; }
+}
+@media (prefers-color-scheme: dark) and (min-width: 769px) {
+  .viva-main:has(.viva-chat-mobile) { background: #17121f; }
+  .viva-chat-mobile .viva-thread { border-color: rgba(255,255,255,.08); }
+  .viva-chat-mobile .viva-composer-wrap-desktop { background: linear-gradient(180deg, rgba(23,18,31,0), #17121f 16%); }
+}
