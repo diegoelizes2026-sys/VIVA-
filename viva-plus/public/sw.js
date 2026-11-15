@@ -1,4 +1,4 @@
-const VERSION = "viva-pwa-v2";
+const VERSION = "viva-pwa-v3";
 const SHELL = ["/offline.html", "/favicon.svg", "/icons/viva-192.svg", "/icons/viva-512.svg"];
 self.addEventListener("install", event => { event.waitUntil(caches.open(VERSION).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", event => { event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== VERSION).map(key => caches.delete(key)))).then(() => self.clients.claim())); });

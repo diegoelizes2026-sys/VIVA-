@@ -846,3 +846,26 @@ a { color: inherit; text-decoration: none; }
     line-height: 1.5;
   }
 }
+
+/* VIVA+ account drawer: keep navigation scrollable and footer in flow on every screen */
+.viva-drawer{display:flex!important;flex-direction:column!important;min-height:0;overflow:hidden}
+.viva-drawer-label{flex:0 0 auto;margin-top:34px!important}
+.viva-drawer nav{display:flex!important;flex:1 1 auto;flex-direction:column;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 2px 14px;scrollbar-width:thin}
+.viva-drawer nav a{flex:0 0 auto;min-height:48px}
+.viva-drawer-bottom{position:static!important;flex:0 0 auto;margin-top:auto;padding:12px 0 0;background:#fff;border-top:1px solid #eee8f4}
+@media(max-width:768px){.viva-drawer{height:100dvh;max-height:100dvh}.viva-drawer-label{margin-top:26px!important}.viva-drawer-bottom{padding-bottom:env(safe-area-inset-bottom)}}
+@media(prefers-color-scheme:dark){.viva-drawer-bottom{background:#211a2b;border-color:rgba(255,255,255,.1)}}
+/* One-time VIVA+ permission setup */
+.viva-permission-layer{position:fixed;inset:0;z-index:12000;display:flex;align-items:center;justify-content:center;padding:24px}
+.viva-permission-backdrop{position:absolute;inset:0;width:100%;height:100%;border:0;background:rgba(25,12,39,.54);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.viva-permission-card{position:relative;z-index:1;width:min(100%,480px);max-height:min(90dvh,760px);overflow:auto;padding:30px;border:1px solid #eee6f5;border-radius:28px;background:#fff;color:#281b35;box-shadow:0 28px 90px rgba(22,8,38,.28)}
+.viva-permission-logo{display:grid;place-items:center;width:48px;height:48px;margin-bottom:18px;border-radius:15px;background:#6410C9;color:#fff;font-size:25px;font-weight:950}.viva-permission-logo span{color:#e9d7ff}
+.viva-permission-kicker{color:#6410C9;font-size:10px;font-weight:900;letter-spacing:.15em}
+.viva-permission-card h2{margin-top:8px;font-size:25px;font-weight:900;line-height:1.15;letter-spacing:-.04em}
+.viva-permission-intro{margin:10px 0 20px;color:#766c80;font-size:14px;line-height:1.6}
+.viva-permission-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 0;border-top:1px solid #eee8f3}.viva-permission-item>div{min-width:0}.viva-permission-item b,.viva-permission-item small{display:block}.viva-permission-item b{font-size:14px;font-weight:850}.viva-permission-item small{margin-top:4px;color:#81758d;font-size:11px;line-height:1.45}.viva-permission-item .btn-primary{flex:0 0 auto;min-width:100px}.viva-permission-item .btn-primary:disabled{opacity:.65}
+.viva-permission-feedback{margin-top:10px;padding:10px 12px;border-radius:12px;background:#f5effc;color:#5e2b9d;font-size:12px;line-height:1.5}
+.viva-permission-note{margin-top:14px;color:#81758d;font-size:11px;line-height:1.55}
+.viva-permission-finish{width:100%;min-height:48px;margin-top:18px;border:0;border-radius:14px;background:#6410C9;color:#fff;font-weight:850}
+@media(max-width:600px){.viva-permission-layer{align-items:flex-end;padding:0}.viva-permission-card{width:100%;max-height:92dvh;padding:26px 22px calc(22px + env(safe-area-inset-bottom));border-radius:28px 28px 0 0}.viva-permission-card h2{font-size:23px}}
+@media(prefers-color-scheme:dark){.viva-permission-card{background:#211a2b;color:#f7f1fc;border-color:#40334d}.viva-permission-intro,.viva-permission-item small,.viva-permission-note{color:#c2b5d0}.viva-permission-item{border-color:#40334d}.viva-permission-feedback{background:#352447;color:#e5d3fa}}
