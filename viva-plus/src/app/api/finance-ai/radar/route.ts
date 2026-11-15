@@ -13,13 +13,11 @@ export async function GET(){
   const supabase=await createClient();
   const {data:{user}}=await supabase.auth.getUser();
   if(!user)return NextResponse.json({enabled:false},{status:401});
-  const [flags,access,admin,pref]=await Promise.all([
+  const [flags,pref]=await Promise.all([
    supabase.from("viva_finance_ai_feature_flags").select("enabled").eq("flag_key","radar").maybeSingle(),
-   supabase.from("viva_finance_ai_user_access").select("enabled").eq("user_id",user.id).maybeSingle(),
-   supabase.rpc("viva_is_admin"),
    supabase.from("viva_finance_ai_preferences").select("use_financial_data").eq("user_id",user.id).maybeSingle()
   ]);
-  if(!flags.data?.enabled||(!access.data?.enabled&&!admin.data)||pref.data?.use_financial_data===false)return NextResponse.json({enabled:false});
+  if(!flags.data?.enabled||pref.data?.use_financial_data===false)return NextResponse.json({enabled:false});
   const context=await buildFinanceContext(supabase,user.id);
   const alerts:Array<{code:string;severity:"high"|"medium"|"low";title:string;value:number|null;detail:string}>=[];
   if(context.forecast_balance<0)alerts.push({code:"negative_forecast",severity:"high",title:"Risco de saldo negativo",value:context.forecast_balance,detail:"A previsão do mês fica abaixo de zero depois dos gastos e contas já cadastrados."});
