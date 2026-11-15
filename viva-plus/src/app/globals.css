@@ -508,3 +508,39 @@ a { color: inherit; text-decoration: none; }
 .viva-pay-error{margin:0;color:#b42318;font-size:11px;line-height:1.5}
 .viva-pix-layer{position:fixed;z-index:150;inset:0;display:grid;place-items:center;padding:20px}.viva-pix-backdrop{position:absolute;inset:0;border:0;background:rgba(24,12,37,.55);backdrop-filter:blur(4px)}.viva-pix-sheet{position:relative;width:min(440px,100%);max-height:min(90dvh,760px);overflow:auto;padding:28px;border:1px solid #eee5f6;border-radius:24px;background:#fff;color:#281b36;box-shadow:0 20px 70px rgba(25,10,45,.25);text-align:center}.viva-pix-sheet h2{font-size:22px;font-weight:900}.viva-pix-sheet p{margin:9px 0 17px;color:#776d83;font-size:12px;line-height:1.6}.viva-pix-sheet img{display:block;width:190px;height:190px;object-fit:contain;margin:0 auto 15px}.viva-pix-sheet textarea{width:100%;min-height:78px;padding:10px;border:1px solid #e5dceb;border-radius:10px;font-size:10px;resize:vertical}.viva-pix-sheet .viva-pix-copy{margin-top:10px;border:0;background:#6410C9;color:white}.viva-pix-sheet small,.viva-pix-sheet>b{display:block;margin-top:12px;color:#81758d;font-size:10px}.viva-pix-sheet>b{color:#6410C9;font-size:12px}.viva-pix-close{position:absolute;right:14px;top:10px;width:32px;height:32px;border:0;border-radius:50%;background:#f3edf8;color:#6410C9;font-size:22px}
 @media(max-width:700px){.viva-plans{padding:12px 0 calc(45px + env(safe-area-inset-bottom))}.viva-plans-grid{grid-template-columns:minmax(0,1fr);gap:13px}.viva-plans-grid article{min-height:0}.viva-period-switch{margin-top:18px}.viva-period-switch button{padding:0 13px}.viva-pix-layer{align-items:end;padding:0}.viva-pix-sheet{width:100%;max-height:90dvh;border-radius:25px 25px 0 0;padding:28px 22px calc(24px + env(safe-area-inset-bottom))}.viva-plan-card-actions{padding-top:12px}}
+
+
+/* Correção de rolagem mobile: páginas longas de Planos e Painel ADM */
+@media(max-width:768px){
+  .viva-main:has(.viva-plans),
+  .viva-main:has(.viva-admin){
+    display:block!important;
+    flex:1 1 0!important;
+    width:100%;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    overscroll-behavior-y:contain;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-y;
+    padding-bottom:calc(28px + env(safe-area-inset-bottom))!important;
+  }
+  .viva-main:has(.viva-plans) .viva-plans,
+  .viva-main:has(.viva-admin) .viva-admin{
+    min-height:100%;
+    height:auto;
+    overflow:visible;
+    padding-bottom:calc(34px + env(safe-area-inset-bottom));
+  }
+  .viva-main:has(.viva-admin) .viva-admin{padding-left:16px;padding-right:16px}
+  .viva-main:has(.viva-admin) .viva-admin-stats,
+  .viva-main:has(.viva-admin) .viva-admin-settings-grid,
+  .viva-main:has(.viva-admin) .viva-plan-fields{min-width:0;grid-template-columns:minmax(0,1fr)!important}
+  .viva-main:has(.viva-admin) .viva-admin-section,
+  .viva-main:has(.viva-admin) .viva-admin-card,
+  .viva-main:has(.viva-admin) .viva-plan-editor>article{min-width:0;max-width:100%}
+  .viva-main:has(.viva-admin) input,
+  .viva-main:has(.viva-admin) select{max-width:100%;min-width:0}
+}
