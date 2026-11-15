@@ -17,12 +17,8 @@ async function authorize(){
  const supabase=await createClient();
  const {data:{user}}=await supabase.auth.getUser();
  if(!user)return {supabase,user:null,response:NextResponse.json({error:"Faça login para acessar suas metas."},{status:401})};
- const [flag,access,admin]=await Promise.all([
-  supabase.from("viva_finance_ai_feature_flags").select("enabled").eq("flag_key","goal_plans").maybeSingle(),
-  supabase.from("viva_finance_ai_user_access").select("enabled").eq("user_id",user.id).maybeSingle(),
-  supabase.rpc("viva_is_admin")
- ]);
- if(!flag.data?.enabled||(!access.data?.enabled&&!admin.data))return {supabase,user,response:NextResponse.json({error:"O plano de metas está em liberação gradual."},{status:403})};
+ const {data:flag}=await supabase.from("viva_finance_ai_feature_flags").select("enabled").eq("flag_key","goal_plans").maybeSingle();
+ if(!flag?.enabled)return {supabase,user,response:NextResponse.json({error:"O plano de metas está temporariamente indisponível."},{status:503})};
  return {supabase,user,response:null};
 }
 export async function GET(){

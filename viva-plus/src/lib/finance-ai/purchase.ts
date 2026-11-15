@@ -47,14 +47,12 @@ export async function buildFinanceContext(supabase:Db,userId:string){
 }
 export async function handlePurchaseDecision(supabase:Db,userId:string,message:string){
  const purchase=parsePurchaseQuestion(message);if(!purchase)return null;
- const [flags,access,pref,adminCheck]=await Promise.all([
+ const [flags,pref]=await Promise.all([
   supabase.from("viva_finance_ai_feature_flags").select("flag_key,enabled").in("flag_key",["finance_context","purchase_decisions"]),
-  supabase.from("viva_finance_ai_user_access").select("enabled").eq("user_id",userId).maybeSingle(),
-  supabase.from("viva_finance_ai_preferences").select("use_financial_data").eq("user_id",userId).maybeSingle(),
-  supabase.rpc("viva_is_admin")
+  supabase.from("viva_finance_ai_preferences").select("use_financial_data").eq("user_id",userId).maybeSingle()
  ]);
  const enabled=new Map((flags.data||[]).map((f:any)=>[f.flag_key,f.enabled]));
- if(!enabled.get("finance_context")||!enabled.get("purchase_decisions")||(!access.data?.enabled&&!adminCheck.data))return null;
+ if(!enabled.get("finance_context")||!enabled.get("purchase_decisions"))return null;
  if(pref.data?.use_financial_data===false)return {answer:"O uso dos seus dados financeiros na IA está desligado. Ative essa opção no perfil para receber uma análise baseada no seu histórico."};
  if(!purchase.total)return {answer:"Qual é o valor aproximado da compra ou da viagem? Assim consigo calcular sem estimar por você."};
  const context=await buildFinanceContext(supabase,userId);
