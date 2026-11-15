@@ -925,3 +925,61 @@ a { color: inherit; text-decoration: none; }
 @media (prefers-color-scheme: dark) {
   .viva-chat-mobile .viva-composer-wrap-mobile { background: rgba(23,18,31,.96); border-color: rgba(255,255,255,.09); }
 }
+
+
+/* VIVA+ conversation workspace — refined desktop composition */
+@media (min-width: 769px) {
+  .viva-main:has(.viva-chat-mobile) {
+    width: min(100%, 1280px);
+    max-width: 1280px;
+    padding: 22px clamp(22px, 3vw, 42px) 28px;
+  }
+  .viva-chat-mobile {
+    width: 100%;
+    min-height: calc(100svh - 124px);
+    gap: 0;
+  }
+  .viva-chat-mobile .viva-chat-heading {
+    align-items: center;
+    padding: 18px 4px 20px !important;
+  }
+  .viva-chat-mobile .viva-chat-heading h1 {
+    margin-top: 5px;
+    font-size: clamp(27px, 2.5vw, 34px);
+  }
+  .viva-chat-mobile .viva-chat-heading p { margin-top: 6px; }
+  .viva-chat-mobile .viva-thread {
+    flex: 1 1 auto;
+    min-height: 340px;
+    max-height: min(64svh, 620px);
+    padding: 22px clamp(18px, 4vw, 42px) 36px;
+    border-left: 1px solid #f0ebf5;
+    border-right: 1px solid #f0ebf5;
+    scrollbar-gutter: stable;
+    scroll-behavior: smooth;
+  }
+  .viva-chat-mobile .viva-message-assistant .viva-bubble {
+    max-width: min(100%, 980px);
+    line-height: 1.7;
+  }
+  .viva-chat-mobile .viva-message-user .viva-bubble { max-width: min(76%, 760px); }
+  .viva-chat-mobile .viva-composer-wrap-desktop {
+    position: sticky;
+    bottom: 0;
+    z-index: 6;
+    padding: 12px 0 8px;
+    background: linear-gradient(180deg, rgba(255,255,255,0), #fff 16%);
+  }
+  .viva-chat-mobile .viva-suggestions { padding: 7px 0 12px; }
+  .viva-chat-mobile .viva-composer {
+    min-height: 68px;
+    border-radius: 22px;
+    padding: 9px 12px;
+  }
+  .viva-chat-mobile .viva-composer-note { padding-top: 8px; }
+}
+@media (prefers-color-scheme: dark) and (min-width: 769px) {
+  .viva-main:has(.viva-chat-mobile) { background: #17121f; }
+  .viva-chat-mobile .viva-thread { border-color: rgba(255,255,255,.08); }
+  .viva-chat-mobile .viva-composer-wrap-desktop { background: linear-gradient(180deg, rgba(23,18,31,0), #17121f 16%); }
+}
