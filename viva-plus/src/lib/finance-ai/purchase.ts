@@ -5,6 +5,7 @@ type Db = any;
 const brl=(n:number)=>Math.round((n+Number.EPSILON)*100)/100;
 const dateKey=(d:Date)=>new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
 const parseBRL=(raw:string)=>Number(raw.replace(/\./g,"").replace(",","."));
+const selectRows=<T,>(items:T[],predicate:(item:T)=>boolean):T[]=>{const out:T[]=[];for(const item of items){if(predicate(item))out.push(item)}return out};
 export function parsePurchaseQuestion(message:string){
  if(!/\b(posso comprar|dá pra comprar|da pra comprar|consigo comprar|posso parcelar|dá pra parcelar|da pra parcelar|cabe no meu orçamento|vale a pena comprar|posso viajar)\b/i.test(message))return null;
  const installment=message.match(/\b(\d{1,2})\s*x\s*(?:de\s*)?(?:R\$\s*)?([\d.]+(?:,\d{1,2})?)/i);
@@ -24,20 +25,20 @@ export async function buildFinanceContext(supabase:Db,userId:string){
   supabase.from("viva_financial_goals").select("target_amount,current_amount,target_date").eq("user_id",userId).order("created_at").limit(10)
  ]);
  if(tx.error||bills.error||limits.error||goals.error)throw new Error("Falha ao montar contexto financeiro.");
- const rows=tx.data||[];const month=rows.filter((x:any)=>x.occurred_on>=monthStart);
- const income=brl(month.filter((x:any)=>x.kind==="income").reduce((s:number,x:any)=>s+Number(x.amount),0));
- const expenses=brl(month.filter((x:any)=>x.kind==="expense").reduce((s:number,x:any)=>s+Number(x.amount),0));
+ const rows=tx.data||[];const month=selectRows(rows, (x:any)=>x.occurred_on>=monthStart);
+ const income=brl(selectRows(month, (x:any)=>x.kind==="income").reduce((s:number,x:any)=>s+Number(x.amount),0));
+ const expenses=brl(selectRows(month, (x:any)=>x.kind==="expense").reduce((s:number,x:any)=>s+Number(x.amount),0));
  const billsMonth=(bills.data||[]).filter((x:any)=>x.due_date.slice(0,7)===today.slice(0,7));
  const billsRemaining=brl(billsMonth.reduce((s:number,x:any)=>s+Number(x.amount),0));
  const limit=limits.data?.[0]?Number(limits.data[0].limit_amount):null;
- const spentToday=brl(rows.filter((x:any)=>x.occurred_on===today&&x.kind==="expense").reduce((s:number,x:any)=>s+Number(x.amount),0));
- const categoryNow=new Map<string,number>();for(const x of month.filter((v:any)=>v.kind==="expense")){const k=String(x.category||"Outros");categoryNow.set(k,(categoryNow.get(k)||0)+Number(x.amount))}
- const categoryAvg=new Map<string,number>();for(let i=1;i<=3;i++){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);const key=dateKey(d).slice(0,7);const sums=new Map<string,number>();for(const x of rows.filter((v:any)=>v.kind==="expense"&&v.occurred_on.slice(0,7)===key)){const k=String(x.category||"Outros");sums.set(k,(sums.get(k)||0)+Number(x.amount))}for(const [k,v] of sums)categoryAvg.set(k,(categoryAvg.get(k)||0)+v/3)}
+ const spentToday=brl(selectRows(rows, (x:any)=>x.occurred_on===today&&x.kind==="expense").reduce((s:number,x:any)=>s+Number(x.amount),0));
+ const categoryNow=new Map<string,number>();for(const x of selectRows(month, (v:any)=>v.kind==="expense")){const k=String(x.category||"Outros");categoryNow.set(k,(categoryNow.get(k)||0)+Number(x.amount))}
+ const categoryAvg=new Map<string,number>();for(let i=1;i<=3;i++){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);const key=dateKey(d).slice(0,7);const sums=new Map<string,number>();for(const x of selectRows(rows, (v:any)=>v.kind==="expense"&&v.occurred_on.slice(0,7)===key)){const k=String(x.category||"Outros");sums.set(k,(sums.get(k)||0)+Number(x.amount))}for(const [k,v] of sums)categoryAvg.set(k,(categoryAvg.get(k)||0)+v/3)}
  const categories=[...new Set([...categoryNow.keys(),...categoryAvg.keys()])].map(category=>({category,month:brl(categoryNow.get(category)||0),average_3_months:brl(categoryAvg.get(category)||0)})).sort((a,b)=>b.month-a.month).slice(0,6);
- const days=[...new Set(rows.map((x:any)=>x.occurred_on))];const weekdaySpend=new Map<string,number>();for(const x of rows.filter((v:any)=>v.kind==="expense")){const day=new Date(x.occurred_on+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long"});weekdaySpend.set(day,(weekdaySpend.get(day)||0)+Number(x.amount))}
- const surplusByMonth=new Map<string,{i:number;e:number}>();for(const x of rows.filter((v:any)=>x.occurred_on<monthStart)){const k=x.occurred_on.slice(0,7);const v=surplusByMonth.get(k)||{i:0,e:0};if(x.kind==="income")v.i+=Number(x.amount);else v.e+=Number(x.amount);surplusByMonth.set(k,v)}
+ const days=[...new Set(rows.map((x:any)=>x.occurred_on))];const weekdaySpend=new Map<string,number>();for(const x of selectRows(rows, (v:any)=>v.kind==="expense")){const day=new Date(x.occurred_on+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"long"});weekdaySpend.set(day,(weekdaySpend.get(day)||0)+Number(x.amount))}
+ const surplusByMonth=new Map<string,{i:number;e:number}>();for(const x of selectRows(rows, (v:any)=>x.occurred_on<monthStart)){const k=x.occurred_on.slice(0,7);const v=surplusByMonth.get(k)||{i:0,e:0};if(x.kind==="income")v.i+=Number(x.amount);else v.e+=Number(x.amount);surplusByMonth.set(k,v)}
  const surplus=brl([...surplusByMonth.values()].reduce((s,v)=>s+v.i-v.e,0)/3);
- let streak=0;if(limit!==null){for(let i=0;i<31;i++){const d=new Date(today+"T12:00:00");d.setDate(d.getDate()-i);const key=dateKey(d);if(i>0&&!days.includes(key))break;const spent=rows.filter((x:any)=>x.occurred_on===key&&x.kind==="expense").reduce((s:number,x:any)=>s+Number(x.amount),0);if(spent>limit)break;streak++}}
+ let streak=0;if(limit!==null){for(let i=0;i<31;i++){const d=new Date(today+"T12:00:00");d.setDate(d.getDate()-i);const key=dateKey(d);if(i>0&&!days.includes(key))break;const spent=selectRows(rows, (x:any)=>x.occurred_on===key&&x.kind==="expense").reduce((s:number,x:any)=>s+Number(x.amount),0);if(spent>limit)break;streak++}}
  const goalsSummary=(goals.data||[]).slice(0,3).map((g:any)=>({target:Number(g.target_amount),saved:Number(g.current_amount),remaining:brl(Math.max(0,Number(g.target_amount)-Number(g.current_amount))),deadline:g.target_date}));
  const insufficient=days.length<14||income<=0||(bills.data||[]).length===0;
  const missing=[days.length<14?"mais lançamentos (pelo menos 14 dias)":null,income<=0?"renda mensal aproximada":null,(bills.data||[]).length===0?"contas fixas e vencimentos":null].filter(Boolean);
