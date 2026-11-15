@@ -869,3 +869,19 @@ a { color: inherit; text-decoration: none; }
 .viva-permission-finish{width:100%;min-height:48px;margin-top:18px;border:0;border-radius:14px;background:#6410C9;color:#fff;font-weight:850}
 @media(max-width:600px){.viva-permission-layer{align-items:flex-end;padding:0}.viva-permission-card{width:100%;max-height:92dvh;padding:26px 22px calc(22px + env(safe-area-inset-bottom));border-radius:28px 28px 0 0}.viva-permission-card h2{font-size:23px}}
 @media(prefers-color-scheme:dark){.viva-permission-card{background:#211a2b;color:#f7f1fc;border-color:#40334d}.viva-permission-intro,.viva-permission-item small,.viva-permission-note{color:#c2b5d0}.viva-permission-item{border-color:#40334d}.viva-permission-feedback{background:#352447;color:#e5d3fa}}
+
+
+/* Mobile content screens must scroll inside the fixed PWA shell.
+   The chat, finance, plans and admin screens keep their dedicated scroll containers. */
+@media (max-width: 768px) {
+  .viva-main:not(:has(.viva-chat-mobile)):not(:has(.viva-finance-scroll)):not(:has(.viva-plans)):not(:has(.viva-admin)) {
+    min-height: 0 !important;
+    height: calc(100dvh - 54px - env(safe-area-inset-top)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
+    touch-action: pan-y !important;
+    padding: 18px 15px calc(28px + env(safe-area-inset-bottom)) !important;
+  }
+}
