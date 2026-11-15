@@ -37,7 +37,7 @@ export async function GET(){
   if(cached.data?.payload)return NextResponse.json({enabled:true,has_alerts:true,radar:cached.data.payload});
   let explanation="Encontrei alguns pontos que merecem sua atenção. Confira os alertas e priorize os itens mais urgentes antes de assumir novos gastos.";
   let usage:{credits:number;daily_used:number;daily_limit:number;warning_80:boolean}|undefined;
-  const creditFeature=(admin.data||access.data?.enabled)?"chat":"radar";
+  const creditFeature="radar";
   const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:creditFeature,p_estimated_input_tokens:1200,p_prefer_cheap:true});
   if(!guardError&&guard?.allowed){
    const modelKey=String(guard.model_key||"cheap");
