@@ -1,17 +1,10 @@
 "use client";
-import { useState } from "react";
+import {useState} from "react";
+function PixIcon(){return <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="m7.2 3.8-3.4 3.4a2.4 2.4 0 0 0 0 3.4l7.1 7.1a1.6 1.6 0 0 0 2.2 0l7.1-7.1a2.4 2.4 0 0 0 0-3.4l-3.4-3.4a2.4 2.4 0 0 0-3.4 0L12 5.2l-1.4-1.4a2.4 2.4 0 0 0-3.4 0Z" stroke="currentColor" strokeWidth="1.8"/><path d="m8 8 8 8m0-8-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+function CardIcon(){return <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none"><rect x="2.5" y="4.5" width="19" height="15" rx="3" stroke="currentColor" strokeWidth="1.8"/><path d="M3 9h18M6.5 14.5h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>}
+function Spinner(){return <span className="viva-pay-spinner" aria-hidden="true"/>}
 export default function CheckoutActions({planId,interval}:{planId:string;interval:"monthly"|"annual"}) {
- const [loading,setLoading]=useState(false),[error,setError]=useState(""),[pix,setPix]=useState<{pixCopyPaste:string;qrCodeBase64?:string|null}|null>(null);
- async function start(method:"pix"|"card") {
-  setLoading(true);setError("");setPix(null);
-  try { const r=await fetch("/api/billing/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({planId,interval,method})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Falha no pagamento");
-   if(method==="card"&&d.checkoutUrl){window.location.assign(d.checkoutUrl);return;}setPix(d);
-  } catch(e){setError(e instanceof Error?e.message:"Erro ao iniciar pagamento");} finally{setLoading(false);}
- }
- return <div className="viva-checkout-actions">
-  <button type="button" disabled={loading} onClick={()=>start("card")}>{loading?"Aguarde...":"Assinar com cartão"}</button>
-  <button type="button" className="secondary" disabled={loading} onClick={()=>start("pix")}>{loading?"Aguarde...":"Pagar com Pix"}</button>
-  {error&&<p role="alert">{error}</p>}
-  {pix&&<div className="viva-pix-result"><b>Pix gerado — aguardando confirmação</b>{pix.qrCodeBase64&&<img alt="QR Code Pix" src={`data:image/png;base64,${pix.qrCodeBase64}`}/>}<textarea readOnly value={pix.pixCopyPaste} aria-label="Código Pix copia e cola"/><button type="button" onClick={()=>navigator.clipboard.writeText(pix.pixCopyPaste)}>Copiar código Pix</button><small>O plano será liberado após a confirmação.</small></div>}
- </div>;
+ const [loading,setLoading]=useState<"pix"|"card"|null>(null),[error,setError]=useState(""),[pix,setPix]=useState<{pixCopyPaste:string;qrCodeBase64?:string|null;expiresAt?:string|null}|null>(null);
+ async function start(method:"pix"|"card"){if(loading)return;setLoading(method);setError("");setPix(null);try{const r=await fetch("/api/billing/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({planId,interval,method})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Não foi possível iniciar o pagamento.");if(method==="card"&&d.checkoutUrl){window.location.assign(d.checkoutUrl);return;}setPix(d);}catch(e){setError(e instanceof Error?e.message:"Erro ao iniciar pagamento.");}finally{setLoading(null);}}
+ return <div className="viva-checkout-actions"><button type="button" className="viva-pay-pix" disabled={!!loading} onClick={()=>start("pix")}>{loading==="pix"?<Spinner/>:<PixIcon/>}{loading==="pix"?"Gerando Pix...":"Assinar com Pix"}</button><button type="button" className="viva-pay-card" disabled={!!loading} onClick={()=>start("card")}>{loading==="card"?<Spinner/>:<CardIcon/>}{loading==="card"?"Abrindo checkout...":"Assinar com cartão"}</button>{error&&<p className="viva-pay-error" role="alert">{error}</p>}{pix&&<div className="viva-pix-layer" role="dialog" aria-modal="true" aria-label="Pagamento Pix"><button type="button" className="viva-pix-backdrop" onClick={()=>setPix(null)} aria-label="Fechar Pix"/><section className="viva-pix-sheet"><button type="button" className="viva-pix-close" onClick={()=>setPix(null)} aria-label="Fechar">×</button><h2>Finalize com Pix</h2><p>Escaneie o QR Code ou copie o código abaixo. Seu plano será liberado após a confirmação do pagamento.</p>{pix.qrCodeBase64&&<img alt="QR Code Pix" src={"data:image/png;base64,"+pix.qrCodeBase64}/>}<textarea readOnly value={pix.pixCopyPaste} aria-label="Código Pix copia e cola"/><button type="button" className="viva-pix-copy" onClick={()=>navigator.clipboard.writeText(pix.pixCopyPaste)}>Copiar código Pix</button>{pix.expiresAt&&<small>Válido até {new Date(pix.expiresAt).toLocaleString("pt-BR")}</small>}<b>Aguardando pagamento...</b></section></div>}</div>;
 }
