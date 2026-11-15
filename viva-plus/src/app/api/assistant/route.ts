@@ -10,6 +10,7 @@ const schema=z.object({
  message:z.string().trim().min(1).max(4000),
  history:z.array(z.object({role:z.enum(["user","assistant"]),content:z.string().max(4000)})).max(12).optional(),
  feature:z.enum(["chat","voice","photo","radar"]).optional(),
+ imageDataUrl:z.string().max(8_000_000).optional(),
 });
 
 export async function GET(){
@@ -36,6 +37,8 @@ export async function POST(request:Request){
   const parsed=schema.safeParse(await request.json());
   if(!parsed.success)return NextResponse.json({error:"Mensagem inválida. Use até 4.000 caracteres."},{status:400});
   const message=parsed.data.message;
+  const imageDataUrl=parsed.data.imageDataUrl;
+  if(imageDataUrl&&!/^data:image\\/(png|jpeg|webp);base64,/i.test(imageDataUrl))return NextResponse.json({error:"Envie uma imagem JPG, PNG ou WebP válida."},{status:400});
   const lower=message.toLocaleLowerCase("pt-BR");
   const asksBills=/\\b(o que vence|contas? (?:a pagar|vencem)|quanto tenho a pagar|minhas contas|vencimentos)\\b/.test(lower);
   if(asksBills){
@@ -92,8 +95,8 @@ export async function POST(request:Request){
   const client=new OpenAI({apiKey:process.env.OPENAI_API_KEY});
   const response=await client.responses.create({
    model:configuredModel.trim(),
-   instructions:"Você é VIVA+, uma assistente pessoal acolhedora e prática. Responda em português brasileiro. Ajude a organizar agenda, hábitos, finanças pessoais e compras. Nunca invente dados nem afirme que registrou algo sem confirmação explícita. Antes de qualquer lançamento financeiro ou compromisso, apresente os dados para confirmação do usuário. Não afirme que pesquisou preços sem uma pesquisa real. Você não substitui consultoria financeira profissional.",
-   input:history.length?history:[{role:"user",content:message}],
+   instructions:imageDataUrl?"Analise a foto de comprovante, nota fiscal ou recibo. Extraia apenas dados que estejam visíveis. Responda APENAS com JSON válido no formato {\\"kind\\":\\"expense\\",\\"amount\\":12.34,\\"description\\":\\"nome curto\\",\\"occurred_on\\":\\"YYYY-MM-DD\\",\\"category\\":\\"Alimentação|Moradia|Transporte|Saúde|Educação|Lazer|Compras|Contas|Renda|Outros\\",\\"payment_method\\":\\"Pix|Dinheiro|Débito|Crédito|Transferência|Outro\\",\\"confidence\\":\\"high|medium|low\\"}. Não adivinhe campos ilegíveis; se não for comprovante, retorne JSON com amount 0 e confidence low.":"Você é VIVA+, uma assistente pessoal acolhedora e prática. Responda em português brasileiro. Ajude a organizar agenda, hábitos, finanças pessoais e compras. Nunca invente dados nem afirme que registrou algo sem confirmação explícita. Antes de qualquer lançamento financeiro ou compromisso, apresente os dados para confirmação do usuário. Não afirme que pesquisou preços sem uma pesquisa real. Você não substitui consultoria financeira profissional.",
+   input:imageDataUrl?[...(history.length?history.slice(0,-1):[]),{role:"user",content:[{type:"input_text",text:message||"Extraia os dados financeiros desta imagem."},{type:"input_image",image_url:imageDataUrl}]}]:(history.length?history:[{role:"user",content:message}]),
    max_output_tokens:Math.max(64,Math.min(16000,Number(guard.max_output_tokens)||300)),
   });
   const tokensIn=response.usage?.input_tokens??0;
@@ -105,6 +108,7 @@ export async function POST(request:Request){
   });
   if(settleError){console.error("VIVA usage settlement failed",settleError);return NextResponse.json({error:"A resposta foi gerada, mas não foi possível fechar o registro de consumo. Tente novamente mais tarde."},{status:503});}
   reservationId=null;
+  if(imageDataUrl){try{const extracted=JSON.parse(response.output_text||"{}");if(Number(extracted.amount)>0&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(extracted.occurred_on||""))){return NextResponse.json({transactionDraft:{kind:extracted.kind==="income"?"income":"expense",amount:Number(extracted.amount),description:String(extracted.description||"Comprovante").slice(0,240),occurred_on:extracted.occurred_on,category:String(extracted.category||"Outros"),payment_method:String(extracted.payment_method||"Outro")},answer:"Identifiquei os dados da imagem. Confira e confirme antes de registrar.",usage:{credits:guard.credits_cost,daily_used:guard.daily_used,daily_limit:guard.daily_limit,warning_80:guard.warning_80,tokens_in:tokensIn,tokens_out:tokensOut}})}catch(parseError){console.error("VIVA receipt extraction parse failed",parseError)}return NextResponse.json({answer:"Não consegui extrair um valor confiável dessa imagem. Você pode digitar os dados ou enviar uma foto mais nítida.",usage:{credits:guard.credits_cost,daily_used:guard.daily_used,daily_limit:guard.daily_limit,warning_80:guard.warning_80,tokens_in:tokensIn,tokens_out:tokensOut}})}
   return NextResponse.json({answer:response.output_text||"Estou aqui com você. Pode me contar mais.",usage:{credits:guard.credits_cost,daily_used:guard.daily_used,daily_limit:guard.daily_limit,warning_80:guard.warning_80,tokens_in:tokensIn,tokens_out:tokensOut}});
  }catch(error){
   console.error("VIVA assistant error",error);
