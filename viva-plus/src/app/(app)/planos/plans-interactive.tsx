@@ -1,0 +1,13 @@
+"use client";
+import {useState} from "react";
+import CheckoutActions from "./checkout-actions";
+type Plan={id:string;name:string;monthly_price_brl:number;annual_price_brl:number;daily_credits:number;history_messages:number;radar_enabled:boolean;voice_enabled:boolean;photo_enabled:boolean};
+function money(v:number){return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});}
+export default function PlansInteractive({plans,currentPlanId}:{plans:Plan[];currentPlanId:string}){
+ const [period,setPeriod]=useState<"monthly"|"annual">("monthly");
+ return <><div className="viva-period-switch" role="group" aria-label="Período de cobrança"><button type="button" aria-pressed={period==="monthly"} className={period==="monthly"?"active":""} onClick={()=>setPeriod("monthly")}>Mensal</button><button type="button" aria-pressed={period==="annual"} className={period==="annual"?"active":""} onClick={()=>setPeriod("annual")}>Anual <span>2 meses grátis</span></button></div><div className="viva-plans-grid">{plans.map(p=>{
+ const free=p.id==="free"||Number(p.monthly_price_brl)===0;const current=p.id===currentPlanId;const price=period==="annual"?Number(p.annual_price_brl):Number(p.monthly_price_brl);
+ const item=(ok:boolean,label:string)=><li className={ok?"included":"excluded"}><span aria-hidden="true">{ok?"✓":"✕"}</span>{label}</li>;
+ return <article key={p.id} className={p.id==="pro"?"featured":""}>{p.id==="pro"&&<span className="viva-popular">Mais popular</span>}<span className="viva-plan-name">{p.name}</span><strong>{money(price)}<small>/{period==="annual"?"ano":"mês"}</small></strong>{period==="annual"&&!free&&<p className="viva-monthly-equivalent">{money(price/12)}/mês no plano anual</p>}<p>{p.daily_credits} créditos por dia</p><ul>{item(true,p.history_messages+" mensagens de histórico")}{item(p.radar_enabled,p.radar_enabled?"Radar de preços liberado":"Sem Radar de Preços")}{item(p.voice_enabled,p.voice_enabled?"Voz liberada":"Voz não incluída")}{item(p.photo_enabled,p.photo_enabled?"Foto de notas liberada":"Foto de notas não incluída")}</ul><div className="viva-plan-card-actions">{free?<a className={"viva-free-action"+(current?" is-current":"")} href={current?"#":"/inicio"} aria-disabled={current}>{current?"Plano atual":"Começar grátis"}</a>:current?<button className="viva-current-action" type="button" disabled>Plano atual</button>:<CheckoutActions planId={p.id} interval={period}/ >}{!free&&!current&&<small className="viva-billing-caption">{period==="annual"?"Cobrança anual · 2 meses grátis":"Cobrança mensal · cancele quando quiser"}</small>}</div></article>;
+ })}</div></>;
+}
