@@ -2,6 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  const productionHost = "viva-plus-fundacao-mvp-1.vercel.app";
+  if (process.env.VERCEL_ENV === "preview" && request.nextUrl.hostname !== productionHost) {
+    const target = request.nextUrl.clone(); target.hostname = productionHost; target.protocol = "https:"; target.port = "";
+    return NextResponse.redirect(target, 307);
+  }
   let response = NextResponse.next({ request });
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

@@ -621,3 +621,5 @@ a { color: inherit; text-decoration: none; }
 .viva-attach-pref{display:flex;align-items:center;gap:9px;border-top:1px solid var(--line);margin-top:10px;padding-top:12px;font-size:13px;font-weight:700}
 .viva-attach-sheet>p{margin:6px 0 0 25px;font-size:11px;color:var(--muted)}
 @media(max-width:700px){.viva-attach-sheet{left:0;right:0;width:auto;bottom:calc(100% + 8px)}}
+
+.viva-ios-dictation-hint{margin:4px 12px 0;font-size:11px;line-height:1.4;color:var(--muted)}
