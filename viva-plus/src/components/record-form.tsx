@@ -1,11 +1,26 @@
 "use client";
 import { useState, type FormEvent } from "react";
 
+const APP_TIME_ZONE = "America/Fortaleza";
+function localDateTimeToIso(value: string) {
+  // datetime-local is a wall-clock value, not UTC. Interpret it in Fortaleza.
+  const match = value.match(/^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2})/);
+  if (!match) throw new Error("Informe uma data e hora válidas.");
+  const [, year, month, day, hour, minute] = match;
+  const wallClock = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute)));
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: APP_TIME_ZONE, year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", hourCycle:"h23" }).formatToParts(wallClock);
+  const p = Object.fromEntries(parts.filter(x=>x.type!=="literal").map(x=>[x.type,x.value]));
+  const representedAsUtc = Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day),Number(p.hour),Number(p.minute));
+  const offset = representedAsUtc - wallClock.getTime();
+  return new Date(wallClock.getTime() - offset).toISOString();
+}
+
 export default function RecordForm({table,fields,submitLabel="Salvar",onSaved}:{table:"viva_events"|"events"|"tasks"|"transactions";fields:{name:string;label:string;type?:string;required?:boolean;options?:string[]}[];submitLabel?:string;onSaved?:()=>void}) {
  const [values,setValues]=useState<Record<string,string>>({});const [msg,setMsg]=useState("");const [busy,setBusy]=useState(false);
  async function submit(e:FormEvent){e.preventDefault();setBusy(true);setMsg("");
  try{const payload:Record<string,unknown>={};
  fields.forEach(f=>{const v=values[f.name];if(v!==undefined&&v!=="")payload[f.name]=f.type==="number"?Number(v):f.type==="boolean"?v==="true":v;});
+ if(table==="viva_events"){if(typeof payload.start_at==="string")payload.start_at=localDateTimeToIso(payload.start_at);if(typeof payload.end_at==="string")payload.end_at=localDateTimeToIso(payload.end_at);}
  if(table==="transactions"&&payload.amount!==undefined)payload.amount=Math.abs(Number(payload.amount));
  if(table==="transactions"){const response=await fetch("/api/transactions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const result=await response.json();if(!response.ok)throw new Error(result.error||"Não foi possível salvar.");window.dispatchEvent(new Event("viva:transactions-updated"));}else{const s=(await import("@/lib/supabase/client")).createClient();const {error}=await s.from(table).insert(payload);if(error)throw error;}
  setValues({});setMsg("Registro salvo com sucesso.");onSaved?.();
