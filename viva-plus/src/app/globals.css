@@ -623,3 +623,32 @@ a { color: inherit; text-decoration: none; }
 @media(max-width:700px){.viva-attach-sheet{left:0;right:0;width:auto;bottom:calc(100% + 8px)}}
 
 .viva-ios-dictation-hint{margin:4px 12px 0;font-size:11px;line-height:1.4;color:var(--muted)}
+
+/* Chat A: hierarchy, fixed heading, single-choice buttons and soft scroll edges */
+.viva-chat{position:relative;padding-top:0!important}
+.viva-chat-heading{position:sticky;top:74px;z-index:20;flex:0 0 auto;margin:0!important;padding:12px 4px 14px!important;background:#fff}
+.viva-chat-heading h1{line-height:1.2}
+.viva-choice-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px!important}
+.viva-clarification-card .viva-choice-button{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;height:48px!important;min-height:48px!important;padding:0 14px!important;border:1.5px solid #6410C9!important;border-radius:14px!important;background:transparent!important;color:#6410C9!important;font-weight:800!important;box-shadow:none!important}
+.viva-clarification-card .viva-choice-button:disabled{background:transparent!important;opacity:.55!important}
+.viva-jump-bottom{display:grid!important;place-items:center!important;width:46px!important;height:46px!important;border:1px solid #dec9f6!important;border-radius:50%!important;background:#f3eaff!important;color:#9a6bd7!important;box-shadow:0 8px 24px rgba(100,16,201,.18)!important;z-index:12}
+.viva-jump-bottom svg{width:21px;height:21px}
+@media(max-width:768px){
+ .viva-main:has(.viva-chat-mobile){padding-top:0!important}
+ .viva-chat-mobile{position:relative;margin:0!important;padding:0!important}
+ .viva-chat-mobile .viva-chat-heading{display:flex!important;position:sticky!important;top:0!important;z-index:30;flex:0 0 auto;align-items:center;min-height:68px;margin:0!important;padding:10px 17px 12px!important;background:#fff;border-bottom:1px solid rgba(30,18,44,.055)}
+ .viva-chat-mobile .viva-chat-heading h1{margin-top:3px;font-size:21px;line-height:1.2;letter-spacing:-.04em}
+ .viva-chat-mobile .viva-chat-heading p{margin-top:4px;font-size:11px;line-height:1.35}
+ .viva-chat-mobile .viva-thread{padding-top:14px!important;padding-bottom:24px!important;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 28px,#000 calc(100% - 28px),transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 28px,#000 calc(100% - 28px),transparent 100%)}
+ .viva-chat-mobile .viva-thread:before,.viva-chat-mobile .viva-thread:after{display:none!important}
+ .viva-chat-mobile .viva-jump-bottom{position:absolute;right:18px;bottom:145px}
+}
+@media(prefers-color-scheme:dark){
+ .viva-chat-heading{background:#17121f}
+ .viva-clarification-card .viva-choice-button{background:transparent!important;color:#d9b8ff!important;border-color:#9d67d5!important}
+ .viva-jump-bottom{background:#2b1e3c!important;border-color:#6e4c91!important;color:#c9a4f1!important}
+}
+
+.viva-jump-bottom{position:absolute!important}
+.viva-clarification-card .viva-choice-button.is-selected{background:#f3eafd!important;color:#6410C9!important}
+@media(max-width:768px){.viva-chat-mobile .viva-chat-heading{top:0!important}}
