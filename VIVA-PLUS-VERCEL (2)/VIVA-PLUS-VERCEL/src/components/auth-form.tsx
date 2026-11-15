@@ -1,5 +1,5 @@
 "use client";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, LockKeyhole, Mail, Sparkles, Eye, EyeOff, Fingerprint, ArrowRight } from "lucide-react";
@@ -16,15 +16,18 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsAttempted, setTermsAttempted] = useState(false);
+  const termsCheckboxRef = useRef<HTMLInputElement>(null);
+  const signupFieldsValid = name.trim().length >= 2 && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) && password.length >= 8;
 
   async function submit(e: FormEvent) {
     e.preventDefault(); setMessage("");
-    if (mode === "signup" && !termsAccepted) { setMessage("Para criar sua conta, confirme que leu e aceita os Termos de Responsabilidade."); return; }
+    if (mode === "signup" && !termsAccepted) { setTermsAttempted(true); setMessage("Marque para continuar"); termsCheckboxRef.current?.focus(); return; }
     setBusy(true);
     try {
       const supabase = createClient();
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name, responsibility_terms_accepted: true, responsibility_terms_version: "1.0-2026-11-15", responsibility_terms_accepted_at: new Date().toISOString() }, emailRedirectTo: `${location.origin}/auth/callback` } });
+        const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name, responsibility_terms_accepted: true, terms_and_privacy_accepted: true, responsibility_terms_version: "1.0-2026-11-15", responsibility_terms_accepted_at: new Date().toISOString() }, emailRedirectTo: `${location.origin}/auth/callback` } });
         if (error) throw error;
         if (data.session) {
           router.replace("/meu-dia");
@@ -61,9 +64,9 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
           {mode === "signup" && <label className="block text-sm font-semibold text-neutral-800">Nome completo<input className="field mt-2" required value={name} onChange={e => setName(e.target.value)} placeholder="Como podemos chamar você?"/></label>}
           <label className="block text-sm font-semibold text-neutral-800">E-mail<span className="relative mt-2 block"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={17}/><input className="field pl-10" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="maria@email.com"/></span></label>
           {mode !== "reset" && <label className="block text-sm font-semibold text-neutral-800">Senha<span className="relative mt-2 block"><LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={17}/><input className="field auth-password-input pl-10 pr-12" type={showPassword ? "text" : "password"} autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={8} required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••••"/>{mode === "login" && <button type="button" className="auth-password-toggle" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}>{showPassword ? <EyeOff size={19}/> : <Eye size={19}/>}</button>}</span></label>}
-          {mode === "signup" && <section aria-label="Aceite obrigatório dos termos" className="rounded-2xl border-2 border-purple-300 bg-purple-50 p-4 shadow-sm"><p className="mb-3 text-sm font-extrabold text-purple-950">Antes de criar sua conta</p><label className="flex cursor-pointer items-start gap-3 text-sm leading-6 text-neutral-800"><input type="checkbox" className="mt-1 h-5 w-5 shrink-0 accent-purple-700" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} required/><span><strong>Li e aceito os </strong><Link className="font-extrabold text-purple-800 underline underline-offset-2" href="/termos-de-responsabilidade" target="_blank">TERMOS DE RESPONSABILIDADE</Link><strong>.</strong> Entendo que o VIVA+ é uma ferramenta de apoio à organização pessoal e financeira, não substitui orientação profissional e que sou responsável por conferir as informações e decisões que tomar.</span></label><p className="mt-2 text-xs font-semibold text-purple-800">O aceite é obrigatório para liberar a criação da conta.</p></section>}
-          {mode === "login" && <div className="auth-options"><label><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}/> <span>Lembrar de mim</span></label><Link href="/recuperar-senha">Esqueci a senha</Link></div>}<button className="btn-primary auth-submit mt-2 w-full" disabled={busy || (mode === "signup" && !termsAccepted)}>{busy ? "Aguarde..." : mode === "signup" ? "Criar conta" : mode === "reset" ? "Enviar instruções" : <><span>Entrar</span><ArrowRight size={20}/></>}</button>
-          {message && <p role="status" className="rounded-xl border border-[var(--color-gray)] bg-neutral-50 p-3 text-sm leading-6 text-neutral-700">{message}</p>}
+          {mode === "signup" && <div className={`rounded-xl border p-3 ${termsAttempted && !termsAccepted ? "border-red-300 bg-red-50" : "border-purple-200 bg-white"}`}><label htmlFor="signup-terms" className="flex min-h-11 cursor-pointer items-center gap-3 text-sm leading-6 text-neutral-800"><input ref={termsCheckboxRef} id="signup-terms" name="termsAccepted" type="checkbox" className="h-5 w-5 shrink-0 accent-[#6410C9]" checked={termsAccepted} onChange={e => { setTermsAccepted(e.target.checked); if (e.target.checked) { setTermsAttempted(false); if (message === "Marque para continuar") setMessage(""); } }} aria-invalid={termsAttempted && !termsAccepted} aria-describedby={termsAttempted && !termsAccepted ? "terms-error" : undefined} /><span>Li e aceito os <a href="/termos" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#6410C9] underline" onClick={e => e.stopPropagation()}>Termos de Uso</a> e a <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#6410C9] underline" onClick={e => e.stopPropagation()}>Política de Privacidade</a></span></label>{termsAttempted && !termsAccepted && <p id="terms-error" role="alert" className="mt-1 text-sm font-medium text-red-600">Marque para continuar</p>}</div>}
+          {mode === "login" && <div className="auth-options"><label><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}/> <span>Lembrar de mim</span></label><Link href="/recuperar-senha">Esqueci a senha</Link></div>}<button className="btn-primary auth-submit mt-2 w-full disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-neutral-500 disabled:shadow-none" disabled={busy || (mode === "signup" && (!termsAccepted || !signupFieldsValid))}>{busy ? "Aguarde..." : mode === "signup" ? "Criar conta" : mode === "reset" ? "Enviar instruções" : <><span>Entrar</span><ArrowRight size={20}/></>}</button>
+          {message && <p role={message === "Marque para continuar" ? "alert" : "status"} className={`rounded-xl border p-3 text-sm leading-6 ${message === "Marque para continuar" ? "border-red-200 bg-red-50 text-red-700" : "border-[var(--color-gray)] bg-neutral-50 text-neutral-700"}`}>{message}</p>}
         </form>
         <div className="auth-alternatives mt-7 flex flex-wrap justify-between gap-3 text-sm font-medium text-neutral-500">
           {mode === "login" ? <><span>Novo por aqui? <Link className="font-bold text-[var(--color-primary)]" href="/cadastro">Criar conta</Link></span></> : <Link className="hover:text-[var(--color-primary)]" href="/login">Voltar ao login</Link>}
