@@ -5,7 +5,7 @@ export default function PwaRegister(){
  const [installEvent,setInstallEvent]=useState<InstallPromptEvent|null>(null);
  const [showAndroid,setShowAndroid]=useState(false);const [showIos,setShowIos]=useState(false);
  useEffect(()=>{
-  if("serviceWorker" in navigator){const register=()=>navigator.serviceWorker.register("/sw.js",{scope:"/"}).catch(()=>undefined);if(document.readyState==="complete")register();else window.addEventListener("load",register,{once:true})}
+  if("serviceWorker" in navigator){const register=()=>navigator.serviceWorker.register("/sw.js",{scope:"/",updateViaCache:"none"}).then(reg=>reg.update().catch(()=>undefined)).catch(error=>{console.error("VIVA service worker registration failed",error);return undefined});if(document.readyState==="complete")register();else window.addEventListener("load",register,{once:true})}
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);const standalone=window.matchMedia("(display-mode: standalone)").matches||("standalone" in navigator&&(navigator as Navigator&{standalone?:boolean}).standalone===true);
   const visits=Number(localStorage.getItem("viva-visits")||"0")+1;localStorage.setItem("viva-visits",String(visits));
   if(ios&&!standalone&&!sessionStorage.getItem("viva-ios-guide-dismissed"))setShowIos(true);
