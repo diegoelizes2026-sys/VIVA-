@@ -652,3 +652,35 @@ a { color: inherit; text-decoration: none; }
 .viva-jump-bottom{position:absolute!important}
 .viva-clarification-card .viva-choice-button.is-selected{background:#f3eafd!important;color:#6410C9!important}
 @media(max-width:768px){.viva-chat-mobile .viva-chat-heading{top:0!important}}
+
+/* Mobile-only receipt sheet, composer and compact chat header */
+@media (max-width: 768px) {
+ .viva-chat-mobile .viva-chat-heading{display:none!important}
+ .viva-chat-mobile .viva-thread{padding-top:14px!important}
+ .viva-mobile-brand{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+ .viva-mobile-online{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.12)}
+ .viva-chat-mobile .viva-composer{flex-direction:row}
+ .viva-chat-mobile .viva-attach-button{order:0;flex:0 0 42px;color:#6410C9;background:#F3EBFD}
+ .viva-chat-mobile .viva-composer textarea{order:1}
+ .viva-chat-mobile .viva-voice-button{order:2}
+ .viva-chat-mobile .viva-ios-dictation-hint{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:5px 3px 0;color:#725b89;font-size:11px}
+ .viva-chat-mobile .viva-ios-dictation-hint button{flex:0 0 26px;width:26px;height:26px;border:0;border-radius:50%;background:#f3ebfd;color:#6410C9;font-size:18px}
+}
+.viva-attach-portal{position:fixed;inset:0;z-index:10050;isolation:isolate}
+.viva-attach-backdrop{position:absolute;inset:0;width:100%;height:100%;border:0;background:rgba(30,12,48,.46);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.viva-attach-bottom-sheet{position:fixed;right:0;bottom:0;left:0;z-index:1;padding:10px 20px calc(18px + env(safe-area-inset-bottom));border-radius:28px 28px 0 0;background:#fff;color:#281b35;box-shadow:0 -12px 45px rgba(26,10,42,.18);animation:vivaAttachSheetIn .28s cubic-bezier(.2,.8,.2,1) both}
+.viva-attach-sheet-top{position:relative;display:flex;min-height:42px;align-items:center;justify-content:center;margin-bottom:8px}
+.viva-attach-sheet-top h2{margin:10px 0 0;color:#281b35;font-size:16px;font-weight:850}
+.viva-attach-handle{position:absolute;top:0;left:50%;width:42px;height:5px;border-radius:99px;background:#d8d0df;transform:translateX(-50%)}
+.viva-attach-close{position:absolute;top:7px;right:0;display:grid;width:34px;height:34px;place-items:center;border:0;border-radius:50%;background:#f3ebfd;color:#6410C9}
+.viva-attach-close svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+.viva-attach-actions{display:grid;gap:2px}
+.viva-attach-bottom-sheet .viva-attach-option{display:flex;width:100%;min-height:60px;align-items:center;gap:14px;padding:8px 2px;border:0;border-radius:13px;background:#fff;color:#281b35;text-align:left;font-size:15px;font-weight:750}
+.viva-attach-bottom-sheet .viva-attach-option:active{background:#faf7fd}
+.viva-attach-option small{margin-left:auto;color:#8b8193;font-size:11px;font-weight:550}
+.viva-attach-icon{display:grid;width:44px;height:44px;flex:0 0 44px;place-items:center;border-radius:13px;background:#F3EBFD;color:#6410C9}
+.viva-attach-icon svg{width:25px;height:25px}
+.viva-attach-bottom-sheet .viva-attach-pref{display:flex;min-height:38px;align-items:center;gap:10px;margin-top:8px;padding:10px 0 0;border-top:1px solid #eee8f3;color:#5f536b;font-size:12px;font-weight:650}
+.viva-attach-bottom-sheet .viva-attach-pref input{width:17px;height:17px;accent-color:#6410C9}
+@keyframes vivaAttachSheetIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.viva-attach-bottom-sheet{animation:none}}
