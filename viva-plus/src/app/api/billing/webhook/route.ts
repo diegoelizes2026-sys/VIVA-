@@ -35,6 +35,11 @@ export async function POST(req: Request) {
       const status = map[p.status] || "pending";
       const { data: paymentRow, error: lookupError } = await db.from("viva_payments").select("id,user_id,plan_id,external_reference,metadata,subscription_id").eq("gateway_payment_id",String(p.id)).maybeSingle();
       if (lookupError) throw lookupError;
+      // Se o webhook chegar antes de o checkout terminar de gravar o pedido,
+      // não marque o evento como concluído: o Mercado Pago poderá reenviá-lo.
+      if (!paymentRow && String(p.external_reference || "").startsWith("viva_")) {
+        throw new Error("Pedido VIVA+ ainda não encontrado para este pagamento; aguardar nova tentativa do webhook.");
+      }
       if (paymentRow) {
         const { error } = await db.from("viva_payments").update({status,paid_at:status==="approved"?(p.date_approved || new Date().toISOString()):null,refunded_at:status==="refunded"?new Date().toISOString():null,updated_at:new Date().toISOString()}).eq("id",paymentRow.id);
         if (error) throw error;
