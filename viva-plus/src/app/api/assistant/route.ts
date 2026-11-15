@@ -96,7 +96,7 @@ export async function POST(request:Request){
   const response=await client.responses.create({
    model:configuredModel.trim(),
    instructions:imageDataUrl?"Analise a foto de comprovante, nota fiscal ou recibo. Extraia apenas dados visíveis. Responda APENAS com JSON válido contendo os campos kind (expense ou income), amount (número), description (texto), occurred_on (data YYYY-MM-DD), category, payment_method e confidence (high, medium ou low). Não adivinhe campos ilegíveis; se não for comprovante, retorne amount 0 e confidence low.":"Você é VIVA+, uma assistente pessoal acolhedora e prática. Responda em português brasileiro. Ajude a organizar agenda, hábitos, finanças pessoais e compras. Nunca invente dados nem afirme que registrou algo sem confirmação explícita. Antes de qualquer lançamento financeiro ou compromisso, apresente os dados para confirmação do usuário. Não afirme que pesquisou preços sem uma pesquisa real. Você não substitui consultoria financeira profissional.",
-   input:imageDataUrl?[...(history.length?history.slice(0,-1):[]),{role:"user",content:[{type:"input_text",text:message||"Extraia os dados financeiros desta imagem."},{type:"input_image",image_url:imageDataUrl}]}]:(history.length?history:[{role:"user",content:message}]),
+   input:imageDataUrl?[...(history.length?history.slice(0,-1):[]),{role:"user",content:[{type:"input_text",text:message||"Extraia os dados financeiros desta imagem."},{type:"input_image",image_url:imageDataUrl,detail:"auto"}]}]:(history.length?history:[{role:"user",content:message}]),
    max_output_tokens:Math.max(64,Math.min(16000,Number(guard.max_output_tokens)||300)),
   });
   const tokensIn=response.usage?.input_tokens??0;
