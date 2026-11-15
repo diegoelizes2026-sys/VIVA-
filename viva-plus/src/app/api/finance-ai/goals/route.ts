@@ -44,8 +44,17 @@ export async function POST(request:NextRequest){
   if(response)return response;
   if(!user)return NextResponse.json({error:"Faça login para acessar suas metas."},{status:401});
   const body=await request.json().catch(()=>({}));
-  const goalId=String(body.goal_id||"");
-  if(!/^[0-9a-f-]{36}$/i.test(goalId))return NextResponse.json({error:"Selecione uma meta válida."},{status:400});
+  let goalId=String(body.goal_id||"");
+  if(!/^[0-9a-f-]{36}$/i.test(goalId)){
+   const title=String(body.title||"").trim().slice(0,90);
+   const target=Number(body.target_amount);
+   const targetDate=body.target_date?String(body.target_date):null;
+   if(!title||!Number.isFinite(target)||target<=0||target>100000000)return NextResponse.json({error:"Informe o nome da meta e um valor válido."},{status:400});
+   if(targetDate&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(targetDate))return NextResponse.json({error:"Informe um prazo válido."},{status:400});
+   const {data:created,error:createError}=await supabase.from("viva_financial_goals").insert({user_id:user.id,title,target_amount:target,current_amount:0,target_date:targetDate}).select("id").single();
+   if(createError||!created)throw new Error("Não foi possível criar sua meta.");
+   goalId=created.id;
+  }
   const {data:goal,error:goalError}=await supabase.from("viva_financial_goals").select("id,title,target_amount,current_amount,target_date").eq("id",goalId).eq("user_id",user.id).maybeSingle();
   if(goalError||!goal)return NextResponse.json({error:"Meta não encontrada."},{status:404});
   const target=Number(goal.target_amount),current=Number(goal.current_amount||0);
