@@ -41,7 +41,8 @@ export async function GET(){
 export async function POST(request:NextRequest){
  try{
   const {supabase,user,response}=await authorize();
-  if(response||!user)return response;
+  if(response)return response;
+  if(!user)return NextResponse.json({error:"Faça login para acessar suas metas."},{status:401});
   const body=await request.json().catch(()=>({}));
   const goalId=String(body.goal_id||"");
   if(!/^[0-9a-f-]{36}$/i.test(goalId))return NextResponse.json({error:"Selecione uma meta válida."},{status:400});
@@ -88,7 +89,8 @@ export async function POST(request:NextRequest){
 export async function PATCH(request:NextRequest){
  try{
   const {supabase,user,response}=await authorize();
-  if(response||!user)return response;
+  if(response)return response;
+  if(!user)return NextResponse.json({error:"Faça login para acessar suas metas."},{status:401});
   const body=await request.json().catch(()=>({}));
   const planId=String(body.plan_id||"");
   if(body.contribution_amount!==undefined){
