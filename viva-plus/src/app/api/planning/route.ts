@@ -19,7 +19,7 @@ export async function GET(){try{const s=await createClient();const {data:{user}}
  ]);
  for(const x of [tx,bills,goals,budgets,cards,cardPurchases,members,dailyLimit,habits,habitLogs])if(x.error)throw x.error;
  const familyIds=(members.data||[]).map(x=>x.family_id);
- let families:any[]=[];let familyExpenses:any[]=[];
+ let families:Array<{id:string;name:string;invite_code:string;owner_id:string}>=[];let familyExpenses:Array<{id:string;family_id:string;description:string;amount:number;category:string;expense_date:string;created_by:string}>=[];
  if(familyIds.length){const [g,e]=await Promise.all([s.from("viva_family_groups").select("id,name,invite_code,owner_id").in("id",familyIds),s.from("viva_family_expenses").select("id,family_id,description,amount,category,expense_date,created_by").in("family_id",familyIds).order("expense_date",{ascending:false}).limit(100)]);if(g.error)throw g.error;if(e.error)throw e.error;families=g.data||[];familyExpenses=e.data||[];}
  return NextResponse.json({transactions:tx.data||[],bills:bills.data||[],goals:goals.data||[],budgets:budgets.data||[],cards:cards.data||[],cardPurchases:cardPurchases.data||[],dailyLimit:dailyLimit.data||null,habits:habits.data||[],habitLogs:habitLogs.data||[],families,familyExpenses});
  }catch(e){console.error("VIVA planning GET",e);return NextResponse.json({error:"Não foi possível carregar seu planejamento."},{status:500})}}
