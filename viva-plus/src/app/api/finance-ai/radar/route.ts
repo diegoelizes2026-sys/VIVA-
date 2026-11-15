@@ -6,6 +6,8 @@ import {buildFinanceContext} from "@/lib/finance-ai/purchase";
 
 export const runtime="nodejs";
 
+type RadarBill = { due_date: string; amount: number };
+
 export async function GET(){
  try{
   const supabase=await createClient();
@@ -22,8 +24,8 @@ export async function GET(){
   const alerts:Array<{code:string;severity:"high"|"medium"|"low";title:string;value:number|null;detail:string}>=[];
   if(context.forecast_balance<0)alerts.push({code:"negative_forecast",severity:"high",title:"Risco de saldo negativo",value:context.forecast_balance,detail:"A previsão do mês fica abaixo de zero depois dos gastos e contas já cadastrados."});
   const today=context.period.today;
-  const next7=context.bills_next_30_days.filter((b:any)=>b.due_date<=new Date(new Date(today+"T12:00:00").getTime()+7*86400000).toISOString().slice(0,10));
-  if(next7.length){const total=next7.reduce((s:number,b:any)=>s+Number(b.amount),0);alerts.push({code:"bills_due_7d",severity:"medium",title:"Contas chegando",value:Math.round(total*100)/100,detail:"Há contas cadastradas com vencimento nos próximos sete dias."})}
+  const next7=context.bills_next_30_days.filter((b: RadarBill)=>b.due_date<=new Date(new Date(today+"T12:00:00").getTime()+7*86400000).toISOString().slice(0,10));
+  if(next7.length){const total=next7.reduce((s:number,b: RadarBill)=>s+Number(b.amount),0);alerts.push({code:"bills_due_7d",severity:"medium",title:"Contas chegando",value:Math.round(total*100)/100,detail:"Há contas cadastradas com vencimento nos próximos sete dias."})}
   if(context.daily_limit!==null&&context.daily_remaining!==null&&context.daily_remaining<=0)alerts.push({code:"daily_limit_reached",severity:"high",title:"Limite diário comprometido",value:context.daily_limit,detail:"Os gastos registrados hoje já alcançaram o limite diário."});
   else if(context.daily_limit!==null&&context.daily_remaining!==null&&context.daily_remaining<=context.daily_limit*.2)alerts.push({code:"daily_limit_near",severity:"medium",title:"Pouca margem no limite diário",value:context.daily_remaining,detail:"Restam vinte por cento ou menos do limite diário."});
   const dayOfMonth=Number(today.slice(8,10));const daysInMonth=new Date(Number(today.slice(0,4)),Number(today.slice(5,7)),0).getDate();
