@@ -35,14 +35,34 @@ export async function POST(request:Request){
   if(!user)return NextResponse.json({error:"Faça login para conversar com a VIVA+."},{status:401});
   const parsed=schema.safeParse(await request.json());
   if(!parsed.success)return NextResponse.json({error:"Mensagem inválida. Use até 4.000 caracteres."},{status:400});
-  if(!process.env.OPENAI_API_KEY)return NextResponse.json({error:"Assistente temporariamente indisponível."},{status:503});
-
   const message=parsed.data.message;
+  const lower=message.toLocaleLowerCase("pt-BR");
+  const asksBills=/\\b(o que vence|contas? (?:a pagar|vencem)|quanto tenho a pagar|minhas contas|vencimentos)\\b/.test(lower);
+  if(asksBills){
+   const today=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+   const week=/semana/.test(lower);const end=new Date(today+"T12:00:00Z");end.setUTCDate(end.getUTCDate()+(week?7:30));
+   const {data,error}=await supabase.from("viva_bills").select("name,amount,due_date,status").eq("user_id",user.id).neq("status","paid").lte("due_date",end.toISOString().slice(0,10)).order("due_date").limit(100);
+   if(error)throw error;
+   const bills=data||[];const sum=bills.reduce((n,b)=>n+Number(b.amount),0);
+   const money=(n:number)=>n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+   const answer=bills.length?("Você tem "+money(sum)+" em contas a pagar"+(week?" nesta semana":" nos próximos 30 dias")+":\\n"+bills.map(b=>"- "+b.name+" · "+money(Number(b.amount))+" · "+new Date(b.due_date+"T12:00:00").toLocaleDateString("pt-BR")).join("\\n")):"Não encontrei contas em aberto nesse período.";
+   return NextResponse.json({answer});
+  }
+  const billAmount=message.match(/(?:r\\$\\s*)?(\\d{1,3}(?:\\.\\d{3})*(?:,\\d{1,2})?|\\d+(?:,\\d{1,2})?)/i);
+  const billDay=message.match(/\\bdia\\s+(\\d{1,2})\\b/i);
+  if(/\\b(tenho que pagar|preciso pagar|pagar|vence)\\b/i.test(message)&&billAmount&&billDay){
+   const amount=Number(billAmount[1].replace(/\\./g,"").replace(",","."));
+   const day=Number(billDay[1]);const now=new Date();const due=new Date(Date.UTC(now.getFullYear(),now.getMonth(),day,12));
+   if(due<new Date(Date.UTC(now.getFullYear(),now.getMonth(),new Date().getDate(),0)))due.setUTCMonth(due.getUTCMonth()+1);
+   const name=message.replace(/tenho que pagar|preciso pagar|pagar|vence/ig,"").replace(billDay[0],"").replace(billAmount[0],"").replace(/[,.]/g," ").trim()||"Conta";
+   if(amount>0&&day>=1&&day<=31)return NextResponse.json({billDraft:{name:name[0].toUpperCase()+name.slice(1),amount,due_date:due.toISOString().slice(0,10),recurrence:"once",installments:1,category:"Contas"}});
+  }
   const financialIntent=parseTransactionIntent(message);
   if(financialIntent){
    if("clarification" in financialIntent)return NextResponse.json({clarification:true,amount:financialIntent.amount});
    return NextResponse.json(financialIntent);
   }
+  if(!process.env.OPENAI_API_KEY)return NextResponse.json({error:"Assistente temporariamente indisponível."},{status:503});
   const isRadarRequest=/\b(menor preço|pesquise.*preço|radar de preço|compare preços|onde está mais barato)\b/i.test(message);
   const feature=parsed.data.feature==="photo"?"photo":parsed.data.feature==="voice"?"voice":isRadarRequest?"radar":"chat";
   const estimatedInputTokens=Math.ceil((message.length+(parsed.data.history||[]).slice(-8).reduce((sum,item)=>sum+item.content.length,0)+900)/4);
