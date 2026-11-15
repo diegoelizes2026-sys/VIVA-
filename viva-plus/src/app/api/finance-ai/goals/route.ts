@@ -27,7 +27,8 @@ async function authorize(){
 export async function GET(){
  try{
   const {supabase,user,response}=await authorize();
-  if(response||!user)return response;
+  if(response)return response;
+  if(!user)return NextResponse.json({error:"Faça login para acessar suas metas."},{status:401});
   const [goals,plans]=await Promise.all([
    supabase.from("viva_financial_goals").select("id,title,target_amount,current_amount,target_date").eq("user_id",user.id).order("created_at",{ascending:false}).limit(30),
    supabase.from("viva_financial_goal_plans").select("id,goal_id,monthly_target,weekly_target,remaining_amount,months_remaining,steps,status,updated_at").eq("user_id",user.id).order("updated_at",{ascending:false}).limit(30)
