@@ -48,7 +48,7 @@ async function enqueueBills(admin:ReturnType<typeof createAdminClient>,now:Date)
  const {data:settings,error:settingsError}=await admin.from("viva_notification_settings").select("user_id,timezone,bills_enabled").in("user_id",[...subscribed]);if(settingsError)throw settingsError;
  const settingsByUser=new Map((settings||[]).map(s=>[s.user_id,s] as const));
  const defaultTz="America/Sao_Paulo";const today=localDate(now,defaultTz);const until=addDays(today,1);
- const {data:bills,error}=await admin.from("viva_bills").select("id,user_id,name,amount,due_date,status,reminder_snoozed_until").eq("status","pending").lte("due_date",until).limit(1000);if(error)throw error;
+ const {data:bills,error}=await admin.from("viva_bills").select("id,user_id,name,amount,due_date,status,reminder_snoozed_until").in("status",["pending","overdue"]).lte("due_date",until).limit(1000);if(error)throw error;
  let count=0;
  for(const bill of bills||[]){if(!subscribed.has(bill.user_id))continue;const setting=settingsByUser.get(bill.user_id);if(setting?.bills_enabled===false)continue;const tz=setting?.timezone||defaultTz;const localToday=localDate(now,tz);const due=String(bill.due_date);const snoozed=String(bill.reminder_snoozed_until||"");if(snoozed&&snoozed>localToday)continue;
   const moneyLabel=money(Number(bill.amount));const common={user_id:bill.user_id,notification_type:"bill" as const,title:due<localToday?"Conta em atraso":"Conta a vencer",body:due<localToday?bill.name+" está em atraso. Valor: "+moneyLabel+". Abra o VIVA+ para regularizar.":bill.name+" vence "+(due===localToday?"hoje":"amanhã")+". Valor: "+moneyLabel+".",target_url:"/contas",payload:{type:"bill",billId:bill.id,billName:bill.name,dueDate:due,amount:Number(bill.amount)}};
