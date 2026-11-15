@@ -12,7 +12,7 @@ export function parseSavingsGoalIntent(message:string):SavingsGoalIntent|null{
  if(!amount||amount<=0)return null;
  let goalWords=text.replace(/(?:r\$\s*)?(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:,\d{1,2})?)(?:\s*(?:mil|k))?/i," ");
  goalWords=goalWords.replace(/\b(quero|preciso|pretendo|vou|minha meta|meu objetivo|objetivo|meta|juntar|junto|junta|guardar|guardo|guarda|poupar|poupo|economizar|reservar|para|pra|de|do|da|até|em|no|na)\b/g," ");
- goalWords=goalWords.replace(/\bcompra\b/g,"comprar").replace(/\s+/g," ").replace(/^[,;:\s-]+|[,;:\s-]+$/g,"").trim();
+ goalWords=goalWords.replace(/\bcompra\b/g,"comprar").replace(/[“”".,!?;:]+/g," ").replace(/\s+/g," ").replace(/^[,;:\s-]+|[,;:\s-]+$/g,"").trim();
  if(!goalWords)return null;
  const title=goalWords[0].toUpperCase()+goalWords.slice(1);
  return {title:title.slice(0,90),target_amount:amount};
