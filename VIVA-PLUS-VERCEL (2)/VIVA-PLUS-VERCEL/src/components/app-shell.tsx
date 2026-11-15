@@ -52,6 +52,11 @@ export default function AppShell({ children, email }: { children: React.ReactNod
           </Link>;
         })}
       </nav>
+      <div className="mt-6 rounded-2xl border border-purple-200 bg-purple-50 p-4">
+        <p className="text-sm font-extrabold text-purple-900">Desbloqueie mais do VIVA+</p>
+        <p className="mt-1 text-xs leading-5 text-purple-800">Conheça os planos Essencial e Pro e escolha os recursos ideais para sua rotina.</p>
+        <a href="https://viva-plus-fundacao-mvp-1.vercel.app/planos" className="mt-3 flex items-center justify-center rounded-xl bg-purple-700 px-3 py-2.5 text-xs font-bold text-white transition hover:bg-purple-800" onClick={() => setOpen(false)}>Conhecer os planos</a>
+      </div>
       <div className="mt-auto pt-6">
         <Link href="/perfil" className="flex items-center gap-3 rounded-xl border p-3 transition-colors hover:bg-neutral-50" style={{ borderColor: "var(--color-gray)" }}>
           <span className="icon-surface h-9 w-9 shrink-0"><UserRound size={18}/></span>
