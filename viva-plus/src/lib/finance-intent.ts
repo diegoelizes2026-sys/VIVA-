@@ -6,16 +6,14 @@ export function parseTransactionIntent(message:string){const text=message.toLowe
 export type SavingsGoalIntent={title:string;target_amount:number};
 export function parseSavingsGoalIntent(message:string):SavingsGoalIntent|null{
  const text=message.trim().toLowerCase();
- if(!/\b(quero|preciso|pretendo|vou|minha meta|meu objetivo|objetivo|meta|juntar|guardar|poupar|economizar|reservar)\b/.test(text))return null;
- if(/\b(gastei|paguei|comprei|recebi|ganhei|sal[aá]rio|pix recebido|despesa|receita)\b/.test(text))return null;
+ if(!/\\b(quero|preciso|pretendo|vou|minha meta|meu objetivo|objetivo|meta|juntar|guardar|poupar|economizar|reservar)\\b/.test(text))return null;
+ if(/\\b(gastei|paguei|comprei|recebi|ganhei|sal[aá]rio|pix recebido|despesa|receita)\\b/.test(text))return null;
  const amount=extractMoneyAmount(text);
  if(!amount||amount<=0)return null;
- const goalWords=text
-  .replace(/(?:r\$\s*)?(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:,\d{1,2})?)(?:\s*(?:mil|k))?/i," ")
-  .replace(/\b(quero|preciso|pretendo|vou|minha meta|meu objetivo|objetivo|meta|juntar|guardar|poupar|economizar|reservar|para|pra|de|do|da|um|uma|o|a|até|em|no|na)\b/g," ")
-  .replace(/\b(5|10|15|20|30|60|90)\s*dias?\b/g," ")
-  .replace(/\s+/g," ").replace(/^[,;:\s-]+|[,;:\s-]+$/g,"").trim();
+ let goalWords=text.replace(/(?:r\\$\\s*)?(\\d{1,3}(?:\\.\\d{3})+(?:,\\d{1,2})?|\\d+(?:,\\d{1,2})?)(?:\\s*(?:mil|k))?/i," ");
+ goalWords=goalWords.replace(/\\b(quero|preciso|pretendo|vou|minha meta|meu objetivo|objetivo|meta|juntar|junto|junta|guardar|guardo|guarda|poupar|poupo|economizar|reservar|para|pra|de|do|da|até|em|no|na)\\b/g," ");
+ goalWords=goalWords.replace(/\\bcompra\\b/g,"comprar").replace(/\\s+/g," ").replace(/^[,;:\\s-]+|[,;:\\s-]+$/g,"").trim();
  if(!goalWords)return null;
- const title=goalWords.length>0?goalWords[0].toUpperCase()+goalWords.slice(1):"Minha meta";
+ const title=goalWords[0].toUpperCase()+goalWords.slice(1);
  return {title:title.slice(0,90),target_amount:amount};
 }
