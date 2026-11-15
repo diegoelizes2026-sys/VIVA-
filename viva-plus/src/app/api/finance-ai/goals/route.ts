@@ -1,5 +1,6 @@
 import {NextRequest,NextResponse} from "next/server";
 import {createClient} from "@/lib/supabase/server";
+import OpenAI from "openai";
 
 export const runtime="nodejs";
 type Goal={id:string;title:string;target_amount:number;current_amount:number;target_date:string|null};
@@ -63,7 +64,25 @@ export async function POST(request:NextRequest){
    user_id:user.id,goal_id:goal.id,monthly_target:monthly,weekly_target:weekly,remaining_amount:remaining,months_remaining:months,steps,status,updated_at:new Date().toISOString()
   },{onConflict:"user_id,goal_id"}).select("id,goal_id,monthly_target,weekly_target,remaining_amount,months_remaining,steps,status,updated_at").single();
   if(error||!plan)throw new Error("Não foi possível salvar o plano.");
-  return NextResponse.json({plan,goal,progress_percent:Math.min(100,round(current/target*100)),message:remaining===0?"Parabéns! Essa meta já foi alcançada.": "Seu plano de ação foi calculado e salvo."});
+  let explanation="Organizei sua meta em passos menores. Siga o ritmo sugerido e revise o plano sempre que sua renda ou suas prioridades mudarem.";
+  const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:"chat",p_estimated_input_tokens:900,p_prefer_cheap:true});
+  if(!guardError&&guard?.allowed){
+   const modelKey=String(guard.model_key||"cheap");
+   const model=process.env[modelKey==="balanced"?"OPENAI_MODEL_BALANCED":"OPENAI_MODEL_CHEAP"]||"";
+   const norm=(v:string)=>v.trim().toLowerCase().replace(/-\\d{4}-\\d{2}-\\d{2}$/,"");
+   if(process.env.OPENAI_API_KEY&&model&&norm(model)===norm(String(guard.model_id||""))){
+    try{
+     const response=await new OpenAI({apiKey:process.env.OPENAI_API_KEY}).responses.create({model,max_output_tokens:130,instructions:"Você é a VIVA+, assistente financeira acolhedora. Explique em duas frases curtas como seguir o plano de uma meta. Não escreva números, valores, datas, percentuais nem moedas; o aplicativo já mostra os cálculos. Não invente dados nem faça novos cálculos.",input:JSON.stringify({goal:goal.title,remaining,monthly_target:monthly,weekly_target:weekly,months_remaining:months,steps:steps.map(s=>s.title)})});
+     const raw=String(response.output_text||"").trim();if(raw&&!/\\d|R\\$|%/.test(raw))explanation=raw;
+     const ti=response.usage?.input_tokens??0,to=response.usage?.output_tokens??0;
+     const usd=(ti*Number(guard.input_usd_per_million)+to*Number(guard.output_usd_per_million))/1000000;
+     const brlCost=usd*Number(guard.usd_brl_rate||6.5)*1.25;
+     const settled=await supabase.rpc("viva_settle_ai_usage",{p_reservation_id:guard.reservation_id,p_model:model,p_tokens_in:ti,p_tokens_out:to,p_cost_usd:usd,p_cost_brl:brlCost});
+     if(settled.error)throw settled.error;
+    }catch(error){await supabase.rpc("viva_release_ai_reservation",{p_reservation_id:guard.reservation_id});console.error("VIVA goal plan explanation failed",error)}
+   }else await supabase.rpc("viva_release_ai_reservation",{p_reservation_id:guard.reservation_id});
+  }
+  return NextResponse.json({plan,goal,progress_percent:Math.min(100,round(current/target*100)),explanation,message:remaining===0?"Parabéns! Essa meta já foi alcançada.":"Seu plano de ação foi calculado e salvo."});
  }catch(error){console.error("VIVA goal plans POST",error);return NextResponse.json({error:error instanceof Error?error.message:"Não foi possível criar seu plano."},{status:500})}
 }
 export async function PATCH(request:NextRequest){
@@ -72,6 +91,20 @@ export async function PATCH(request:NextRequest){
   if(response||!user)return response;
   const body=await request.json().catch(()=>({}));
   const planId=String(body.plan_id||"");
+  if(body.contribution_amount!==undefined){
+   const amount=Number(body.contribution_amount);
+   if(!/^[0-9a-f-]{36}$/i.test(planId)||!Number.isFinite(amount)||amount<=0||amount>100000000)return NextResponse.json({error:"Informe um valor de aporte válido."},{status:400});
+   const {data:plan,error:planError}=await supabase.from("viva_financial_goal_plans").select("id,goal_id").eq("id",planId).eq("user_id",user.id).maybeSingle();
+   if(planError||!plan)return NextResponse.json({error:"Plano não encontrado."},{status:404});
+   const {data:goal,error:goalError}=await supabase.from("viva_financial_goals").select("id,title,target_amount,current_amount,target_date").eq("id",plan.goal_id).eq("user_id",user.id).maybeSingle();
+   if(goalError||!goal)return NextResponse.json({error:"Meta não encontrada."},{status:404});
+   const current=Number(goal.current_amount||0),target=Number(goal.target_amount),next=round(Math.min(target,current+amount)),remaining=round(Math.max(0,target-next)),months=monthsBetween(goal.target_date);
+   const {data:updatedGoal,error:updateGoalError}=await supabase.from("viva_financial_goals").update({current_amount:next}).eq("id",goal.id).eq("user_id",user.id).select("id,title,target_amount,current_amount,target_date").single();
+   if(updateGoalError||!updatedGoal)throw new Error("Não foi possível registrar o aporte.");
+   const {data:updatedPlan,error:updatePlanError}=await supabase.from("viva_financial_goal_plans").update({remaining_amount:remaining,monthly_target:round(remaining/months),weekly_target:round(remaining/(months*52/12)),months_remaining:months,status:remaining===0?"completed":"active",updated_at:new Date().toISOString()}).eq("id",planId).eq("user_id",user.id).select("id,goal_id,monthly_target,weekly_target,remaining_amount,months_remaining,steps,status,updated_at").single();
+   if(updatePlanError||!updatedPlan)throw new Error("Aporte salvo, mas não consegui atualizar o plano. Recarregue a tela.");
+   return NextResponse.json({goal:updatedGoal,plan:updatedPlan,progress_percent:target>0?Math.min(100,round(next/target*100)):0,message:remaining===0?"Meta alcançada! Parabéns.":"Aporte registrado e progresso atualizado."});
+  }
   const stepIndex=Number(body.step_index);
   const done=body.done;
   if(!/^[0-9a-f-]{36}$/i.test(planId)||!Number.isInteger(stepIndex)||typeof done!=="boolean")return NextResponse.json({error:"Atualização inválida."},{status:400});
