@@ -34,7 +34,9 @@ export async function GET(){
   const cached=await supabase.from("viva_finance_ai_decision_cache").select("payload").eq("user_id",user.id).eq("cache_key",cacheKey).maybeSingle();
   if(cached.data?.payload)return NextResponse.json({enabled:true,has_alerts:true,radar:cached.data.payload});
   let explanation="Encontrei alguns pontos que merecem sua atenção. Confira os alertas e priorize os itens mais urgentes antes de assumir novos gastos.";
-  const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:"radar",p_estimated_input_tokens:1200,p_prefer_cheap:true});
+  let usage:{credits:number;daily_used:number;daily_limit:number;warning_80:boolean}|undefined;
+  const creditFeature=(admin.data||access.data?.enabled)?"chat":"radar";
+  const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:creditFeature,p_estimated_input_tokens:1200,p_prefer_cheap:true});
   if(!guardError&&guard?.allowed){
    const modelKey=String(guard.model_key||"cheap");
    const model=process.env[modelKey==="balanced"?"OPENAI_MODEL_BALANCED":"OPENAI_MODEL_CHEAP"]||"";
@@ -49,11 +51,12 @@ export async function GET(){
      const brlCost=usd*Number(guard.usd_brl_rate||6.5)*1.25;
      const settled=await supabase.rpc("viva_settle_ai_usage",{p_reservation_id:guard.reservation_id,p_model:model,p_tokens_in:ti,p_tokens_out:to,p_cost_usd:usd,p_cost_brl:brlCost});
      if(settled.error)throw settled.error;
+     usage={credits:Number(guard.credits_cost||0),daily_used:Number(guard.daily_used||0),daily_limit:Number(guard.daily_limit||0),warning_80:Boolean(guard.warning_80)};
     }catch(error){await supabase.rpc("viva_release_ai_reservation",{p_reservation_id:guard.reservation_id});console.error("VIVA radar explanation failed",error)}
    }else await supabase.rpc("viva_release_ai_reservation",{p_reservation_id:guard.reservation_id});
   }
   const radar={alerts:compact,explanation,data_insufficient:context.data_insufficient,checked_at:new Date().toISOString()};
   await supabase.from("viva_finance_ai_decision_cache").upsert({user_id:user.id,cache_key:cacheKey,payload:radar},{onConflict:"user_id,cache_key"});
-  return NextResponse.json({enabled:true,has_alerts:true,radar});
+  return NextResponse.json({enabled:true,has_alerts:true,radar,...(usage?{usage}:{})});
  }catch(error){console.error("VIVA finance radar error",error);return NextResponse.json({error:"Não foi possível verificar o Radar financeiro agora."},{status:500})}
 }
