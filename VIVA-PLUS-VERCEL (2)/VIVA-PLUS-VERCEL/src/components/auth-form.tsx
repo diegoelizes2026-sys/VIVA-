@@ -15,13 +15,16 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   async function submit(e: FormEvent) {
-    e.preventDefault(); setBusy(true); setMessage("");
+    e.preventDefault(); setMessage("");
+    if (mode === "signup" && !termsAccepted) { setMessage("Para criar sua conta, confirme que leu e aceita os Termos de Responsabilidade."); return; }
+    setBusy(true);
     try {
       const supabase = createClient();
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name }, emailRedirectTo: `${location.origin}/auth/callback` } });
+        const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name, responsibility_terms_accepted: true, responsibility_terms_version: "1.0-2026-11-15", responsibility_terms_accepted_at: new Date().toISOString() }, emailRedirectTo: `${location.origin}/auth/callback` } });
         if (error) throw error;
         setMessage("Cadastro enviado. Confira seu e-mail para confirmar a conta, se a confirmação estiver ativada.");
       } else if (mode === "login") {
@@ -53,7 +56,8 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
           {mode === "signup" && <label className="block text-sm font-semibold text-neutral-800">Nome completo<input className="field mt-2" required value={name} onChange={e => setName(e.target.value)} placeholder="Como podemos chamar você?"/></label>}
           <label className="block text-sm font-semibold text-neutral-800">E-mail<span className="relative mt-2 block"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={17}/><input className="field pl-10" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="maria@email.com"/></span></label>
           {mode !== "reset" && <label className="block text-sm font-semibold text-neutral-800">Senha<span className="relative mt-2 block"><LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={17}/><input className="field auth-password-input pl-10 pr-12" type={showPassword ? "text" : "password"} autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={8} required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••••"/>{mode === "login" && <button type="button" className="auth-password-toggle" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}>{showPassword ? <EyeOff size={19}/> : <Eye size={19}/>}</button>}</span></label>}
-          {mode === "login" && <div className="auth-options"><label><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}/> <span>Lembrar de mim</span></label><Link href="/recuperar-senha">Esqueci a senha</Link></div>}<button className="btn-primary auth-submit mt-2 w-full" disabled={busy}>{busy ? "Aguarde..." : mode === "signup" ? "Criar conta" : mode === "reset" ? "Enviar instruções" : <><span>Entrar</span><ArrowRight size={20}/></>}</button>
+          {mode === "signup" && <div className="rounded-xl border border-[var(--color-gray)] bg-neutral-50 p-4 text-sm text-neutral-700"><label className="flex cursor-pointer items-start gap-3"><input type="checkbox" className="mt-1" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} required/><span>Li e aceito os <Link className="font-bold text-[var(--color-primary)] underline" href="/termos-de-responsabilidade" target="_blank">Termos de Responsabilidade</Link>. Entendo que o VIVA+ é uma ferramenta de apoio à organização pessoal e financeira, não substitui orientação profissional e que sou responsável por conferir as informações e decisões que tomar.</span></label></div>}
+          {mode === "login" && <div className="auth-options"><label><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)}/> <span>Lembrar de mim</span></label><Link href="/recuperar-senha">Esqueci a senha</Link></div>}<button className="btn-primary auth-submit mt-2 w-full" disabled={busy || (mode === "signup" && !termsAccepted)}>{busy ? "Aguarde..." : mode === "signup" ? "Criar conta" : mode === "reset" ? "Enviar instruções" : <><span>Entrar</span><ArrowRight size={20}/></>}</button>
           {message && <p role="status" className="rounded-xl border border-[var(--color-gray)] bg-neutral-50 p-3 text-sm leading-6 text-neutral-700">{message}</p>}
         </form>
         <div className="auth-alternatives mt-7 flex flex-wrap justify-between gap-3 text-sm font-medium text-neutral-500">
