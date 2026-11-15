@@ -19,7 +19,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
   async function submit(e: FormEvent) {
     e.preventDefault(); setBusy(true); setMessage("");
     try {
-      const supabase = createClient();
+      const supabase = createClient(mode === "login" ? remember : true);
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { data: { full_name: name.trim(), app_source: "viva_plus" }, emailRedirectTo: `${location.origin}/auth/callback` } });
         if (error) {
@@ -55,7 +55,9 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
             return;
           }
         }
-        router.replace(params.get("next") || "/assistente"); router.refresh();
+        const requestedNext = params.get("next") || "/assistente";
+        const safeNext = requestedNext.startsWith("/") && !requestedNext.startsWith("//") && !requestedNext.includes("\\") ? requestedNext : "/assistente";
+        router.replace(safeNext); router.refresh();
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/auth/callback?next=/alterar-senha` });
         if (error) throw error;
