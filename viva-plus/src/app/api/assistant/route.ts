@@ -10,7 +10,7 @@ const schema=z.object({
  message:z.string().trim().min(1).max(4000),
  history:z.array(z.object({role:z.enum(["user","assistant"]),content:z.string().max(4000)})).max(12).optional(),
  feature:z.enum(["chat","voice","photo","radar"]).optional(),
- imageDataUrl:z.string().max(8_000_000).optional(),
+ imageDataUrl:z.string().max(4_200_000).optional(),
 });
 
 export async function GET(){
