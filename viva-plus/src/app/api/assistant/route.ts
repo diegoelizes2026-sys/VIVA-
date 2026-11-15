@@ -62,7 +62,7 @@ export async function POST(request:Request){
   }
   const financialIntent=parseTransactionIntent(message);
   if(financialIntent){
-   if("clarification" in financialIntent)return NextResponse.json({clarification:true,amount:financialIntent.amount});
+   if("clarification" in financialIntent)return NextResponse.json({clarification:financialIntent.clarification});
    return NextResponse.json(financialIntent);
   }
   if(!process.env.OPENAI_API_KEY)return NextResponse.json({error:"Assistente temporariamente indisponível."},{status:503});
