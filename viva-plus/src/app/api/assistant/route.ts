@@ -13,23 +13,27 @@ async function deterministicResponse(supabase:Awaited<ReturnType<typeof createCl
  const pending=[...history].reverse().find(item=>item.role==="assistant"&&item.clarification)?.clarification;
  if(pending){const kindMatch=message.match(/^\\s*(despesas?|receitas?|expense|income)\\s*[.!]?\\s*$/i);const amount=extractMoneyAmount(message);if(kindMatch){const kind=/receita|income/i.test(kindMatch[1])?"income":"expense";return NextResponse.json({transactionDraft:{...pending,amount:amount??pending.amount??0,kind}})}if(amount)return NextResponse.json({clarification:{...pending,amount},clarificationPrompt:"Anotei "+Number(amount).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})+". Falta escolher: despesa ou receita."})}
  const lower=message.toLocaleLowerCase("pt-BR");
- const eventIntent=/\b(agende|agendar|marque|marcar|adicionar.*agenda|coloque.*agenda|compromisso|reuni[aã]o|me lembre|me avise|avise|lembrete)\b/i.test(lower);
+ const eventIntent=/\b(agenda|agende|agendar|marque|marcar|adicionar.*agenda|coloque.*agenda|compromisso|reuni[aã]o|me lembre|me avise|avise|lembrete)\b/i.test(lower);
  const eventTime=message.match(/\b(?:às?\s*)?(\d{1,2})(?::(\d{2})|h(?:\s*(\d{2}))?)\b/i);
  const explicitDate=message.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/);
  const dayOnly=message.match(/\bdia\s+(\d{1,2})\b/i);
  const relative=/\bamanh[ãa]\b/i.test(lower)?"tomorrow":/\bhoje\b/i.test(lower)?"today":null;
- if(eventIntent&&eventTime&&(explicitDate||dayOnly||relative)){
-  const tz="America/Sao_Paulo";const now=new Date();const local=new Intl.DateTimeFormat("en-CA",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit"}).format(now);
-  const [cy,cm,cd]=local.split("-").map(Number);let year=cy,month=cm,day=cd;
+ if(eventIntent){
+  if(!eventTime)return NextResponse.json({answer:"Claro! Qual horário devo colocar na sua agenda? Se quiser, informe também o dia. 💜"});
+  const tz="America/Sao_Paulo";const now=new Date();const parts=new Intl.DateTimeFormat("en-CA",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(now);
+  const part=(type:string)=>Number(parts.find(x=>x.type===type)?.value||0);
+  const cy=part("year"),cm=part("month"),cd=part("day"),currentHour=part("hour"),currentMinute=part("minute");
+  let year=cy,month=cm,day=cd;
   if(explicitDate){day=Number(explicitDate[1]);month=Number(explicitDate[2]);year=explicitDate[3]?Number(explicitDate[3].length===2?"20"+explicitDate[3]:explicitDate[3]):cy}
   else if(dayOnly){day=Number(dayOnly[1]);const candidate=new Date(Date.UTC(cy,cm-1,day,12));if(candidate<new Date(Date.UTC(cy,cm-1,cd,0)))candidate.setUTCMonth(candidate.getUTCMonth()+1);year=candidate.getUTCFullYear();month=candidate.getUTCMonth()+1}
   else if(relative==="tomorrow"){const next=new Date(Date.UTC(cy,cm-1,cd+1,12));year=next.getUTCFullYear();month=next.getUTCMonth()+1;day=next.getUTCDate()}
-  const hour=Number(eventTime[1]);const minute=Number(eventTime[2]||eventTime[3]||0);
-  if(month>=1&&month<=12&&day>=1&&day<=31&&hour>=0&&hour<=23&&minute>=0&&minute<=59){
-   const date=new Date(Date.UTC(year,month-1,day,hour+3,minute));
-   const title=message.replace(/\b(agende|agendar|marque|marcar|adicionar|coloque|um|uma|compromisso|lembrete|me lembre|na agenda|para mim)\b/ig," ").replace(/\bamanh[ãa]\b|\bhoje\b/ig," ").replace(/\bdia\s+\d{1,2}\b|\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/ig," ").replace(/\b(?:às?\s*)?\d{1,2}(?::\d{2}|h(?:\s*\d{2})?)\b/ig," ").replace(/[,.!?]/g," ").replace(/\s+/g," ").trim();
-   if(title.length>=2)return NextResponse.json({eventDraft:{title:title.slice(0,120),start_at:date.toISOString(),description:"",reminder_enabled:true,reminder_before_minutes:30,reminder_at_start:true}});
-  }
+  const hour=Number(eventTime[1]),minute=Number(eventTime[2]||eventTime[3]||0);
+  if(month<1||month>12||day<1||day>31||hour<0||hour>23||minute<0||minute>59)return NextResponse.json({answer:"Não consegui identificar a data ou o horário. Pode me informar novamente? 💜"});
+  if(!explicitDate&&!dayOnly&&!relative&&(hour<currentHour||(hour===currentHour&&minute<=currentMinute))){const next=new Date(Date.UTC(cy,cm-1,cd+1,12));year=next.getUTCFullYear();month=next.getUTCMonth()+1;day=next.getUTCDate()}
+  const date=new Date(Date.UTC(year,month-1,day,hour+3,minute));
+  const title=message.replace(/\b(agenda|agende|agendar|marque|marcar|adicionar|coloque|um|uma|compromisso|lembrete|me lembre|me avise|avise|na agenda|para mim)\b/ig," ").replace(/\bamanh[ãa]\b|\bhoje\b/ig," ").replace(/\bdia\s+\d{1,2}\b|\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/ig," ").replace(/\b(?:às?\s*)?\d{1,2}(?::\d{2}|h(?:\s*\d{2})?)\b/ig," ").replace(/[,.!?]/g," ").replace(/\s+/g," ").trim();
+  if(title.length>=2)return NextResponse.json({eventDraft:{title:title.slice(0,120),start_at:date.toISOString(),description:"",reminder_enabled:true,reminder_before_minutes:30,reminder_at_start:true}});
+  return NextResponse.json({answer:"Qual é o nome do compromisso que devo colocar na agenda? 💜"});
  }
 
  const asksBills=/\b(o que vence|contas? (?:a pagar|vencem)|quanto tenho a pagar|minhas contas|vencimentos)\b/.test(lower);
