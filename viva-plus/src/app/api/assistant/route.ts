@@ -13,7 +13,7 @@ async function deterministicResponse(supabase:Awaited<ReturnType<typeof createCl
  const pending=[...history].reverse().find(item=>item.role==="assistant"&&item.clarification)?.clarification;
  if(pending){const kindMatch=message.match(/^\\s*(despesas?|receitas?|expense|income)\\s*[.!]?\\s*$/i);const amount=extractMoneyAmount(message);if(kindMatch){const kind=/receita|income/i.test(kindMatch[1])?"income":"expense";return NextResponse.json({transactionDraft:{...pending,amount:amount??pending.amount??0,kind}})}if(amount)return NextResponse.json({clarification:{...pending,amount},clarificationPrompt:"Anotei "+Number(amount).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})+". Falta escolher: despesa ou receita."})}
  const lower=message.toLocaleLowerCase("pt-BR");
- const eventIntent=/\b(agende|agendar|marque|marcar|adicionar.*agenda|coloque.*agenda|compromisso|reuni[aã]o|me lembre|lembrete)\b/i.test(lower);
+ const eventIntent=/\b(agende|agendar|marque|marcar|adicionar.*agenda|coloque.*agenda|compromisso|reuni[aã]o|me lembre|me avise|avise|lembrete)\b/i.test(lower);
  const eventTime=message.match(/\b(?:às?\s*)?(\d{1,2})(?::(\d{2})|h(?:\s*(\d{2}))?)\b/i);
  const explicitDate=message.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/);
  const dayOnly=message.match(/\bdia\s+(\d{1,2})\b/i);
