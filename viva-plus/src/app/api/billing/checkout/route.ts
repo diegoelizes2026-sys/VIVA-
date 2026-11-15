@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdmin } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 export async function POST(req: Request) {
   try {
@@ -17,10 +18,15 @@ export async function POST(req: Request) {
     const amount = Number(interval === "annual" ? plan.annual_price_brl : plan.monthly_price_brl);
     if (!Number.isFinite(amount) || amount <= 0) return NextResponse.json({ error: "Preço inválido." }, { status: 400 });
     const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     // Em testes, use o e-mail da conta compradora de teste do Mercado Pago.
     // Em produção, deixe MERCADOPAGO_TEST_PAYER_EMAIL vazio.
     const payerEmail = process.env.MERCADOPAGO_TEST_PAYER_EMAIL || user.email;
     if (!token) return NextResponse.json({ error: "Mercado Pago não configurado." }, { status: 503 });
+    if (!serviceRoleKey) return NextResponse.json({ error: "Serviço de pedidos temporariamente indisponível." }, { status: 503 });
+    // A gravação é feita no servidor com service role, após autenticar o comprador.
+    // Não reabrir INSERT para usuários autenticados nas tabelas de cobrança.
+    const adminDb = createAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const origin = new URL(req.url).origin;
     const external_reference = `viva_${user.id}_${randomUUID()}`;
     const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
@@ -33,7 +39,7 @@ export async function POST(req: Request) {
       })});
       const data = await mp.json();
       if (!mp.ok || !data.id || !data.init_point) { console.error("MP preapproval", data); return NextResponse.json({ error: "Falha ao criar assinatura no Mercado Pago." }, { status: 502 }); }
-      const { error } = await db.from("viva_subscriptions").insert({ user_id: user.id, plan_id: plan.id, status: "pending", billing_interval: interval, gateway: "mercadopago", gateway_subscription_id: String(data.id), gateway_checkout_url: data.init_point, payment_method: "card", external_reference });
+      const { error } = await adminDb.from("viva_subscriptions").insert({ user_id: user.id, plan_id: plan.id, status: "pending", billing_interval: interval, gateway: "mercadopago", gateway_subscription_id: String(data.id), gateway_checkout_url: data.init_point, payment_method: "card", external_reference });
       if (error) { console.error(error); return NextResponse.json({ error: "Não foi possível registrar a assinatura." }, { status: 500 }); }
       return NextResponse.json({ checkoutUrl: data.init_point });
     }
@@ -44,7 +50,7 @@ export async function POST(req: Request) {
     const payment = await mp.json();
     const tx = payment.point_of_interaction?.transaction_data;
     if (!mp.ok || !payment.id || !tx?.qr_code) { console.error("MP pix", payment); return NextResponse.json({ error: "Não foi possível gerar o Pix." }, { status: 502 }); }
-    const { error } = await db.from("viva_payments").insert({ user_id: user.id, plan_id: plan.id, gateway: "mercadopago", gateway_payment_id: String(payment.id), external_reference, payment_method: "pix", billing_interval: "one_time", status: "pending", amount_brl: amount, pix_qr_code: tx.qr_code, pix_qr_code_base64: tx.qr_code_base64 || null, pix_expires_at: payment.date_of_expiration || null, metadata: { plan_name: plan.name, requested_interval: interval } });
+    const { error } = await adminDb.from("viva_payments").insert({ user_id: user.id, plan_id: plan.id, gateway: "mercadopago", gateway_payment_id: String(payment.id), external_reference, payment_method: "pix", billing_interval: "one_time", status: "pending", amount_brl: amount, pix_qr_code: tx.qr_code, pix_qr_code_base64: tx.qr_code_base64 || null, pix_expires_at: payment.date_of_expiration || null, metadata: { plan_name: plan.name, requested_interval: interval } });
     if (error) { console.error(error); return NextResponse.json({ error: "Pix gerado, mas não foi possível salvar o pedido." }, { status: 500 }); }
     return NextResponse.json({ paymentId: String(payment.id), pixCopyPaste: tx.qr_code, qrCodeBase64: tx.qr_code_base64 || null, expiresAt: payment.date_of_expiration || null });
   } catch (e) { console.error("checkout", e); return NextResponse.json({ error: "Erro ao iniciar pagamento." }, { status: 500 }); }
