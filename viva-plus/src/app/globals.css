@@ -983,3 +983,34 @@ a { color: inherit; text-decoration: none; }
   .viva-chat-mobile .viva-thread { border-color: rgba(255,255,255,.08); }
   .viva-chat-mobile .viva-composer-wrap-desktop { background: linear-gradient(180deg, rgba(23,18,31,0), #17121f 16%); }
 }
+
+/* Subscription conversion offer shown once per authenticated browser session */
+.viva-entry-offer-layer{position:fixed;inset:0;z-index:30000;display:flex;align-items:center;justify-content:center;padding:22px}
+.viva-entry-offer-backdrop{position:absolute;inset:0;width:100%;height:100%;border:0;background:rgba(19,10,31,.76);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.viva-entry-offer-card{position:relative;z-index:1;width:min(1120px,100%);max-height:94dvh;overflow-y:auto;overscroll-behavior:contain;padding:clamp(22px,3vw,38px);border:1px solid #e8def2;border-radius:28px;background:#fbfaff;color:#251b31;box-shadow:0 32px 100px rgba(10,4,20,.42)}
+.viva-entry-offer-close{position:absolute;top:16px;right:16px;display:grid;width:40px;height:40px;place-items:center;border:0;border-radius:50%;background:#f0e8f8;color:#5720ad;font-size:28px;line-height:1;cursor:pointer}
+.viva-entry-offer-brand{margin-bottom:14px;color:#7028d8;font-size:25px;font-weight:950;letter-spacing:-.06em}.viva-entry-offer-brand span{color:#e5b900}
+.viva-entry-offer-kicker{display:block;color:#7028d8;font-size:10px;font-weight:950;letter-spacing:.16em}
+.viva-entry-offer-card>h2{max-width:760px;margin:9px 48px 8px 0;font-size:clamp(25px,3vw,38px);font-weight:950;line-height:1.08;letter-spacing:-.045em}
+.viva-entry-offer-description{max-width:720px;margin:0 0 18px;color:#746b7e;font-size:14px;line-height:1.6}
+.viva-entry-offer-plans .viva-plans-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.viva-entry-offer-plans .viva-plans-grid>article{min-width:0}
+.viva-entry-offer-plans .viva-period-switch{margin-bottom:14px}
+.viva-entry-offer-free{display:block;margin:18px auto 0;padding:10px 18px;border:1px solid #d9cce8;border-radius:999px;background:transparent;color:#675876;font-size:13px;font-weight:800;cursor:pointer}
+.viva-entry-offer-free:hover{background:#f1eafa;color:#5720ad}
+.viva-entry-offer-footnote{margin:10px auto 0;color:#8a8191;font-size:11px;line-height:1.5;text-align:center}
+@media(max-width:760px){
+ .viva-entry-offer-layer{align-items:flex-end;padding:0}
+ .viva-entry-offer-card{width:100%;max-height:96dvh;padding:25px 17px calc(20px + env(safe-area-inset-bottom));border-radius:25px 25px 0 0}
+ .viva-entry-offer-card>h2{font-size:26px;margin-right:42px}
+ .viva-entry-offer-description{font-size:13px;margin-bottom:14px}
+ .viva-entry-offer-plans .viva-plans-grid{grid-template-columns:1fr;gap:10px}
+ .viva-entry-offer-close{top:13px;right:13px;width:36px;height:36px}
+}
+@media(prefers-color-scheme:dark){
+ .viva-entry-offer-card{background:#211a2b;color:#f7f1fc;border-color:#40334d}
+ .viva-entry-offer-description,.viva-entry-offer-footnote{color:#c2b5d0}
+ .viva-entry-offer-close{background:#352447;color:#e5d3fa}
+ .viva-entry-offer-free{border-color:#5a486d;color:#ded0ed}
+ .viva-entry-offer-free:hover{background:#352447;color:#fff}
+}
