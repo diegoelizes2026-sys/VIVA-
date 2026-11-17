@@ -182,7 +182,7 @@ export default function HealthHub(){
    <div className="md:hidden space-y-4 pb-24 text-[#1F2937]">
     <section className="overflow-hidden rounded-[24px] bg-gradient-to-br from-[#7C3AED] to-[#4C1D95] text-white shadow-[0_14px_34px_rgba(76,29,149,.25)]">
      <div className="relative h-[190px] overflow-hidden">
-      <img src={trainerGender==="female"?"/personal/personal-mulher.jpg":"/personal/personal-homem.jpg"} alt={trainerGender==="female"?"Personal VIVA+ mulher":"Personal VIVA+ homem"} className="h-full w-full object-cover object-top" onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src="/trainer-personal-fallback.svg";}}/>
+      <div aria-hidden="true" className="h-full w-full bg-gradient-to-br from-[#7C3AED] to-[#4C1D95]" style={{backgroundImage:`url("${trainerGender==="female"?"/personal/banner-personal-mulher.jpg":"/personal/banner-personal-homem.jpg"}"), linear-gradient(135deg, #7C3AED, #4C1D95)`,backgroundSize:"cover",backgroundPosition:"right center"}}/>
       <div className="absolute inset-0 bg-gradient-to-t from-[#2E1065] via-[#4C1D95]/20 to-transparent"/>
       <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">
        <div><p className="text-[11px] font-bold uppercase tracking-[.2em] text-white/80">VIVA+ PERSONAL</p><h1 className="mt-1 text-[21px] font-black leading-tight">{greeting}! Vamos evoluir juntos?</h1><p className="mt-1 text-[13px] text-white/85">Seu treinador virtual, no seu ritmo.</p></div>
