@@ -161,7 +161,7 @@ export default function HealthHub(){
   catch(e){setError(e instanceof Error?e.message:"Não foi possível conversar com a VIVA.");}
   finally{setAiLoading(false);}
  }
- return <div className="mx-auto w-full max-w-6xl pb-12 pt-20 md:pt-24">
+ return <div className="mx-auto w-full max-w-6xl pb-12 pt-36 md:pt-24">
   <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold" style={{background:"var(--color-primary-soft)",color:"var(--color-primary)"}}><HeartPulse size={14}/> VIVA+ • SEU BEM-ESTAR</div><span className="text-xs text-muted">Seus registros são privados</span></div>
   {(message||error)&&<div role={error?"alert":"status"} className="mb-4 rounded-2xl border p-3 text-sm" style={{borderColor:error?"#FECACA":"#BBF7D0",background:error?"#FEF2F2":"#F0FDF4",color:error?"#B91C1C":"#166534"}}>{error||message}</div>}
   {loading?<div className={panel+" p-8 text-sm text-muted"}>Preparando seu espaço de bem-estar...</div>:<>
@@ -180,7 +180,7 @@ export default function HealthHub(){
      </div>
     </section>
 
-    <nav aria-label="Navegação Saúde e Bem-Estar" className="sticky top-[64px] z-30 grid grid-cols-4 gap-1 rounded-[18px] border border-purple-100 bg-white/95 p-1.5 shadow-[0_8px_24px_rgba(31,41,55,.08)] backdrop-blur">
+    <nav aria-label="Navegação Saúde e Bem-Estar" className="fixed left-1/2 top-[64px] z-[60] w-[calc(100%-24px)] max-w-6xl -translate-x-1/2 grid grid-cols-4 gap-1 rounded-[18px] border border-purple-100 bg-white/95 p-1.5 shadow-[0_8px_24px_rgba(31,41,55,.12)] backdrop-blur md:hidden">
      {[{id:"chat",label:"Chat",icon:MessageCircle},{id:"day",label:"Meu Dia",icon:HeartPulse},{id:"training",label:"Treinos",icon:Activity},{id:"profile",label:"Perfil",icon:Scale}].map(item=>{const Icon=item.icon;return <button key={item.id} type="button" onClick={()=>{mobileHaptic();setMobileTab(item.id as typeof mobileTab);}} className={mobileTab===item.id?"min-h-11 rounded-[14px] bg-[#7C3AED] px-1 text-[12px] font-extrabold text-white shadow-md":"min-h-11 rounded-[14px] px-1 text-[12px] font-bold text-gray-500"}><Icon size={15} className="mx-auto mb-0.5"/>{item.label}</button>;})}
     </nav>
 
@@ -188,8 +188,8 @@ export default function HealthHub(){
      <section className="rounded-[20px] border border-purple-100 bg-white p-4 shadow-[0_8px_24px_rgba(31,41,55,.06)]">
       <div className="flex items-center justify-between gap-2"><div><h2 className="text-[16px] font-extrabold">Converse com seu Personal</h2><p className="mt-1 text-[13px] text-gray-500">Orientação prática, acolhedora e personalizada.</p></div><span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">● Online</span></div>
       <div className="mt-3 flex gap-2">
-       <button onClick={()=>{mobileHaptic();setTrainerGender("female");}} className={trainerGender==="female"?"min-h-11 flex-1 rounded-full bg-purple-100 text-[13px] font-bold text-purple-800 ring-1 ring-purple-300":"min-h-11 flex-1 rounded-full border border-gray-200 text-[13px] font-semibold text-gray-600"}><UserRound size={15}/> Mulher</button>
-       <button onClick={()=>{mobileHaptic();setTrainerGender("male");}} className={trainerGender==="male"?"min-h-11 flex-1 rounded-full bg-purple-100 text-[13px] font-bold text-purple-800 ring-1 ring-purple-300":"min-h-11 flex-1 rounded-full border border-gray-200 text-[13px] font-semibold text-gray-600"}><UserRound size={15}/> Homem</button>
+       <button onClick={()=>{mobileHaptic();setTrainerGender("female");}} className={trainerGender==="female"?"min-h-11 inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-purple-100 text-[13px] font-bold text-purple-800 ring-1 ring-purple-300":"min-h-11 inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-gray-200 text-[13px] font-semibold text-gray-600"}><UserRound size={16} className="shrink-0"/>Mulher</button>
+       <button onClick={()=>{mobileHaptic();setTrainerGender("male");}} className={trainerGender==="male"?"min-h-11 inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-purple-100 text-[13px] font-bold text-purple-800 ring-1 ring-purple-300":"min-h-11 inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-gray-200 text-[13px] font-semibold text-gray-600"}><UserRound size={16} className="shrink-0"/>Homem</button>
       </div>
       <div className="mt-3 max-h-[42vh] min-h-36 space-y-2 overflow-y-auto rounded-[18px] bg-[#F7F5FC] p-3">
        {trainerChat.length===0&&<div className="flex items-start gap-2"><img src={trainerGender==="female"?"/personal/personal-mulher.jpg":"/personal/personal-homem.jpg"} alt="" className="h-10 w-10 rounded-full object-cover object-[center_18%]" onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src="/trainer-personal-fallback.svg";}}/><div className="rounded-2xl rounded-tl-sm bg-white p-3 text-[13px] leading-5 shadow-sm">O que você gostaria de melhorar hoje: força, disposição, condicionamento ou criar o hábito de treinar?</div></div>}
