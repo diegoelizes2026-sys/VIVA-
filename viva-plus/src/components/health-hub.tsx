@@ -122,7 +122,7 @@ export default function HealthHub(){
   try{
    const context="Você é "+(trainerGender==="female"?"a Personal Virtual VIVA+":"o Personal Virtual VIVA+")+", um treinador acolhedor e motivador. Converse em português brasileiro, com respostas curtas, práticas e humanas. Ajude com rotina, exercícios e dúvidas gerais. Antes de sugerir treino, considere objetivo, experiência, dias disponíveis e limitações informadas. Não diagnostique, não prescreva tratamento, não incentive treinar com dor ou ignorar sintomas. Em sinais de alerta, oriente interromper e procurar profissional de saúde. Dados do aluno: objetivo "+trainerGoal+", experiência "+trainerLevel+", dias por semana "+trainerDays+", local/equipamentos "+trainerEquipment+", limitações: "+(trainerLimitations||"não informadas")+".";
    const history=trainerChat.slice(-8).map(item=>(item.role==="user"?"Aluno: ":"Personal: ")+item.text).join("\n");
-   const response=await fetch("/api/assistant",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:context+"\n\nConversa anterior:\n"+history+"\nAluno: "+textToSend+"\nPersonal:"})});
+   const response=await fetch("/api/assistant",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:context+"\n\nConversa anterior:\n"+history+"\nAluno: "+textToSend+"\nPersonal:",feature:"personal"})});
    const json=await response.json();if(!response.ok)throw new Error(json.error||"Não consegui responder agora.");
    const answer=json.answer||json.message||"Vamos tentar novamente?";setTrainerChat(items=>[...items,{role:"assistant",text:answer}]);
   }catch(e){setError(e instanceof Error?e.message:"Falha ao conversar com o Personal.");}
