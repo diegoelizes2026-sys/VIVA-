@@ -31,8 +31,9 @@ export default function HealthHub(){
  },[]);
  useEffect(()=>{void load();},[load]);
  const waterTotal=useMemo(()=>data?.water.reduce((sum,row)=>sum+row.amount_ml,0)||0,[data]);
- const bmi=profile.height_cm>0?profile.current_weight_kg/Math.pow(profile.height_cm/100,2):0;
- const bmr=profile.sex==="other"?null:(10*profile.current_weight_kg+6.25*profile.height_cm-5*profile.age+(profile.sex==="male"?5:-161));
+ const profileReady=profile.age>=13&&profile.height_cm>=100&&profile.current_weight_kg>=25;
+ const bmi=profileReady?profile.current_weight_kg/Math.pow(profile.height_cm/100,2):0;
+ const bmr=!profileReady||profile.sex==="other"?null:(10*profile.current_weight_kg+6.25*profile.height_cm-5*profile.age+(profile.sex==="male"?5:-161));
  const tdee=bmr?bmr*activityFactor[profile.activity_level]:null;
  const waterPercent=Math.min(100,Math.round(waterTotal/Math.max(500,profile.water_goal_ml)*100));
  async function save(body:Record<string,unknown>,key:string){
