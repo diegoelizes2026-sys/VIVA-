@@ -63,6 +63,10 @@ export default function HealthHub(){
  const [trainerLimitations,setTrainerLimitations]=useState("");
  const [trainerPlan,setTrainerPlan]=useState("");
  const [trainerLoading,setTrainerLoading]=useState(false);
+ const [trainerMessage,setTrainerMessage]=useState("");
+ const [trainerChat,setTrainerChat]=useState<{role:"user"|"assistant";text:string}[]>([]);
+ const [trainerChatLoading,setTrainerChatLoading]=useState(false);
+ const [trainerListening,setTrainerListening]=useState(false);
  const load=useCallback(async()=>{
   setLoading(true);setError("");
   try{const response=await fetch("/api/health",{cache:"no-store"});const json=await response.json();if(!response.ok)throw new Error(json.error||"Falha ao carregar.");setData(json);if(json.profile){setProfile(json.profile);setWeight(String(json.profile.current_weight_kg));}setSleepDate(json.today);}
@@ -111,6 +115,31 @@ export default function HealthHub(){
   }catch(e){setError(e instanceof Error?e.message:"Não foi possível montar seu treino.");}
   finally{setTrainerLoading(false);}
  }
+ async function sendTrainerMessage(textOverride?:string){
+  const textToSend=(textOverride??trainerMessage).trim();if(!textToSend||trainerChatLoading)return;
+  setTrainerMessage("");setTrainerChat(items=>[...items,{role:"user",text:textToSend}]);setTrainerChatLoading(true);setError("");
+  try{
+   const context="Você é o Personal Virtual VIVA+, um treinador acolhedor e motivador. Converse em português brasileiro, com respostas curtas, práticas e humanas. Ajude com rotina, exercícios e dúvidas gerais. Antes de sugerir treino, considere objetivo, experiência, dias disponíveis e limitações informadas. Não diagnostique, não prescreva tratamento, não incentive treinar com dor ou ignorar sintomas. Em sinais de alerta, oriente interromper e procurar profissional de saúde. Dados do aluno: objetivo "+trainerGoal+", experiência "+trainerLevel+", dias por semana "+trainerDays+", local/equipamentos "+trainerEquipment+", limitações: "+(trainerLimitations||"não informadas")+".";
+   const history=trainerChat.slice(-8).map(item=>(item.role==="user"?"Aluno: ":"Personal: ")+item.text).join("\n");
+   const response=await fetch("/api/assistant",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:context+"\n\nConversa anterior:\n"+history+"\nAluno: "+textToSend+"\nPersonal:"})});
+   const json=await response.json();if(!response.ok)throw new Error(json.error||"Não consegui responder agora.");
+   const answer=json.answer||json.message||"Vamos tentar novamente?";setTrainerChat(items=>[...items,{role:"assistant",text:answer}]);
+  }catch(e){setError(e instanceof Error?e.message:"Falha ao conversar com o Personal.");}
+  finally{setTrainerChatLoading(false);}
+ }
+ function startTrainerVoice(){
+  const w=window as Window&{SpeechRecognition?:new()=>{lang:string;interimResults:boolean;onresult:((event:{results:{[index:number]:{[index:number]:{transcript:string}}}})=>void)|null;onerror:(()=>void)|null;onend:(()=>void)|null;start:()=>void;stop:()=>void};webkitSpeechRecognition?:new()=>{lang:string;interimResults:boolean;onresult:((event:{results:{[index:number]:{[index:number]:{transcript:string}}}})=>void)|null;onerror:(()=>void)|null;onend:(()=>void)|null;start:()=>void;stop:()=>void}};
+  const Recognition=w.SpeechRecognition||w.webkitSpeechRecognition;
+  if(!Recognition){setError("Seu navegador não oferece reconhecimento de voz. Você pode conversar digitando.");return;}
+  const recognition=new Recognition();recognition.lang="pt-BR";recognition.interimResults=false;setTrainerListening(true);
+  recognition.onresult=(event)=>{const spoken=event.results[0][0].transcript;setTrainerMessage(spoken);void sendTrainerMessage(spoken);};
+  recognition.onerror=()=>{setTrainerListening(false);setError("Não consegui ouvir. Confira a permissão do microfone e tente novamente.");};
+  recognition.onend=()=>setTrainerListening(false);recognition.start();
+ }
+ function speakTrainer(text:string){
+  if(typeof window==="undefined"||!("speechSynthesis" in window))return;
+  window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(text);utterance.lang="pt-BR";utterance.rate=.96;window.speechSynthesis.speak(utterance);
+ }
  async function askAI(){
   setAiLoading(true);setError("");setInsight("");
   const summary=[
@@ -156,8 +185,24 @@ export default function HealthHub(){
       </div>
       <div className="relative min-h-[300px] overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#2b1450] via-[#21103d] to-[#12091f] p-4 md:p-5">
        <div className="absolute right-0 top-0 opacity-30"><VivaPersonalMark large/></div>
-       <div className="relative flex items-center justify-between gap-2"><div><p className="text-[10px] font-black uppercase tracking-[.22em] text-fuchsia-300">Sua ficha inteligente</p><h3 className="mt-1 text-lg font-extrabold">Plano de treinamento</h3></div><DumbbellGlyph/></div>
-       {trainerPlan?<div className="relative mt-4 max-h-[560px] overflow-y-auto rounded-xl border border-white/10 bg-black/20 p-4 text-sm leading-7 text-white/90 whitespace-pre-wrap">{trainerPlan}</div>:<div className="relative mt-6 flex min-h-[205px] flex-col items-center justify-center text-center"><VivaPersonalMark large/><p className="mt-4 max-w-xs text-sm font-bold">Seu próximo treino começa com um plano feito para você.</p><p className="mt-2 max-w-xs text-xs leading-5 text-white/50">Preencha seu objetivo e sua rotina. A VIVA organiza os dias, exercícios, séries, repetições e intervalos.</p></div>}
+       <div className="relative flex items-center justify-between gap-2"><div><p className="text-[10px] font-black uppercase tracking-[.22em] text-fuchsia-300">Seu Personal está aqui</p><h3 className="mt-1 text-lg font-extrabold">Vamos conversar?</h3></div><span className="rounded-full bg-emerald-400/15 px-3 py-1 text-[10px] font-bold text-emerald-200">● ONLINE</span></div>
+       <div className="relative mt-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[.06] p-3">
+        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-fuchsia-300/40 bg-gradient-to-br from-fuchsia-500 to-violet-900"><svg viewBox="0 0 100 110" className="h-full w-full" role="img" aria-label="Avatar do Personal Virtual VIVA+"><defs><linearGradient id="trainerSkin" x2="1" y2="1"><stop stopColor="#f7c9a5"/><stop offset="1" stopColor="#b96e50"/></linearGradient></defs><path d="M12 110Q13 73 50 72Q88 73 90 110" fill="#21102f"/><path d="M31 75 50 91 69 75 80 110H20Z" fill="#a855f7"/><ellipse cx="50" cy="42" rx="25" ry="31" fill="url(#trainerSkin)"/><path d="M25 39Q22 5 52 8Q80 8 76 43L69 28Q50 19 32 31Z" fill="#211522"/><path d="M40 45h4m13 0h4" stroke="#39232a" strokeWidth="3" strokeLinecap="round"/><path d="M43 58q8 7 15 0" stroke="#8e3e48" strokeWidth="2.5" fill="none" strokeLinecap="round"/><path d="m35 77 15 13 15-13" stroke="#f0abfc" strokeWidth="3" fill="none"/></svg></div>
+        <div><p className="text-sm font-extrabold">Olá! Eu sou seu Personal VIVA+ 💜</p><p className="mt-1 text-xs leading-5 text-white/65">Pode falar comigo ou escrever. Vamos cuidar da sua evolução, um passo de cada vez.</p></div>
+       </div>
+       <div className="relative mt-3 max-h-64 space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-black/20 p-3">
+        <div className="mr-5 rounded-2xl rounded-tl-sm bg-white/10 p-3 text-xs leading-5 text-white/90">👋 O que você gostaria de melhorar hoje: força, disposição, condicionamento ou criar o hábito de treinar?</div>
+        {trainerChat.map((item,index)=><div key={index} className={item.role==="user"?"ml-5 rounded-2xl rounded-tr-sm bg-fuchsia-600/35 p-3 text-xs leading-5 text-white":"mr-5 rounded-2xl rounded-tl-sm bg-white/10 p-3 text-xs leading-5 text-white/90"}>{item.text}{item.role==="assistant"&&<button onClick={()=>speakTrainer(item.text)} className="ml-2 inline-flex items-center gap-1 text-fuchsia-200 underline">🔊 Ouvir</button>}</div>)}
+        {trainerChatLoading&&<p className="text-xs text-fuchsia-200">Seu Personal está pensando...</p>}
+        {trainerPlan&&<div className="rounded-xl border border-fuchsia-300/20 bg-fuchsia-500/10 p-3"><p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-fuchsia-200">Seu plano de treino</p><p className="whitespace-pre-wrap text-xs leading-5 text-white/90">{trainerPlan}</p></div>}
+       </div>
+       <form className="relative mt-3 flex items-center gap-2 rounded-2xl border border-fuchsia-300/40 bg-[#26143d] p-2 shadow-[0_0_22px_rgba(168,85,247,.16)]" onSubmit={e=>{e.preventDefault();void sendTrainerMessage();}}>
+        <button type="button" onClick={startTrainerVoice} className={trainerListening?"rounded-xl bg-fuchsia-500 p-3 text-white animate-pulse":"rounded-xl bg-white/10 p-3 text-fuchsia-200"} aria-label="Falar com o Personal">🎙️</button>
+        <input value={trainerMessage} onChange={e=>setTrainerMessage(e.target.value)} placeholder={trainerListening?"Estou ouvindo você...":"Digite sua mensagem para o Personal..."} className="min-w-0 flex-1 bg-transparent px-1 py-3 text-sm text-white outline-none placeholder:text-white/40"/>
+        <button type="submit" disabled={!trainerMessage.trim()||trainerChatLoading} className="rounded-xl bg-gradient-to-r from-fuchsia-500 to-purple-500 px-4 py-3 text-sm font-black text-white disabled:opacity-40">Enviar ➤</button>
+       </form>
+       <p className="relative mt-2 text-[10px] leading-4 text-white/45">Use o microfone para falar (permita o acesso no navegador) ou digite pelo teclado. A voz depende do suporte do seu aparelho.</p>
+       {trainerPlan&&<button onClick={()=>speakTrainer(trainerPlan)} className="relative mt-2 rounded-full border border-fuchsia-300/30 px-3 py-2 text-xs font-bold text-fuchsia-200">🔊 Ouvir meu treino</button>}
       </div>
      </div>
     </div>
