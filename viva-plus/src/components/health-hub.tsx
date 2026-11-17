@@ -15,7 +15,7 @@ function DumbbellGlyph(){
  return <svg width="48" height="36" viewBox="0 0 48 36" fill="none" aria-hidden="true"><path d="M8 10v16M3 14v8m42-12v16m-5-12v8M8 18h32" stroke="#E9D5FF" strokeWidth="3.5" strokeLinecap="round"/><path d="M17 7 24 3l7 4v22l-7 4-7-4V7Z" fill="#A855F7" fillOpacity=".28" stroke="#E879F9" strokeWidth="1.5"/></svg>;
 }
 
-import {Activity,ArrowDownRight,ArrowUpRight,Brain,Check,ChevronRight,Droplets,HeartPulse,MessageCircle,Moon,Plus,Scale,Sparkles,Target,TrendingUp,Utensils,Weight,Mic,Send,Settings2,Volume2,Play,Venus,Mars} from "lucide-react";
+import {Activity,ArrowDownRight,ArrowUpRight,Brain,Check,ChevronRight,Droplets,HeartPulse,MessageCircle,Moon,Plus,Scale,Sparkles,Target,TrendingUp,Utensils,Weight,Mic,Send,Settings2,Volume2,Play,UserRound} from "lucide-react";
 
 type Profile={age:number;sex:"female"|"male"|"other";height_cm:number;current_weight_kg:number;goal_weight_kg:number|null;activity_level:"sedentary"|"light"|"moderate"|"high";water_goal_ml:number};
 type WaterLog={id:string;amount_ml:number;created_at:string};
@@ -188,8 +188,8 @@ export default function HealthHub(){
      <section className="rounded-[20px] border border-purple-100 bg-white p-4 shadow-[0_8px_24px_rgba(31,41,55,.06)]">
       <div className="flex items-center justify-between gap-2"><div><h2 className="text-[16px] font-extrabold">Converse com seu Personal</h2><p className="mt-1 text-[13px] text-gray-500">Orientação prática, acolhedora e personalizada.</p></div><span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">● Online</span></div>
       <div className="mt-3 flex gap-2">
-       <button onClick={()=>{mobileHaptic();setTrainerGender("female");}} className={trainerGender==="female"?"min-h-11 flex-1 rounded-full bg-purple-100 text-[13px] font-bold text-purple-800 ring-1 ring-purple-300":"min-h-11 flex-1 rounded-full border border-gray-200 text-[13px] font-semibold text-gray-600"}><Venus size={15}/> Mulher</button>
-       <button onClick={()=>{mobileHaptic();setTrainerGender("male");}} className={trainerGender==="male"?"min-h-11 flex-1 rounded-full bg-purple-100 text-[13px] font-bold text-purple-800 ring-1 ring-purple-300":"min-h-11 flex-1 rounded-full border border-gray-200 text-[13px] font-semibold text-gray-600"}><Mars size={15}/> Homem</button>
+       <button onClick={()=>{mobileHaptic();setTrainerGender("female");}} className={trainerGender==="female"?"min-h-11 flex-1 rounded-full bg-purple-100 text-[13px] font-bold text-purple-800 ring-1 ring-purple-300":"min-h-11 flex-1 rounded-full border border-gray-200 text-[13px] font-semibold text-gray-600"}><UserRound size={15}/> Mulher</button>
+       <button onClick={()=>{mobileHaptic();setTrainerGender("male");}} className={trainerGender==="male"?"min-h-11 flex-1 rounded-full bg-purple-100 text-[13px] font-bold text-purple-800 ring-1 ring-purple-300":"min-h-11 flex-1 rounded-full border border-gray-200 text-[13px] font-semibold text-gray-600"}><UserRound size={15}/> Homem</button>
       </div>
       <div className="mt-3 max-h-[42vh] min-h-36 space-y-2 overflow-y-auto rounded-[18px] bg-[#F7F5FC] p-3">
        {trainerChat.length===0&&<div className="flex items-start gap-2"><img src={trainerGender==="female"?"/personal/personal-mulher.jpg":"/personal/personal-homem.jpg"} alt="" className="h-10 w-10 rounded-full object-cover object-[center_18%]" onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src="/trainer-personal-fallback.svg";}}/><div className="rounded-2xl rounded-tl-sm bg-white p-3 text-[13px] leading-5 shadow-sm">O que você gostaria de melhorar hoje: força, disposição, condicionamento ou criar o hábito de treinar?</div></div>}
