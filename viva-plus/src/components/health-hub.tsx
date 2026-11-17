@@ -161,7 +161,7 @@ export default function HealthHub(){
   catch(e){setError(e instanceof Error?e.message:"Não foi possível conversar com a VIVA.");}
   finally{setAiLoading(false);}
  }
- return <div className="mx-auto w-full max-w-6xl pb-12 pt-36 md:pt-24">
+ return <div className="mx-auto w-full max-w-6xl pb-12 pt-4 md:pt-24">
   <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold" style={{background:"var(--color-primary-soft)",color:"var(--color-primary)"}}><HeartPulse size={14}/> VIVA+ • SEU BEM-ESTAR</div><span className="text-xs text-muted">Seus registros são privados</span></div>
   {(message||error)&&<div role={error?"alert":"status"} className="mb-4 rounded-2xl border p-3 text-sm" style={{borderColor:error?"#FECACA":"#BBF7D0",background:error?"#FEF2F2":"#F0FDF4",color:error?"#B91C1C":"#166534"}}>{error||message}</div>}
   {loading?<div className={panel+" p-8 text-sm text-muted"}>Preparando seu espaço de bem-estar...</div>:<>
@@ -180,7 +180,7 @@ export default function HealthHub(){
      </div>
     </section>
 
-    <nav aria-label="Navegação Saúde e Bem-Estar" className="fixed left-1/2 top-[64px] z-[60] w-[calc(100%-24px)] max-w-6xl -translate-x-1/2 grid grid-cols-4 gap-1 rounded-[18px] border border-purple-100 bg-white/95 p-1.5 shadow-[0_8px_24px_rgba(31,41,55,.12)] backdrop-blur md:hidden">
+    <nav aria-label="Navegação Saúde e Bem-Estar" className="fixed left-1/2 top-[180px] z-[60] w-[calc(100%-24px)] max-w-6xl -translate-x-1/2 grid grid-cols-4 gap-1 rounded-[18px] border border-purple-100 bg-white/95 p-1.5 shadow-[0_8px_24px_rgba(31,41,55,.12)] backdrop-blur md:hidden">
      {[{id:"chat",label:"Chat",icon:MessageCircle},{id:"day",label:"Meu Dia",icon:HeartPulse},{id:"training",label:"Treinos",icon:Activity},{id:"profile",label:"Perfil",icon:Scale}].map(item=>{const Icon=item.icon;return <button key={item.id} type="button" onClick={()=>{mobileHaptic();setMobileTab(item.id as typeof mobileTab);}} className={mobileTab===item.id?"min-h-11 rounded-[14px] bg-[#7C3AED] px-1 text-[12px] font-extrabold text-white shadow-md":"min-h-11 rounded-[14px] px-1 text-[12px] font-bold text-gray-500"}><Icon size={15} className="mx-auto mb-0.5"/>{item.label}</button>;})}
     </nav>
 
