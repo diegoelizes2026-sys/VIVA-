@@ -81,8 +81,7 @@ export default function HealthHub(){
    "Atividades registradas: "+((data?.activities||[]).map(x=>x.activity_type+" por "+x.duration_minutes+" min, intensidade "+x.intensity).join("; ")||"sem registros")+".",
    "Histórico de peso: "+(data?.weights.slice(0,6).map(x=>x.weight_kg+" kg em "+x.logged_on).join("; ")||"sem registros"),
    "IMC estimado: "+(profileReady?bmi.toFixed(1):"indisponível")+". Metabolismo basal estimado: "+(bmr?Math.round(bmr)+" kcal/dia":"indisponível")+"."
-  ].join("
-");
+  ].join("\n");
   try{const response=await fetch("/api/assistant",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:summary,feature:"chat"})});const json=await response.json();if(!response.ok)throw new Error(json.error||json.message||"A VIVA não conseguiu analisar agora.");if(json.state==="limit_reached"||json.state==="blocked"){setInsight(json.message||"A análise está temporariamente indisponível para sua conta.");return;}setInsight(json.answer||json.message||json.error||"A VIVA não retornou uma análise. Tente novamente.");}
   catch(e){setError(e instanceof Error?e.message:"Não foi possível conversar com a VIVA.");}
   finally{setAiLoading(false);}
