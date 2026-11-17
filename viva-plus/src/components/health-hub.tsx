@@ -64,7 +64,7 @@ export default function HealthHub(){
  const [trainerPlan,setTrainerPlan]=useState("");
  const [trainerLoading,setTrainerLoading]=useState(false);
  const [trainerMessage,setTrainerMessage]=useState("");
- const [trainerGender,setTrainerGender]=useState<"female"|"male">("female");
+ const [trainerGender,setTrainerGender]=useState<"female"|"male">("male");
  const [trainerChat,setTrainerChat]=useState<{role:"user"|"assistant";text:string}[]>([]);
  const [trainerChatLoading,setTrainerChatLoading]=useState(false);
  const [trainerListening,setTrainerListening]=useState(false);
