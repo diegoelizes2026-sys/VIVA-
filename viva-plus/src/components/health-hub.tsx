@@ -15,7 +15,7 @@ function DumbbellGlyph(){
  return <svg width="48" height="36" viewBox="0 0 48 36" fill="none" aria-hidden="true"><path d="M8 10v16M3 14v8m42-12v16m-5-12v8M8 18h32" stroke="#E9D5FF" strokeWidth="3.5" strokeLinecap="round"/><path d="M17 7 24 3l7 4v22l-7 4-7-4V7Z" fill="#A855F7" fillOpacity=".28" stroke="#E879F9" strokeWidth="1.5"/></svg>;
 }
 
-import {Activity,ArrowDownRight,ArrowUpRight,Brain,Check,ChevronRight,Droplets,HeartPulse,MessageCircle,Moon,Plus,Scale,Sparkles,Target,TrendingUp,Utensils,Weight} from "lucide-react";
+import {Activity,ArrowDownRight,ArrowUpRight,Brain,Check,ChevronRight,Droplets,HeartPulse,MessageCircle,Moon,Plus,Scale,Sparkles,Target,TrendingUp,Utensils,Weight,Mic,Send,Settings2,Volume2,Play,Venus,Mars} from "lucide-react";
 
 type Profile={age:number;sex:"female"|"male"|"other";height_cm:number;current_weight_kg:number;goal_weight_kg:number|null;activity_level:"sedentary"|"light"|"moderate"|"high";water_goal_ml:number};
 type WaterLog={id:string;amount_ml:number;created_at:string};
@@ -166,20 +166,17 @@ export default function HealthHub(){
   {(message||error)&&<div role={error?"alert":"status"} className="mb-4 rounded-2xl border p-3 text-sm" style={{borderColor:error?"#FECACA":"#BBF7D0",background:error?"#FEF2F2":"#F0FDF4",color:error?"#B91C1C":"#166534"}}>{error||message}</div>}
   {loading?<div className={panel+" p-8 text-sm text-muted"}>Preparando seu espaço de bem-estar...</div>:<>
    <div className="md:hidden space-y-4 pb-24 text-[#1F2937]">
-    <section className="overflow-hidden rounded-[24px] bg-gradient-to-br from-[#7C3AED] to-[#4C1D95] p-4 text-white shadow-[0_14px_34px_rgba(76,29,149,.25)]">
-     <div className="flex items-center gap-3">
-      <div className="relative h-[76px] w-[76px] shrink-0 overflow-hidden rounded-full border-[3px] border-white/70 shadow-lg">
-       <img src={trainerGender==="female"?"/personal/personal-mulher.jpg":"/trainer-personal.jpg"} alt="Personal VIVA+" className="h-full w-full object-cover object-[center_18%]" onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src="/trainer-personal-fallback.svg";}}/>
-       <span className="absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-white bg-emerald-400 shadow-[0_0_0_3px_rgba(16,185,129,.2)] animate-pulse"/>
-      </div>
-      <div className="min-w-0 flex-1">
-       <div className="flex items-center gap-2"><p className="text-[11px] font-bold uppercase tracking-[.18em] text-white/75">VIVA+ PERSONAL</p><span className="text-[11px] font-semibold text-emerald-200">● Online</span></div>
-       <h1 className="mt-1 text-[20px] font-black leading-tight">{greeting}! Vamos evoluir juntos?</h1>
-       <p className="mt-1 text-[13px] text-white/80">Seu treinador virtual, no seu ritmo.</p>
+    <section className="overflow-hidden rounded-[24px] bg-gradient-to-br from-[#7C3AED] to-[#4C1D95] text-white shadow-[0_14px_34px_rgba(76,29,149,.25)]">
+     <div className="relative h-[190px] overflow-hidden">
+      <img src={trainerGender==="female"?"/personal/personal-mulher.jpg":"/personal/personal-homem.jpg"} alt={trainerGender==="female"?"Personal VIVA+ mulher":"Personal VIVA+ homem"} className="h-full w-full object-cover object-top" onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src="/trainer-personal-fallback.svg";}}/>
+      <div className="absolute inset-0 bg-gradient-to-t from-[#2E1065] via-[#4C1D95]/20 to-transparent"/>
+      <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">
+       <div><p className="text-[11px] font-bold uppercase tracking-[.2em] text-white/80">VIVA+ PERSONAL</p><h1 className="mt-1 text-[21px] font-black leading-tight">{greeting}! Vamos evoluir juntos?</h1><p className="mt-1 text-[13px] text-white/85">Seu treinador virtual, no seu ritmo.</p></div>
+       <span className="mb-1 shrink-0 rounded-full border border-emerald-200/40 bg-emerald-400/20 px-3 py-1.5 text-[11px] font-bold text-white"><span className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-300 animate-pulse"/>Online</span>
       </div>
      </div>
-     <div className="ml-[88px] mt-3 rounded-2xl bg-white px-4 py-3 text-[13px] leading-5 text-[#34234A] shadow-[0_8px_22px_rgba(30,10,60,.18)]">
-      Olá! Eu sou {trainerGender==="female"?"sua Personal":"seu Personal"} VIVA+. Estou aqui para ajudar com seus treinos, hábitos e evolução. 💜
+     <div className="bg-white p-4 text-[13px] leading-5 text-[#34234A] shadow-[0_8px_22px_rgba(30,10,60,.18)]">
+      Olá! Eu sou {trainerGender==="female"?"sua Personal":"seu Personal"} VIVA+. Estou aqui para ajudar com seus treinos, hábitos e evolução.
      </div>
     </section>
 
@@ -191,22 +188,22 @@ export default function HealthHub(){
      <section className="rounded-[20px] border border-purple-100 bg-white p-4 shadow-[0_8px_24px_rgba(31,41,55,.06)]">
       <div className="flex items-center justify-between gap-2"><div><h2 className="text-[16px] font-extrabold">Converse com seu Personal</h2><p className="mt-1 text-[13px] text-gray-500">Orientação prática, acolhedora e personalizada.</p></div><span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">● Online</span></div>
       <div className="mt-3 flex gap-2">
-       <button onClick={()=>{mobileHaptic();setTrainerGender("female");}} className={trainerGender==="female"?"min-h-11 flex-1 rounded-full bg-purple-100 text-[13px] font-bold text-purple-800 ring-1 ring-purple-300":"min-h-11 flex-1 rounded-full border border-gray-200 text-[13px] font-semibold text-gray-600"}>♀ Mulher</button>
-       <button onClick={()=>{mobileHaptic();setTrainerGender("male");}} className={trainerGender==="male"?"min-h-11 flex-1 rounded-full bg-purple-100 text-[13px] font-bold text-purple-800 ring-1 ring-purple-300":"min-h-11 flex-1 rounded-full border border-gray-200 text-[13px] font-semibold text-gray-600"}>♂ Homem</button>
+       <button onClick={()=>{mobileHaptic();setTrainerGender("female");}} className={trainerGender==="female"?"min-h-11 flex-1 rounded-full bg-purple-100 text-[13px] font-bold text-purple-800 ring-1 ring-purple-300":"min-h-11 flex-1 rounded-full border border-gray-200 text-[13px] font-semibold text-gray-600"}><Venus size={15}/> Mulher</button>
+       <button onClick={()=>{mobileHaptic();setTrainerGender("male");}} className={trainerGender==="male"?"min-h-11 flex-1 rounded-full bg-purple-100 text-[13px] font-bold text-purple-800 ring-1 ring-purple-300":"min-h-11 flex-1 rounded-full border border-gray-200 text-[13px] font-semibold text-gray-600"}><Mars size={15}/> Homem</button>
       </div>
       <div className="mt-3 max-h-[42vh] min-h-36 space-y-2 overflow-y-auto rounded-[18px] bg-[#F7F5FC] p-3">
-       {trainerChat.length===0&&<div className="flex items-start gap-2"><img src={trainerGender==="female"?"/personal/personal-mulher.jpg":"/trainer-personal.jpg"} alt="" className="h-10 w-10 rounded-full object-cover object-[center_18%]" onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src="/trainer-personal-fallback.svg";}}/><div className="rounded-2xl rounded-tl-sm bg-white p-3 text-[13px] leading-5 shadow-sm">O que você gostaria de melhorar hoje: força, disposição, condicionamento ou criar o hábito de treinar?</div></div>}
-       {trainerChat.map((item,index)=><div key={index} className={item.role==="user"?"ml-8 rounded-2xl rounded-tr-sm bg-[#7C3AED] p-3 text-[13px] leading-5 text-white":"mr-5 rounded-2xl rounded-tl-sm bg-white p-3 text-[13px] leading-5 text-gray-800 shadow-sm"}>{item.text}{item.role==="assistant"&&<button onClick={()=>speakTrainer(item.text)} className="ml-2 inline-flex min-h-8 items-center gap-1 text-[12px] font-bold text-purple-700">🔊 Ouvir</button>}</div>)}
+       {trainerChat.length===0&&<div className="flex items-start gap-2"><img src={trainerGender==="female"?"/personal/personal-mulher.jpg":"/personal/personal-homem.jpg"} alt="" className="h-10 w-10 rounded-full object-cover object-[center_18%]" onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src="/trainer-personal-fallback.svg";}}/><div className="rounded-2xl rounded-tl-sm bg-white p-3 text-[13px] leading-5 shadow-sm">O que você gostaria de melhorar hoje: força, disposição, condicionamento ou criar o hábito de treinar?</div></div>}
+       {trainerChat.map((item,index)=><div key={index} className={item.role==="user"?"ml-8 rounded-2xl rounded-tr-sm bg-[#7C3AED] p-3 text-[13px] leading-5 text-white":"mr-5 rounded-2xl rounded-tl-sm bg-white p-3 text-[13px] leading-5 text-gray-800 shadow-sm"}>{item.text}{item.role==="assistant"&&<button onClick={()=>speakTrainer(item.text)} className="ml-2 inline-flex min-h-8 items-center gap-1 text-[12px] font-bold text-purple-700"><Volume2 size={14}/> Ouvir</button>}</div>)}
        {trainerChatLoading&&<p className="text-[13px] font-medium text-purple-700">Seu Personal está respondendo...</p>}
       </div>
       <form className="mt-3 flex min-h-14 items-center gap-2 rounded-full border border-purple-200 bg-white p-1.5 shadow-sm" onSubmit={e=>{e.preventDefault();void sendTrainerMessage();}}>
-       <button type="button" onClick={startTrainerVoice} aria-label="Falar com Personal" className={trainerListening?"min-h-11 min-w-11 rounded-full bg-purple-100 text-purple-700 animate-pulse":"min-h-11 min-w-11 rounded-full bg-purple-50 text-lg text-purple-700"}>🎙</button>
+       <button type="button" onClick={startTrainerVoice} aria-label="Falar com Personal" className={trainerListening?"min-h-11 min-w-11 rounded-full bg-purple-100 text-purple-700 animate-pulse":"min-h-11 min-w-11 rounded-full bg-purple-50 text-lg text-purple-700"}><Mic size={18}/></button>
        <input value={trainerMessage} onChange={e=>setTrainerMessage(e.target.value)} placeholder="Digite sua mensagem..." className="min-w-0 flex-1 bg-transparent text-[14px] text-gray-800 outline-none placeholder:text-gray-400"/>
-       <button type="submit" disabled={!trainerMessage.trim()||trainerChatLoading} className="min-h-11 rounded-full bg-[#7C3AED] px-4 text-[13px] font-bold text-white disabled:opacity-40">Enviar ➤</button>
+       <button type="submit" disabled={!trainerMessage.trim()||trainerChatLoading} className="min-h-11 rounded-full bg-[#7C3AED] px-4 text-[13px] font-bold text-white disabled:opacity-40"><span>Enviar</span><Send size={15}/></button>
       </form>
      </section>
      <details className="rounded-[20px] border border-purple-100 bg-white p-4 shadow-sm">
-      <summary className="min-h-11 cursor-pointer py-2 text-[14px] font-bold text-gray-800">⚙ Configurar meu treinador</summary>
+      <summary className="min-h-11 cursor-pointer py-2 text-[14px] font-bold text-gray-800"><Settings2 size={16} className="mr-2 inline-block text-purple-600"/> Configurar meu treinador</summary>
       <div className="mt-3 grid gap-3">
        <label className="text-[13px] font-semibold">Objetivo<select className="field mt-2" value={trainerGoal} onChange={e=>setTrainerGoal(e.target.value)}><option value="condicionamento">Melhorar condicionamento</option><option value="forca">Ganhar força</option><option value="hipertrofia">Hipertrofia / massa muscular</option><option value="mobilidade">Mobilidade e flexibilidade</option><option value="bem-estar">Saúde e bem-estar geral</option></select></label>
        <label className="text-[13px] font-semibold">Experiência<select className="field mt-2" value={trainerLevel} onChange={e=>setTrainerLevel(e.target.value)}><option value="iniciante">Iniciante</option><option value="intermediario">Intermediário</option><option value="avancado">Avançado</option></select></label>
@@ -250,7 +247,7 @@ export default function HealthHub(){
       <div className="mt-4 grid grid-cols-3 gap-2">{[{label:"Treinos",pct:trainerPlan?Math.min(100,Math.round(Number(trainerDays)/7*100)):0},{label:"Água",pct:waterPercent},{label:"Atividade",pct:Math.min(100,Math.round(activityMinutesTotal/150*100))}].map(x=><div key={x.label} className="rounded-[16px] bg-[#F7F5FC] p-3"><p className="text-[12px] font-semibold text-gray-600">{x.label}</p><strong className="text-[16px] text-[#7C3AED]">{x.pct}%</strong><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-purple-100"><div className="h-full rounded-full bg-[#7C3AED]" style={{width:x.pct+"%"}}/></div></div>)}</div>
      </section>
      <section className="rounded-[20px] border border-purple-100 bg-white p-4 shadow-sm">
-      <div className="flex items-start gap-3"><img src={trainerGender==="female"?"/personal/personal-mulher.jpg":"/trainer-personal.jpg"} alt="" className="h-16 w-16 rounded-[18px] object-cover object-[center_18%]" onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src="/trainer-personal-fallback.svg";}}/><div className="min-w-0"><h2 className="text-[16px] font-extrabold">Meu treino de hoje</h2><p className="text-[13px] text-gray-500">{trainerPlan?"Plano personalizado • gerado pela IA":"Gere seu plano com o Personal VIVA+"}</p><p className="mt-1 text-[12px] text-purple-700">Tempo estimado: 45 min</p></div></div>
+      <div className="flex items-start gap-3"><img src={trainerGender==="female"?"/personal/personal-mulher.jpg":"/personal/personal-homem.jpg"} alt="" className="h-16 w-16 rounded-[18px] object-cover object-[center_18%]" onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src="/trainer-personal-fallback.svg";}}/><div className="min-w-0"><h2 className="text-[16px] font-extrabold">Meu treino de hoje</h2><p className="text-[13px] text-gray-500">{trainerPlan?"Plano personalizado • gerado pela IA":"Gere seu plano com o Personal VIVA+"}</p><p className="mt-1 text-[12px] text-purple-700">Tempo estimado: 45 min</p></div></div>
       {trainerPlan?<div className="mt-4 max-h-[42vh] overflow-y-auto rounded-[16px] bg-[#F7F5FC] p-3 text-[13px] leading-5 text-gray-800">{trainerPlan.split(/\n/).filter(line=>line.trim()).map((line,index)=><p key={index} className="border-b border-purple-100 py-1 last:border-0">{line.trim()}</p>)}</div>:<div className="mt-4 rounded-[16px] bg-[#F7F5FC] p-4"><p className="text-[14px] font-semibold">Seu próximo treino começa aqui.</p><p className="mt-1 text-[13px] text-gray-500">Converse com o Personal e gere sua ficha semanal.</p><button onClick={()=>setMobileTab("chat")} className="mt-3 min-h-11 rounded-xl bg-purple-100 px-4 text-[13px] font-bold text-purple-700">Configurar treino</button></div>}
       <button onClick={()=>{mobileHaptic();if(trainerPlan)speakTrainer(trainerPlan);else void generateTrainerPlan();}} disabled={trainerLoading} className="mt-4 min-h-12 w-full rounded-[16px] bg-[#7C3AED] text-[14px] font-extrabold text-white shadow-[0_8px_18px_rgba(124,58,237,.25)] disabled:opacity-50">{trainerPlan?"🔊 Ouvir meu treino":trainerLoading?"Gerando seu treino...":"✨ Gerar meu treino"}</button>
      </section>
