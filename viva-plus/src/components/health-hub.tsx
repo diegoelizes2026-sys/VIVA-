@@ -271,7 +271,7 @@ export default function HealthHub(){
      <section className="rounded-[20px] bg-purple-50 p-4"><h2 className="text-[16px] font-extrabold">Energia e alimentação</h2><div className="mt-3 grid grid-cols-3 gap-2">{[{label:"Metabolismo basal",value:bmr?number(bmr):"—"},{label:"Gasto diário",value:tdee?number(tdee):"—"},{label:"IMC",value:profileReady?bmi.toFixed(1).replace(".",","):"—"}].map(x=><div key={x.label} className="rounded-[14px] bg-white p-3"><p className="text-[11px] text-purple-700">{x.label}</p><strong className="text-[16px] text-purple-900">{x.value}</strong></div>)}</div></section>
     </div>}
    </div>
-   <div className="fixed inset-x-0 bottom-0 z-40 border-t border-purple-100 bg-white/95 p-3 shadow-[0_-8px_24px_rgba(31,41,55,.1)] backdrop-blur md:hidden">
+   <div className={`fixed inset-x-0 bottom-0 z-40 border-t border-purple-100 bg-white/95 p-3 shadow-[0_-8px_24px_rgba(31,41,55,.1)] backdrop-blur md:hidden ${mobileTab==="chat"?"hidden":""}`}>
     <button type="button" onClick={()=>{mobileHaptic();if(trainerPlan)speakTrainer(trainerPlan);else{setMobileTab("chat");void generateTrainerPlan();}}} disabled={trainerLoading} className="min-h-12 w-full rounded-[16px] bg-[#7C3AED] text-[15px] font-extrabold text-white shadow-[0_8px_18px_rgba(124,58,237,.25)] disabled:opacity-50">{trainerPlan?<><Play size={16} className="mr-2 inline-block"/>Iniciar Treino de Hoje</>:trainerLoading?"Preparando seu treino...":<><Sparkles size={16} className="mr-2 inline-block"/>Gerar meu treino de hoje</>}</button>
    </div>
    <div className="hidden md:block">
