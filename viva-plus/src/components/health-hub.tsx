@@ -1,6 +1,20 @@
 "use client";
 
 import {useCallback,useEffect,useMemo,useState} from "react";
+
+function VivaPersonalMark({large=false}:{large?:boolean}){
+ return <svg width={large?112:54} height={large?112:54} viewBox="0 0 100 100" fill="none" aria-label="Símbolo exclusivo VIVA+ Personal" role="img" className="shrink-0">
+  <defs><linearGradient id="viva-mark-gradient" x1="8" y1="8" x2="92" y2="92"><stop stopColor="#F0ABFC"/><stop offset=".52" stopColor="#A855F7"/><stop offset="1" stopColor="#6D28D9"/></linearGradient></defs>
+  <path d="M50 4 91 27v46L50 96 9 73V27L50 4Z" stroke="url(#viva-mark-gradient)" strokeWidth="3"/>
+  <path d="m25 35 13 31h7l5-13 5 13h7l13-31H64L59 50l-5-15h-8l-5 15-5-15H25Z" fill="url(#viva-mark-gradient)"/>
+  <path d="M18 50h8m48 0h8M50 15v8m0 54v8" stroke="#F5D0FE" strokeWidth="3" strokeLinecap="round"/>
+  <circle cx="50" cy="50" r="42" stroke="#F5D0FE" strokeOpacity=".3" strokeDasharray="2 7"/>
+ </svg>;
+}
+function DumbbellGlyph(){
+ return <svg width="48" height="36" viewBox="0 0 48 36" fill="none" aria-hidden="true"><path d="M8 10v16M3 14v8m42-12v16m-5-12v8M8 18h32" stroke="#E9D5FF" strokeWidth="3.5" strokeLinecap="round"/><path d="M17 7 24 3l7 4v22l-7 4-7-4V7Z" fill="#A855F7" fillOpacity=".28" stroke="#E879F9" strokeWidth="1.5"/></svg>;
+}
+
 import {Activity,ArrowDownRight,ArrowUpRight,Brain,Check,ChevronRight,Droplets,HeartPulse,MessageCircle,Moon,Plus,Scale,Sparkles,Target,TrendingUp,Utensils,Weight} from "lucide-react";
 
 type Profile={age:number;sex:"female"|"male"|"other";height_cm:number;current_weight_kg:number;goal_weight_kg:number|null;activity_level:"sedentary"|"light"|"moderate"|"high";water_goal_ml:number};
@@ -42,6 +56,13 @@ export default function HealthHub(){
  const [activityMinutes,setActivityMinutes]=useState("30");
  const [activityIntensity,setActivityIntensity]=useState<"light"|"moderate"|"vigorous">("moderate");
  const [activityNotes,setActivityNotes]=useState("");
+ const [trainerGoal,setTrainerGoal]=useState("condicionamento");
+ const [trainerLevel,setTrainerLevel]=useState("iniciante");
+ const [trainerDays,setTrainerDays]=useState("3");
+ const [trainerEquipment,setTrainerEquipment]=useState("academia");
+ const [trainerLimitations,setTrainerLimitations]=useState("");
+ const [trainerPlan,setTrainerPlan]=useState("");
+ const [trainerLoading,setTrainerLoading]=useState(false);
  const load=useCallback(async()=>{
   setLoading(true);setError("");
   try{const response=await fetch("/api/health",{cache:"no-store"});const json=await response.json();if(!response.ok)throw new Error(json.error||"Falha ao carregar.");setData(json);if(json.profile){setProfile(json.profile);setWeight(String(json.profile.current_weight_kg));}setSleepDate(json.today);}
@@ -69,6 +90,27 @@ export default function HealthHub(){
   finally{setSaving("");}
  }
  function patch<K extends keyof Profile>(key:K,value:Profile[K]){setProfile(current=>({...current,[key]:value}));}
+ async function generateTrainerPlan(){
+  setTrainerLoading(true);setError("");setTrainerPlan("");
+  const prompt=[
+   "VIVA_PERSONAL_PLAN: Crie uma proposta de planejamento semanal de atividade física.",
+   "Objetivo: "+trainerGoal+".",
+   "Experiência: "+trainerLevel+".",
+   "Dias disponíveis por semana: "+trainerDays+".",
+   "Equipamentos: "+trainerEquipment+".",
+   "Limitações, dores ou condições informadas: "+(trainerLimitations.trim()||"Não informado; pergunte se isso for essencial antes de sugerir exercícios específicos.")+".",
+   "Perfil disponível: "+(profileReady?JSON.stringify({idade:profile.age,altura_cm:profile.height_cm,peso_kg:profile.current_weight_kg,nivel_atividade:activityLabel[profile.activity_level]}):"perfil físico não preenchido")+".",
+   "Crie a ficha por dias, com exercício, séries, repetições ou tempo, descanso e dica técnica. Inclua aquecimento e recuperação. Não invente dados de saúde. Faça perguntas se faltar informação essencial."
+  ].join("\\n");
+  try{
+   const response=await fetch("/api/assistant",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:prompt,feature:"chat"})});
+   const json=await response.json();
+   if(!response.ok)throw new Error(json.error||json.message||"Não foi possível montar seu treino agora.");
+   if(json.state==="limit_reached"||json.state==="blocked"){setTrainerPlan(json.message||"O treinador está temporariamente indisponível para sua conta.");return;}
+   setTrainerPlan(json.answer||json.message||"A VIVA não retornou um plano. Tente novamente.");
+  }catch(e){setError(e instanceof Error?e.message:"Não foi possível montar seu treino.");}
+  finally{setTrainerLoading(false);}
+ }
  async function askAI(){
   setAiLoading(true);setError("");setInsight("");
   const summary=[
@@ -148,6 +190,35 @@ export default function HealthHub(){
     </div>
     <button disabled={!!saving||Number(activityMinutes)<1||Number(activityMinutes)>1440} onClick={()=>void save({kind:"activity",activity_type:activityType,duration_minutes:Number(activityMinutes),intensity:activityIntensity,notes:activityNotes.trim()||null},"activity")} className="btn-primary mt-3">{saving==="activity"?"Registrando...":"Registrar atividade"}</button>
     {(data?.activities||[]).length>0?<div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{data!.activities.slice(0,6).map(item=><div key={item.id} className="rounded-xl bg-[var(--color-gray)]/50 p-3"><p className="text-sm font-bold">{({walking:"Caminhada",running:"Corrida",gym:"Musculação",cycling:"Bicicleta",sports:"Esporte",yoga:"Yoga / alongamento",other:"Outra"} as Record<string,string>)[item.activity_type]||item.activity_type}</p><p className="mt-1 text-xs text-muted">{item.duration_minutes} min • {({light:"Leve",moderate:"Moderada",vigorous:"Intensa"} as Record<string,string>)[item.intensity]||item.intensity} • {dateLabel(item.logged_on)}</p>{item.notes&&<p className="mt-1 text-xs text-muted">{item.notes}</p>}</div>)}</div>:<p className="mt-4 text-sm text-muted">Suas atividades registradas aparecerão aqui.</p>}
+   </section>
+   <section id="personal" className="relative mb-5 overflow-hidden rounded-[30px] border border-purple-200 bg-[#170b2b] p-5 text-white shadow-[0_20px_55px_rgba(42,12,76,.18)] md:p-7">
+    <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border-[30px] border-fuchsia-400/10"/><div className="pointer-events-none absolute bottom-0 right-1/3 h-40 w-40 rounded-full bg-purple-600/20 blur-3xl"/>
+    <div className="relative">
+     <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex items-center gap-3"><VivaPersonalMark/><div><p className="text-[10px] font-black uppercase tracking-[.28em] text-fuchsia-300">Treinador inteligente</p><h2 className="text-2xl font-black tracking-tight md:text-3xl">VIVA+ <span className="text-fuchsia-300">PERSONAL</span></h2><p className="mt-1 text-sm text-white/65">Seu ritmo. Seu treino. Sua evolução.</p></div></div>
+      <span className="rounded-full border border-fuchsia-300/25 bg-fuchsia-300/10 px-3 py-1.5 text-xs font-bold text-fuchsia-200">EXCLUSIVO VIVA+</span>
+     </div>
+     <div className="mt-6 grid gap-5 lg:grid-cols-[.85fr_1.15fr]">
+      <div className="rounded-2xl border border-white/10 bg-white/[.06] p-4 md:p-5">
+       <div className="flex items-center gap-2 text-sm font-bold"><Target size={17} className="text-fuchsia-300"/> Configure seu treinador</div>
+       <p className="mt-1 text-xs leading-5 text-white/55">A VIVA usa suas respostas para preparar uma sugestão inicial. Quanto mais completas, melhor a adaptação.</p>
+       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+        <label className="text-xs font-bold text-white/75">Objetivo<select className="field mt-1.5 !border-white/10 !bg-[#26143d] !text-white" value={trainerGoal} onChange={e=>setTrainerGoal(e.target.value)}><option value="condicionamento">Melhorar condicionamento</option><option value="forca">Ganhar força</option><option value="hipertrofia">Hipertrofia / massa muscular</option><option value="mobilidade">Mobilidade e flexibilidade</option><option value="bem-estar">Saúde e bem-estar geral</option></select></label>
+        <label className="text-xs font-bold text-white/75">Experiência<select className="field mt-1.5 !border-white/10 !bg-[#26143d] !text-white" value={trainerLevel} onChange={e=>setTrainerLevel(e.target.value)}><option value="iniciante">Iniciante</option><option value="intermediario">Intermediário</option><option value="avancado">Avançado</option></select></label>
+        <label className="text-xs font-bold text-white/75">Dias por semana<select className="field mt-1.5 !border-white/10 !bg-[#26143d] !text-white" value={trainerDays} onChange={e=>setTrainerDays(e.target.value)}><option value="2">2 dias</option><option value="3">3 dias</option><option value="4">4 dias</option><option value="5">5 dias</option><option value="6">6 dias</option></select></label>
+        <label className="text-xs font-bold text-white/75">Onde vai treinar?<select className="field mt-1.5 !border-white/10 !bg-[#26143d] !text-white" value={trainerEquipment} onChange={e=>setTrainerEquipment(e.target.value)}><option value="academia">Academia completa</option><option value="casa com equipamentos">Casa com equipamentos</option><option value="casa sem equipamentos">Casa sem equipamentos</option><option value="ar livre">Ao ar livre</option></select></label>
+       </div>
+       <details className="mt-3 rounded-xl border border-white/10 p-3"><summary className="cursor-pointer text-xs font-bold text-fuchsia-200">Informar lesões, dores ou limitações (importante)</summary><textarea className="mt-3 min-h-20 w-full rounded-xl border border-white/10 bg-[#26143d] p-3 text-sm text-white outline-none placeholder:text-white/35" placeholder="Conte se existe alguma limitação ou orientação profissional..." value={trainerLimitations} onChange={e=>setTrainerLimitations(e.target.value)}/></details>
+       <button onClick={()=>void generateTrainerPlan()} disabled={trainerLoading} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-purple-500 px-4 py-3 text-sm font-black text-white shadow-lg shadow-purple-950/30 transition hover:brightness-110 disabled:opacity-60"><Sparkles size={17}/>{trainerLoading?"Montando seu planejamento...":"GERAR MEU TREINO"}</button>
+       <p className="mt-2 text-[10px] leading-4 text-white/40">A IA pode consumir créditos do assistente VIVA+. O plano é uma orientação educativa, não substitui avaliação profissional.</p>
+      </div>
+      <div className="relative min-h-[300px] overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#2b1450] via-[#21103d] to-[#12091f] p-4 md:p-5">
+       <div className="absolute right-0 top-0 opacity-30"><VivaPersonalMark large/></div>
+       <div className="relative flex items-center justify-between gap-2"><div><p className="text-[10px] font-black uppercase tracking-[.22em] text-fuchsia-300">Sua ficha inteligente</p><h3 className="mt-1 text-lg font-extrabold">Plano de treinamento</h3></div><DumbbellGlyph/></div>
+       {trainerPlan?<div className="relative mt-4 max-h-[560px] overflow-y-auto rounded-xl border border-white/10 bg-black/20 p-4 text-sm leading-7 text-white/90 whitespace-pre-wrap">{trainerPlan}</div>:<div className="relative mt-6 flex min-h-[205px] flex-col items-center justify-center text-center"><VivaPersonalMark large/><p className="mt-4 max-w-xs text-sm font-bold">Seu próximo treino começa com um plano feito para você.</p><p className="mt-2 max-w-xs text-xs leading-5 text-white/50">Preencha seu objetivo e sua rotina. A VIVA organiza os dias, exercícios, séries, repetições e intervalos.</p></div>}
+      </div>
+     </div>
+    </div>
    </section>
    <section className={panel+" mb-5 p-5 md:p-6"}><div className="flex items-center gap-2"><Utensils size={20} className="text-purple-600"/><h2 className="text-lg font-extrabold">Energia e alimentação</h2></div><p className="mt-1 text-sm text-muted">Estimativas educativas para entender seu corpo — não são metas alimentares prescritas.</p><div className="mt-4 grid gap-3 sm:grid-cols-3"><div className="rounded-2xl bg-purple-50 p-4"><p className="text-xs text-purple-800">Metabolismo basal estimado</p><strong className="mt-1 block text-2xl text-purple-950">{bmr?number(bmr):"—"}</strong><span className="text-xs text-purple-800/70">kcal/dia</span></div><div className="rounded-2xl bg-purple-50 p-4"><p className="text-xs text-purple-800">Gasto diário estimado</p><strong className="mt-1 block text-2xl text-purple-950">{tdee?number(tdee):"—"}</strong><span className="text-xs text-purple-800/70">kcal/dia</span></div><div className="rounded-2xl bg-purple-50 p-4"><p className="text-xs text-purple-800">IMC estimado</p><strong className="mt-1 block text-2xl text-purple-950">{profileReady?bmi.toFixed(1).replace(".",","):"—"}</strong><span className="text-xs text-purple-800/70">indicador geral, não diagnóstico</span></div></div><div className="mt-4 rounded-xl border border-[var(--color-border)] p-4 text-sm text-muted">Depois de registrar sua alimentação e atividade física, a VIVA poderá cruzar esses hábitos com seu sono, hidratação e metas. Não usamos uma divisão fixa de macronutrientes como prescrição individual.</div></section>
    <p className="px-1 text-xs leading-6 text-muted">Seus indicadores são aproximações educativas e não substituem avaliação médica ou nutricional. A IA não diagnostica nem prescreve tratamentos. Registre apenas informações que deseja acompanhar.</p>
