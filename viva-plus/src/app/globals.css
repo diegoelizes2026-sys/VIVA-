@@ -341,7 +341,13 @@ a { color: inherit; text-decoration: none; }
   .health-hub-root [id]{scroll-margin-top:calc(var(--topbar-h, 110px) + 12px)}
   .health-personal-chat{display:flex;flex-direction:column;min-height:calc(100dvh - var(--topbar-h, 110px) - 24px)}
   .health-personal-history{flex:1;min-height:140px;max-height:calc(100dvh - var(--topbar-h, 110px) - 300px);padding-bottom:24px;overscroll-behavior:contain}
-  .health-personal-composer{position:sticky;bottom:0;z-index:50;flex-shrink:0;margin-top:12px!important;padding-bottom:calc(6px + env(safe-area-inset-bottom));background:rgba(255,255,255,.98);box-shadow:0 -6px 18px rgba(31,41,55,.07);scroll-margin-bottom:env(safe-area-inset-bottom)}
+  .health-personal-composer{position:sticky;bottom:env(safe-area-inset-bottom);z-index:50;display:flex;flex-direction:row;align-items:center;gap:8px;box-sizing:border-box;width:100%;height:52px;min-height:52px;max-height:52px;flex:0 0 52px;margin:12px 0 0!important;padding:6px 8px!important;border-radius:26px;background:rgba(255,255,255,.98);box-shadow:0 -6px 18px rgba(31,41,55,.07);scroll-margin-bottom:env(safe-area-inset-bottom)}
+  .health-personal-composer .health-personal-mic{display:inline-flex;align-items:center;justify-content:center;flex:0 0 40px;width:40px;height:40px;min-width:40px;min-height:40px;max-width:40px;max-height:40px;padding:0;border-radius:50%}
+  .health-personal-composer .health-personal-mic svg{width:20px;height:20px;flex:0 0 20px}
+  .health-personal-composer .health-personal-input{display:block;flex:1 1 0%;min-width:0;width:0;height:40px;min-height:40px;max-height:40px;margin:0;padding:0 4px;border:0;border-radius:0;background:transparent;font-size:16px;line-height:40px;outline:none;box-shadow:none}
+  .health-personal-composer .health-personal-send{display:inline-flex;flex:0 0 auto;flex-shrink:0;flex-direction:row;align-items:center;justify-content:center;gap:6px;height:40px;min-height:40px;max-height:40px;padding:0 14px;border-radius:20px;white-space:nowrap;word-break:keep-all;line-height:1}
+  .health-personal-composer .health-personal-send span{display:inline;white-space:nowrap}
+  .health-personal-composer .health-personal-send svg{display:block;flex:0 0 18px;width:18px;height:18px}
   .viva-topbar{position:relative;top:auto;height:54px;min-height:54px;padding:0 12px;justify-content:center;background:#fff;border:0;border-bottom:1px solid rgba(100,16,201,.08);backdrop-filter:none;-webkit-backdrop-filter:none}
   .viva-desktop-brand,.viva-desktop-actions{display:none!important}
   .viva-mobile-header{display:grid;width:100%;grid-template-columns:48px 1fr 48px;align-items:center;text-align:center}
