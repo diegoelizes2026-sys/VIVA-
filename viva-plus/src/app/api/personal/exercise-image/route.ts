@@ -17,7 +17,7 @@ export async function POST(request:Request){
   if(!exercise||exercise.length>120)return NextResponse.json({error:"Informe um exercício com até 120 caracteres."},{status:400});
   const client=new OpenAI({apiKey:process.env.OPENAI_API_KEY});
   const result=await client.images.generate({
-   model:"gpt-image-1",
+   model:"gpt-image-2",
    prompt:"Create a clear, safe educational fitness instruction illustration for the exercise: "+exercise+". Show one adult "+(gender==="female"?"woman":"man")+" wearing modest neutral athletic clothing, with anatomically plausible proportions, demonstrating the correct movement in two sequential positions side by side (starting position and finishing position). Make posture, alignment and range of motion easy to understand. Clean light neutral studio background, professional sports education illustration, full body visible, no text, no labels, no logos, no watermark. Do not depict unsafe form. If the exercise name is ambiguous, depict a conservative common version.",
    size:"1024x1024",
    quality:"low"
