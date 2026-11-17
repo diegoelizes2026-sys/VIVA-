@@ -211,9 +211,9 @@ export default function HealthHub(){
        {trainerChatLoading&&<p className="text-[13px] font-medium text-purple-700">Seu Personal está respondendo...</p>}
       </div>
       <form className="health-personal-composer mt-3 flex min-h-14 items-center gap-2 rounded-full border border-purple-200 bg-white p-1.5 shadow-sm" onSubmit={e=>{e.preventDefault();void sendTrainerMessage();}}>
-       <button type="button" onClick={startTrainerVoice} aria-label="Falar com Personal" className={trainerListening?"min-h-11 min-w-11 rounded-full bg-purple-100 text-purple-700 animate-pulse":"min-h-11 min-w-11 rounded-full bg-purple-50 text-lg text-purple-700"}><Mic size={18}/></button>
-       <input value={trainerMessage} onChange={e=>setTrainerMessage(e.target.value)} placeholder="Digite sua mensagem..." className="min-w-0 flex-1 bg-transparent text-[14px] text-gray-800 outline-none placeholder:text-gray-400"/>
-       <button type="submit" disabled={!trainerMessage.trim()||trainerChatLoading} className="min-h-11 rounded-full bg-[#7C3AED] px-4 text-[13px] font-bold text-white disabled:opacity-40"><span>Enviar</span><Send size={15}/></button>
+       <button type="button" onClick={startTrainerVoice} aria-label="Falar com Personal" className={trainerListening?"health-personal-mic rounded-full bg-purple-100 text-purple-700 animate-pulse":"health-personal-mic rounded-full bg-purple-50 text-purple-700"}><Mic size={20}/></button>
+       <input value={trainerMessage} onChange={e=>setTrainerMessage(e.target.value)} placeholder="Digite sua mensagem..." className="health-personal-input min-w-0 flex-1 bg-transparent text-[16px] text-gray-800 outline-none placeholder:text-gray-400"/>
+       <button type="submit" disabled={!trainerMessage.trim()||trainerChatLoading} className="health-personal-send rounded-full bg-[#7C3AED] text-[13px] font-bold text-white disabled:opacity-40"><span>Enviar</span><Send size={18}/></button>
       </form>
      </section>
      <details className="rounded-[20px] border border-purple-100 bg-white p-4 shadow-sm">
