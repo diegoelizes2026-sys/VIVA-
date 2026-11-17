@@ -63,6 +63,9 @@ export default function HealthHub(){
  const [trainerEquipment,setTrainerEquipment]=useState("academia");
  const [trainerLimitations,setTrainerLimitations]=useState("");
  const [trainerPlan,setTrainerPlan]=useState("");
+ const [trainerExercise,setTrainerExercise]=useState("");
+ const [trainerExerciseImage,setTrainerExerciseImage]=useState("");
+ const [trainerImageLoading,setTrainerImageLoading]=useState(false);
  const [trainerLoading,setTrainerLoading]=useState(false);
  const [trainerMessage,setTrainerMessage]=useState("");
  const [trainerGender,setTrainerGender]=useState<"female"|"male">("male");
@@ -112,6 +115,19 @@ export default function HealthHub(){
   finally{setSaving("");}
  }
  function patch<K extends keyof Profile>(key:K,value:Profile[K]){setProfile(current=>({...current,[key]:value}));}
+ async function generateExerciseImage(){
+  const exercise=trainerExercise.trim();
+  if(!exercise||trainerImageLoading)return;
+  setTrainerImageLoading(true);setError("");setTrainerExerciseImage("");
+  try{
+   const response=await fetch("/api/personal/exercise-image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({exercise,gender:trainerGender})});
+   const json=await response.json();
+   if(!response.ok)throw new Error(json.error||"Não foi possível gerar a demonstração agora.");
+   if(!json.image)throw new Error("A imagem não foi retornada. Tente novamente.");
+   setTrainerExerciseImage(json.image);
+  }catch(e){setError(e instanceof Error?e.message:"Não foi possível gerar a demonstração.");}
+  finally{setTrainerImageLoading(false);}
+ }
  async function generateTrainerPlan(){
   setTrainerLoading(true);setError("");setTrainerPlan("");
   const prompt=[
@@ -263,6 +279,13 @@ export default function HealthHub(){
      <section className="rounded-[20px] border border-purple-100 bg-white p-4 shadow-sm">
       <div className="flex items-start gap-3"><img src={trainerGender==="female"?"/personal/personal-mulher.jpg":"/personal/personal-homem.jpg"} alt="" className="h-16 w-16 rounded-[18px] object-cover object-[center_18%]" onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src="/trainer-personal-fallback.svg";}}/><div className="min-w-0"><h2 className="text-[16px] font-extrabold">Meu treino de hoje</h2><p className="text-[13px] text-gray-500">{trainerPlan?"Plano personalizado • gerado pela IA":"Gere seu plano com o Personal VIVA+"}</p><p className="mt-1 text-[12px] text-purple-700">Tempo estimado: 45 min</p></div></div>
       {trainerPlan?<div className="mt-4 max-h-[42vh] overflow-y-auto rounded-[16px] bg-[#F7F5FC] p-3 text-[13px] leading-5 text-gray-800">{trainerPlan.split(/\n/).filter(line=>line.trim()).map((line,index)=><p key={index} className="border-b border-purple-100 py-1 last:border-0">{line.trim()}</p>)}</div>:<div className="mt-4 rounded-[16px] bg-[#F7F5FC] p-4"><p className="text-[14px] font-semibold">Seu próximo treino começa aqui.</p><p className="mt-1 text-[13px] text-gray-500">Converse com o Personal e gere sua ficha semanal.</p><button onClick={()=>setMobileTab("chat")} className="mt-3 min-h-11 rounded-xl bg-purple-100 px-4 text-[13px] font-bold text-purple-700">Configurar treino</button></div>}
+{trainerPlan&&<div className="mt-4 rounded-[16px] border border-purple-100 bg-white p-3">
+       <p className="text-[13px] font-extrabold text-purple-900">Demonstração do exercício</p>
+       <p className="mt-1 text-[12px] text-gray-500">Digite um exercício da sua ficha para gerar uma imagem explicativa. A geração é manual e não consome os créditos de conversa VIVA+.</p>
+       <input value={trainerExercise} onChange={e=>setTrainerExercise(e.target.value)} maxLength={120} placeholder="Ex.: agachamento livre" className="field mt-3 w-full"/>
+       <button type="button" onClick={()=>void generateExerciseImage()} disabled={!trainerExercise.trim()||trainerImageLoading} className="mt-2 min-h-11 w-full rounded-xl bg-[#7C3AED] px-4 text-[13px] font-bold text-white disabled:opacity-50">{trainerImageLoading?"Gerando demonstração...":"Gerar imagem do exercício"}</button>
+       {trainerExerciseImage&&<img src={trainerExerciseImage} alt={"Demonstração de "+trainerExercise} className="mt-3 w-full rounded-xl border border-purple-100" loading="lazy"/>}
+      </div>}
       <button onClick={()=>{mobileHaptic();if(trainerPlan)speakTrainer(trainerPlan);else void generateTrainerPlan();}} disabled={trainerLoading} className="mt-4 min-h-12 w-full rounded-[16px] bg-[#7C3AED] text-[14px] font-extrabold text-white shadow-[0_8px_18px_rgba(124,58,237,.25)] disabled:opacity-50">{trainerPlan?<><Volume2 size={16} className="mr-2 inline-block"/>Ouvir meu treino</>:trainerLoading?"Gerando seu treino...":<><Sparkles size={16} className="mr-2 inline-block"/>Gerar meu treino</>}</button>
      </section>
     </div>}
@@ -325,7 +348,13 @@ export default function HealthHub(){
         <div className="mr-5 rounded-2xl rounded-tl-sm bg-white/10 p-3 text-xs leading-5 text-white/90">👋 O que você gostaria de melhorar hoje: força, disposição, condicionamento ou criar o hábito de treinar?</div>
         {trainerChat.map((item,index)=><div key={index} className={item.role==="user"?"ml-5 rounded-2xl rounded-tr-sm bg-fuchsia-600/35 p-3 text-xs leading-5 text-white":"mr-5 rounded-2xl rounded-tl-sm bg-white/10 p-3 text-xs leading-5 text-white/90"}>{item.text}{item.role==="assistant"&&<button onClick={()=>speakTrainer(item.text)} className="ml-2 inline-flex items-center gap-1 text-fuchsia-200 underline">🔊 Ouvir</button>}</div>)}
         {trainerChatLoading&&<p className="text-xs text-fuchsia-200">Seu Personal está pensando...</p>}
-        {trainerPlan&&<div className="rounded-xl border border-fuchsia-300/20 bg-fuchsia-500/10 p-3"><p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-fuchsia-200">Seu plano de treino</p><p className="whitespace-pre-wrap text-xs leading-5 text-white/90">{trainerPlan}</p></div>}
+        {trainerPlan&&<div className="rounded-xl border border-fuchsia-300/20 bg-fuchsia-500/10 p-3"><p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-fuchsia-200">Seu plano de treino</p><p className="whitespace-pre-wrap text-xs leading-5 text-white/90">{trainerPlan}</p></div>}{trainerPlan&&<div className="rounded-xl border border-fuchsia-300/20 bg-fuchsia-500/10 p-3">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-fuchsia-200">Demonstração visual do exercício</p>
+        <p className="mb-2 text-[11px] leading-4 text-white/65">Informe um exercício da ficha para gerar uma imagem explicativa sob demanda, sem consumir créditos de conversa VIVA+.</p>
+        <input value={trainerExercise} onChange={e=>setTrainerExercise(e.target.value)} maxLength={120} placeholder="Ex.: agachamento livre" className="w-full rounded-lg border border-white/15 bg-black/20 px-3 py-2 text-xs text-white placeholder:text-white/40"/>
+        <button type="button" onClick={()=>void generateExerciseImage()} disabled={!trainerExercise.trim()||trainerImageLoading} className="mt-2 rounded-lg bg-fuchsia-500 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{trainerImageLoading?"Gerando...":"Gerar imagem do exercício"}</button>
+        {trainerExerciseImage&&<img src={trainerExerciseImage} alt={"Demonstração de "+trainerExercise} className="mt-3 w-full rounded-xl" loading="lazy"/>}
+       </div>}
        </div>
        <form className="relative mt-3 flex items-center gap-2 rounded-2xl border border-fuchsia-300/40 bg-[#26143d] p-2 shadow-[0_0_22px_rgba(168,85,247,.16)]" onSubmit={e=>{e.preventDefault();void sendTrainerMessage();}}>
         <button type="button" onClick={startTrainerVoice} className={trainerListening?"rounded-xl bg-fuchsia-500 p-3 text-white animate-pulse":"rounded-xl bg-white/10 p-3 text-fuchsia-200"} aria-label="Falar com o Personal">🎙️</button>
