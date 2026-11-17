@@ -41,7 +41,7 @@ export async function GET() {
     ]);
     const error=profileError||waterError||weightError||sleepError||foodError||activityError;
     if(error)throw error;
-    return NextResponse.json({profile,water:water||[],weights:weights||[],sleep:sleep||[],today});
+    return NextResponse.json({profile,water:water||[],weights:weights||[],sleep:sleep||[],foods:foods||[],activities:activities||[],today});
   } catch(error) {
     console.error("VIVA health load failed",error);
     return NextResponse.json({error:"Não foi possível carregar seus dados de bem-estar."},{status:500});
