@@ -1,6 +1,7 @@
 "use client";
 
 import {useCallback,useEffect,useMemo,useState} from "react";
+import {createPortal} from "react-dom";
 
 function VivaPersonalMark({large=false}:{large?:boolean}){
  return <svg width={large?112:54} height={large?112:54} viewBox="0 0 100 100" fill="none" aria-label="Símbolo exclusivo VIVA+ Personal" role="img" className="shrink-0">
@@ -66,6 +67,19 @@ export default function HealthHub(){
  const [trainerMessage,setTrainerMessage]=useState("");
  const [trainerGender,setTrainerGender]=useState<"female"|"male">("male");
  const [mobileTab,setMobileTab]=useState<"chat"|"day"|"training"|"profile">("chat");
+ const [tabsHost,setTabsHost]=useState<HTMLElement|null>(null);
+ useEffect(()=>{
+  const shell=document.getElementById("viva-fixed-top");
+  const host=document.getElementById("viva-health-tabs-slot");
+  if(host)setTabsHost(host);
+  if(!shell)return;
+  const update=()=>document.documentElement.style.setProperty("--topbar-h",`${Math.ceil(shell.getBoundingClientRect().height)}px`);
+  update();
+  const observer=new ResizeObserver(update);
+  observer.observe(shell);
+  window.addEventListener("resize",update);
+  return()=>{observer.disconnect();window.removeEventListener("resize",update);};
+ },[]);
  const [mobileQuickOpen,setMobileQuickOpen]=useState<"water"|"sleep"|"weight"|"food"|null>(null);
  function mobileHaptic(){if(typeof navigator!=="undefined"&&"vibrate" in navigator)navigator.vibrate(8);}
  const [trainerChat,setTrainerChat]=useState<{role:"user"|"assistant";text:string}[]>([]);
@@ -161,7 +175,7 @@ export default function HealthHub(){
   catch(e){setError(e instanceof Error?e.message:"Não foi possível conversar com a VIVA.");}
   finally{setAiLoading(false);}
  }
- return <div className="mx-auto w-full max-w-6xl pb-12 pt-4 md:pt-24">
+ return <div className="health-hub-root mx-auto w-full max-w-6xl pb-12 pt-4 md:pt-24">
   <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold" style={{background:"var(--color-primary-soft)",color:"var(--color-primary)"}}><HeartPulse size={14}/> VIVA+ • SEU BEM-ESTAR</div><span className="text-xs text-muted">Seus registros são privados</span></div>
   {(message||error)&&<div role={error?"alert":"status"} className="mb-4 rounded-2xl border p-3 text-sm" style={{borderColor:error?"#FECACA":"#BBF7D0",background:error?"#FEF2F2":"#F0FDF4",color:error?"#B91C1C":"#166534"}}>{error||message}</div>}
   {loading?<div className={panel+" p-8 text-sm text-muted"}>Preparando seu espaço de bem-estar...</div>:<>
@@ -180,12 +194,12 @@ export default function HealthHub(){
      </div>
     </section>
 
-    <nav aria-label="Navegação Saúde e Bem-Estar" className="fixed left-1/2 top-[180px] z-[60] w-[calc(100%-24px)] max-w-6xl -translate-x-1/2 grid grid-cols-4 gap-1 rounded-[18px] border border-purple-100 bg-white/95 p-1.5 shadow-[0_8px_24px_rgba(31,41,55,.12)] backdrop-blur md:hidden">
+    {tabsHost&&createPortal(<nav aria-label="Navegação Saúde e Bem-Estar" className="viva-health-tabs grid grid-cols-4 gap-1 p-1.5">
      {[{id:"chat",label:"Chat",icon:MessageCircle},{id:"day",label:"Meu Dia",icon:HeartPulse},{id:"training",label:"Treinos",icon:Activity},{id:"profile",label:"Perfil",icon:Scale}].map(item=>{const Icon=item.icon;return <button key={item.id} type="button" onClick={()=>{mobileHaptic();setMobileTab(item.id as typeof mobileTab);}} className={mobileTab===item.id?"min-h-11 rounded-[14px] bg-[#7C3AED] px-1 text-[12px] font-extrabold text-white shadow-md":"min-h-11 rounded-[14px] px-1 text-[12px] font-bold text-gray-500"}><Icon size={15} className="mx-auto mb-0.5"/>{item.label}</button>;})}
-    </nav>
+    </nav>,tabsHost)}
 
     {mobileTab==="chat"&&<div className="space-y-4">
-     <section className="rounded-[20px] border border-purple-100 bg-white p-4 shadow-[0_8px_24px_rgba(31,41,55,.06)]">
+     <section className="health-personal-chat rounded-[20px] border border-purple-100 bg-white p-4 shadow-[0_8px_24px_rgba(31,41,55,.06)]">
       <div className="flex items-center justify-between gap-2"><div><h2 className="text-[16px] font-extrabold">Converse com seu Personal</h2><p className="mt-1 text-[13px] text-gray-500">Orientação prática, acolhedora e personalizada.</p></div><span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">● Online</span></div>
       <div className="mt-3 flex gap-2">
        <button onClick={()=>{mobileHaptic();setTrainerGender("female");}} className={trainerGender==="female"?"min-h-11 inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-purple-100 text-[13px] font-bold text-purple-800 ring-1 ring-purple-300":"min-h-11 inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-gray-200 text-[13px] font-semibold text-gray-600"}><UserRound size={16} className="shrink-0"/>Mulher</button>
@@ -196,7 +210,7 @@ export default function HealthHub(){
        {trainerChat.map((item,index)=><div key={index} className={item.role==="user"?"ml-8 rounded-2xl rounded-tr-sm bg-[#7C3AED] p-3 text-[13px] leading-5 text-white":"mr-5 rounded-2xl rounded-tl-sm bg-white p-3 text-[13px] leading-5 text-gray-800 shadow-sm"}>{item.text}{item.role==="assistant"&&<button onClick={()=>speakTrainer(item.text)} className="ml-2 inline-flex min-h-8 items-center gap-1 text-[12px] font-bold text-purple-700"><Volume2 size={14}/> Ouvir</button>}</div>)}
        {trainerChatLoading&&<p className="text-[13px] font-medium text-purple-700">Seu Personal está respondendo...</p>}
       </div>
-      <form className="mt-3 flex min-h-14 items-center gap-2 rounded-full border border-purple-200 bg-white p-1.5 shadow-sm" onSubmit={e=>{e.preventDefault();void sendTrainerMessage();}}>
+      <form className="health-personal-composer mt-3 flex min-h-14 items-center gap-2 rounded-full border border-purple-200 bg-white p-1.5 shadow-sm" onSubmit={e=>{e.preventDefault();void sendTrainerMessage();}}>
        <button type="button" onClick={startTrainerVoice} aria-label="Falar com Personal" className={trainerListening?"min-h-11 min-w-11 rounded-full bg-purple-100 text-purple-700 animate-pulse":"min-h-11 min-w-11 rounded-full bg-purple-50 text-lg text-purple-700"}><Mic size={18}/></button>
        <input value={trainerMessage} onChange={e=>setTrainerMessage(e.target.value)} placeholder="Digite sua mensagem..." className="min-w-0 flex-1 bg-transparent text-[14px] text-gray-800 outline-none placeholder:text-gray-400"/>
        <button type="submit" disabled={!trainerMessage.trim()||trainerChatLoading} className="min-h-11 rounded-full bg-[#7C3AED] px-4 text-[13px] font-bold text-white disabled:opacity-40"><span>Enviar</span><Send size={15}/></button>
