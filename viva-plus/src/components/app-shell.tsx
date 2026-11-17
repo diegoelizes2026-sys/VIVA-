@@ -25,7 +25,7 @@ export default function AppShell({children,email,isAdmin=false,entryOfferPlans=[
   </header>
   {path==="/saude"&&<div id="viva-health-tabs-slot" className="viva-health-tabs-slot" />}
   </div>
-  <main className="viva-main">{children}</main><AlarmOverlay/><PermissionOnboarding/><SubscriptionEntryOffer plans={entryOfferPlans} currentPlanId={currentPlanId}/>
+  <main className={path==="/saude"?"viva-main viva-main-health":"viva-main"}>{children}</main><AlarmOverlay/><PermissionOnboarding/><SubscriptionEntryOffer plans={entryOfferPlans} currentPlanId={currentPlanId}/>
   {open&&<><button className="viva-drawer-backdrop" aria-label="Fechar menu" onClick={()=>setOpen(false)}/><aside className="viva-drawer" role="dialog" aria-modal="true" aria-label="Menu principal"><div className="viva-drawer-head"><Mark/><button onClick={()=>setOpen(false)} aria-label="Fechar menu"><Glyph name="close"/></button></div><p className="viva-drawer-label">SEU ESPAÇO</p><nav>{links.map(item=><Link key={item.href} href={item.href} onClick={()=>setOpen(false)} className={path===item.href?"active":""}>{item.kind==="viva"?<span className="viva-mini-orb"/>:item.kind==="health"?<span className="viva-health-icon"><svg viewBox="0 0 28 28" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M14 23s-9-5.4-9-12a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.6-9 12-9 12Z"/><path d="M8.5 13h3l1.5-3 2.2 6 1.4-3h3"/></svg></span>:<Glyph name={item.kind}/>}<span>{item.label}</span></Link>)}</nav><div className="viva-drawer-bottom"><div className="viva-drawer-email">{email}</div><button onClick={logout} disabled={loggingOut}>{loggingOut?"Saindo...":"Sair da conta"}</button></div></aside></>}
  </div>
 }
