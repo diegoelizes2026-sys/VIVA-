@@ -29,7 +29,19 @@ export default function HealthHub(){
  const [error,setError]=useState("");
  const [insight,setInsight]=useState("");
  const [aiLoading,setAiLoading]=useState(false);
- const [showProfile,setShowProfile]=useState(false);\n const [foodName,setFoodName]=useState("");\n const [foodQuantity,setFoodQuantity]=useState("1 porção");\n const [mealType,setMealType]=useState<"breakfast"|"lunch"|"dinner"|"snack">("breakfast");\n const [foodCalories,setFoodCalories]=useState("");\n const [foodProtein,setFoodProtein]=useState("");\n const [foodCarbs,setFoodCarbs]=useState("");\n const [foodFat,setFoodFat]=useState("");\n const [foodFiber,setFoodFiber]=useState("");\n const [activityType,setActivityType]=useState<"walking"|"running"|"gym"|"cycling"|"sports"|"yoga"|"other">("walking");\n const [activityMinutes,setActivityMinutes]=useState("30");\n const [activityIntensity,setActivityIntensity]=useState<"light"|"moderate"|"vigorous">("moderate");\n const [activityNotes,setActivityNotes]=useState("");
+ const [showProfile,setShowProfile]=useState(false);
+ const [foodName,setFoodName]=useState("");
+ const [foodQuantity,setFoodQuantity]=useState("1 porção");
+ const [mealType,setMealType]=useState<"breakfast"|"lunch"|"dinner"|"snack">("breakfast");
+ const [foodCalories,setFoodCalories]=useState("");
+ const [foodProtein,setFoodProtein]=useState("");
+ const [foodCarbs,setFoodCarbs]=useState("");
+ const [foodFat,setFoodFat]=useState("");
+ const [foodFiber,setFoodFiber]=useState("");
+ const [activityType,setActivityType]=useState<"walking"|"running"|"gym"|"cycling"|"sports"|"yoga"|"other">("walking");
+ const [activityMinutes,setActivityMinutes]=useState("30");
+ const [activityIntensity,setActivityIntensity]=useState<"light"|"moderate"|"vigorous">("moderate");
+ const [activityNotes,setActivityNotes]=useState("");
  const load=useCallback(async()=>{
   setLoading(true);setError("");
   try{const response=await fetch("/api/health",{cache:"no-store"});const json=await response.json();if(!response.ok)throw new Error(json.error||"Falha ao carregar.");setData(json);if(json.profile){setProfile(json.profile);setWeight(String(json.profile.current_weight_kg));}setSleepDate(json.today);}
@@ -44,7 +56,9 @@ export default function HealthHub(){
  const tdee=bmr?bmr*activityFactor[profile.activity_level]:null;
  const waterPercent=Math.min(100,Math.round(waterTotal/Math.max(500,profile.water_goal_ml)*100));
  const latestWeight=data?.weights[0];
- const latestSleep=data?.sleep[0];\n const foodTotals=useMemo(()=>({calories:(data?.foods||[]).reduce((n,x)=>n+Number(x.calories||0),0),protein:(data?.foods||[]).reduce((n,x)=>n+Number(x.protein_g||0),0),carbs:(data?.foods||[]).reduce((n,x)=>n+Number(x.carbs_g||0),0),fat:(data?.foods||[]).reduce((n,x)=>n+Number(x.fat_g||0),0),fiber:(data?.foods||[]).reduce((n,x)=>n+Number(x.fiber_g||0),0)}),[data?.foods]);\n const activityMinutesTotal=(data?.activities||[]).reduce((n,x)=>n+x.duration_minutes,0);
+ const latestSleep=data?.sleep[0];
+ const foodTotals=useMemo(()=>({calories:(data?.foods||[]).reduce((n,x)=>n+Number(x.calories||0),0),protein:(data?.foods||[]).reduce((n,x)=>n+Number(x.protein_g||0),0),carbs:(data?.foods||[]).reduce((n,x)=>n+Number(x.carbs_g||0),0),fat:(data?.foods||[]).reduce((n,x)=>n+Number(x.fat_g||0),0),fiber:(data?.foods||[]).reduce((n,x)=>n+Number(x.fiber_g||0),0)}),[data?.foods]);
+ const activityMinutesTotal=(data?.activities||[]).reduce((n,x)=>n+x.duration_minutes,0);
  const weightDelta=data?.weights.length&&data.weights.length>1?Number(data.weights[0].weight_kg)-Number(data.weights[data.weights.length-1].weight_kg):null;
  const greeting=(()=>{const h=new Date().getHours();return h<12?"Bom dia":h<18?"Boa tarde":"Boa noite";})();
  const focus=waterPercent<50?"Que tal fazer uma pausa para beber água?":!latestSleep?"Registre como foi seu sono para acompanhar sua rotina.":latestSleep.sleep_hours<7?"Seu sono merece atenção hoje.": "Você está construindo uma rotina. Continue no seu ritmo.";
@@ -64,9 +78,11 @@ export default function HealthHub(){
    "Água registrada hoje: "+waterTotal+" ml de "+profile.water_goal_ml+" ml.",
    "Sono mais recente: "+(latestSleep?latestSleep.sleep_hours+" horas em "+latestSleep.sleep_date:"sem registro"),
    "Alimentação de hoje: "+((data?.foods||[]).map(x=>x.food_name+" ("+x.quantity+", "+x.meal_type+", "+(x.calories??"calorias não informadas")+" kcal)").join("; ")||"sem registros")+". Totais informados: "+foodTotals.calories+" kcal, proteínas "+foodTotals.protein+" g, carboidratos "+foodTotals.carbs+" g, gorduras "+foodTotals.fat+" g, fibras "+foodTotals.fiber+" g.",
-   "Atividades registradas: "+((data?.activities||[]).map(x=>x.activity_type+" por "+x.duration_minutes+" min, intensidade "+x.intensity).join("; ")||"sem registros")+".",\n   "Histórico de peso: "+(data?.weights.slice(0,6).map(x=>x.weight_kg+" kg em "+x.logged_on).join("; ")||"sem registros"),
+   "Atividades registradas: "+((data?.activities||[]).map(x=>x.activity_type+" por "+x.duration_minutes+" min, intensidade "+x.intensity).join("; ")||"sem registros")+".",
+   "Histórico de peso: "+(data?.weights.slice(0,6).map(x=>x.weight_kg+" kg em "+x.logged_on).join("; ")||"sem registros"),
    "IMC estimado: "+(profileReady?bmi.toFixed(1):"indisponível")+". Metabolismo basal estimado: "+(bmr?Math.round(bmr)+" kcal/dia":"indisponível")+"."
-  ].join("\n");
+  ].join("
+");
   try{const response=await fetch("/api/assistant",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:summary,feature:"chat"})});const json=await response.json();if(!response.ok)throw new Error(json.error||json.message||"A VIVA não conseguiu analisar agora.");if(json.state==="limit_reached"||json.state==="blocked"){setInsight(json.message||"A análise está temporariamente indisponível para sua conta.");return;}setInsight(json.answer||json.message||json.error||"A VIVA não retornou uma análise. Tente novamente.");}
   catch(e){setError(e instanceof Error?e.message:"Não foi possível conversar com a VIVA.");}
   finally{setAiLoading(false);}
