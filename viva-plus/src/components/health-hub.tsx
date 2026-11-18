@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Activity, BedDouble, Check, ChartColumn, Droplet, Dumbbell, Flame, HeartPulse, Info, Mic, Play, Salad, Scale, SendHorizontal, Settings2, Star, Target, Trash2, Trophy, X, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { CreditMeter, CreditNotice, OutOfCredits, UpgradeSheet, makeRequestKey, type Wallet } from "@/components/credit-ui";
 import { GOALS, PLANS, TIPS, WEEKDAYS, type HealthGoal } from "@/lib/health-plans";
 
 type Kind = "water" | "sleep" | "weight" | "meal" | "activity" | "workout";
@@ -62,6 +63,11 @@ export default function HealthHub() {
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", content: "" }]);
   const [input, setInput] = useState("");
   const [chatBusy, setChatBusy] = useState(false);
+  const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [upgrade, setUpgrade] = useState<string | null>(null);
+  const requestRef = useRef<{ text: string; id: string; at: number } | null>(null);
+  useEffect(() => { fetch("/api/assistant").then(r => r.ok ? r.json() : null).then(d => { if (d?.authenticated) setWallet(d); }).catch(() => {}); }, []);
+  const outOfCredits = Boolean(wallet && wallet.available <= 0 && wallet.extra_credits <= 0);
   const [listening, setListening] = useState(false);
   const [speechOk, setSpeechOk] = useState(false);
   const recRef = useRef<SpeechRec | null>(null);
@@ -161,9 +167,12 @@ export default function HealthHub() {
     const history = messages.slice(1).slice(-8);
     setMessages(m => [...m, { role: "user", content: message }]); setInput(""); setChatBusy(true);
     try {
-      const r = await fetch("/api/personal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, history }) });
+      const r = await fetch("/api/personal", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, history, requestId: makeRequestKey(requestRef, message) }) });
       const d = await r.json().catch(() => ({}));
-      setMessages(m => [...m, { role: "assistant", content: String(d.answer || d.error || "Não consegui responder agora. Tente novamente.") }]);
+      if (d.wallet) setWallet(d.wallet);
+      if (d.upgrade && d.reason !== "no_credits") setUpgrade(String(d.message || ""));
+      if (d.reason !== "no_credits") setMessages(m => [...m, { role: "assistant", content: String(d.answer || d.message || d.error || "Não consegui responder agora. Tente novamente.") }]);
+      else if (d.wallet) setWallet(d.wallet);
     } catch { setMessages(m => [...m, { role: "assistant", content: "Sem conexão com o Personal agora. Tente novamente em instantes." }]); }
     finally { setChatBusy(false); }
   }
@@ -211,11 +220,13 @@ export default function HealthHub() {
           <button onClick={() => scrollTo("vh-evolucao")}><ChartColumn />Acompanhar evolução</button>
           <button onClick={() => setSheet("goals")}><Target />Ajustar objetivo</button>
         </div>
-        <form className="vh-composer" onSubmit={(e: FormEvent) => { e.preventDefault(); send(input); }}>
+        {wallet && <div className="vh-credits"><CreditMeter wallet={wallet} compact /><CreditNotice wallet={wallet} /></div>}
+        {outOfCredits ? <OutOfCredits wallet={wallet} /> : <form className="vh-composer" onSubmit={(e: FormEvent) => { e.preventDefault(); send(input); }}>
           {speechOk && <button type="button" className={"vh-mic" + (listening ? " on" : "")} onClick={toggleMic} aria-label={listening ? "Parar de ouvir" : "Falar por voz"}><Mic /></button>}
           <input value={input} onChange={e => setInput(e.target.value)} placeholder={`Digite sua mensagem para ${profile.trainer === "mulher" ? "a" : "o"} Personal VIVA+...`} maxLength={2000} aria-label="Mensagem para o Personal" />
           <button type="submit" className="vh-send" disabled={chatBusy || !input.trim()} aria-label="Enviar"><SendHorizontal /></button>
-        </form>
+        </form>}
+        <UpgradeSheet open={Boolean(upgrade)} text={upgrade || undefined} onClose={() => setUpgrade(null)} />
 
       </div>
     </section>

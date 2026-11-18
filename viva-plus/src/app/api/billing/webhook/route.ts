@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient as createAdmin } from "@supabase/supabase-js";
 export const runtime = "nodejs";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AdminDb = { rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ error: any }> };
+// Concede os créditos do ciclo pago (idempotente no banco: nunca concede duas vezes o mesmo período).
+async function grantCycle(db: AdminDb, subscriptionId: string) {
+  const { error } = await db.rpc("viva_grant_subscription_cycle", { p_subscription_id: subscriptionId });
+  if (error) throw error;
+}
 function verify(req: Request, id: string) {
   const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
   const sig = req.headers.get("x-signature") || "";
@@ -61,20 +68,47 @@ export async function POST(req: Request) {
           }
           const { error: linkError } = await db.from("viva_payments").update({subscription_id:subscriptionId}).eq("id",paymentRow.id);
           if (linkError) throw linkError;
+          await grantCycle(db, subscriptionId!);
+        }
+        if (status === "approved" && paymentRow.subscription_id) await grantCycle(db, paymentRow.subscription_id);
+        if (status === "refunded" && paymentRow.subscription_id) {
+          // Estorno/chargeback: encerra o período pago; a carteira volta ao Free na sincronização.
+          const { error: endError } = await db.from("viva_subscriptions").update({status:"expired",current_period_end:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",paymentRow.subscription_id);
+          if (endError) throw endError;
+          await grantCycle(db, paymentRow.subscription_id);
         }
       }
     } else if (type === "subscription_preapproval") {
       const res = await fetch(`https://api.mercadopago.com/preapproval/${encodeURIComponent(id)}`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"});
       const s = await res.json(); if (!res.ok) throw new Error("Falha ao consultar assinatura");
-      const status = s.status==="authorized"?"active":s.status==="cancelled"?"cancelled":s.status==="paused"?"paused":"pending";
-      const { error } = await db.from("viva_subscriptions").update({status,updated_at:new Date().toISOString()}).eq("gateway_subscription_id",String(s.id));
-      if (error) throw error;
+      // A autorização do cartão NÃO ativa o Pro: a ativação acontece só quando a cobrança é aprovada
+      // (evento subscription_authorized_payment). Status gravados seguem o CHECK da tabela.
+      const { data: sub, error: subLookupError } = await db.from("viva_subscriptions").select("id,status").eq("gateway_subscription_id",String(s.id)).maybeSingle();
+      if (subLookupError) throw subLookupError;
+      if (sub) {
+        const next = s.status==="cancelled" ? "canceled" : s.status==="paused" ? "past_due" : sub.status;
+        if (next !== sub.status) {
+          const { error } = await db.from("viva_subscriptions").update({status:next,updated_at:new Date().toISOString()}).eq("id",sub.id);
+          if (error) throw error;
+          await grantCycle(db, sub.id);
+        }
+      }
     } else if (type === "subscription_authorized_payment") {
       const res = await fetch(`https://api.mercadopago.com/authorized_payments/${encodeURIComponent(id)}`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"});
       const invoice = await res.json(); if (!res.ok) throw new Error("Falha ao consultar fatura");
       if (invoice.preapproval_id && invoice.status === "approved") {
-        const { error } = await db.from("viva_subscriptions").update({status:"active",updated_at:new Date().toISOString()}).eq("gateway_subscription_id",String(invoice.preapproval_id));
+        const { data: sub, error: subLookupError } = await db.from("viva_subscriptions").select("id,user_id,plan_id,billing_interval,external_reference").eq("gateway_subscription_id",String(invoice.preapproval_id)).maybeSingle();
+        if (subLookupError) throw subLookupError;
+        if (!sub) throw new Error("Assinatura VIVA+ ainda não encontrada para esta cobrança; aguardar nova tentativa do webhook.");
+        // Cada cobrança aprovada abre um novo período pago (e um novo ciclo de créditos, uma única vez).
+        const start = new Date(invoice.debit_date || invoice.date_created || Date.now());
+        const end = new Date(start); if (sub.billing_interval === "annual") end.setFullYear(end.getFullYear()+1); else end.setMonth(end.getMonth()+1);
+        const { error } = await db.from("viva_subscriptions").update({status:"active",current_period_start:start.toISOString(),current_period_end:end.toISOString(),updated_at:new Date().toISOString()}).eq("id",sub.id);
         if (error) throw error;
+        const amount = Number(invoice.transaction_amount || invoice.amount || 0);
+        const { error: payError } = await db.from("viva_payments").upsert({user_id:sub.user_id,subscription_id:sub.id,plan_id:sub.plan_id,gateway:"mercadopago",gateway_payment_id:`preapproval_payment:${invoice.id}`,gateway_subscription_id:String(invoice.preapproval_id),external_reference:`${sub.external_reference||sub.id}:${invoice.id}`,payment_method:"card",billing_interval:sub.billing_interval==="annual"?"annual":"monthly",status:"approved",amount_brl:Number.isFinite(amount)&&amount>0?amount:0,paid_at:start.toISOString(),metadata:{authorized_payment_id:String(invoice.id)}},{onConflict:"gateway,gateway_payment_id"});
+        if (payError && payError.code !== "23505") throw payError;
+        await grantCycle(db, sub.id);
       }
     }
     await db.from("viva_payment_webhook_events").update({processed_at:new Date().toISOString(),processing_error:null}).eq("gateway","mercadopago").eq("gateway_event_id",eventId);
