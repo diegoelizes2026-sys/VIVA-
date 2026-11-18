@@ -56,6 +56,10 @@ export async function POST(request:Request){
    "Objetivo do usuário: "+(GOAL_LABEL[String(p.goal||"saude")]||GOAL_LABEL.saude)+".",
    p.age?`Idade: ${p.age} anos.`:"",p.height_cm?`Altura: ${Number(p.height_cm)} cm.`:"",
    p.goal_weight_kg?"Peso desejado: "+Number(p.goal_weight_kg)+" kg.":"",
+   p.experience_level?`Nível de experiência: ${p.experience_level}.`:"",
+   p.train_location?`Treina: ${({casa:"em casa (sem aparelhos de academia)",academia:"na academia",ar_livre:"ao ar livre",misto:"em casa e na academia"} as Record<string,string>)[String(p.train_location)]||p.train_location}.`:"",
+   p.session_minutes?`Tempo por treino: ${p.session_minutes} minutos.`:"",
+   p.limitations?`ATENÇÃO — limitações/orientações informadas pelo usuário: ${String(p.limitations).slice(0,300)}. Adapte os exercícios e recomende acompanhamento profissional.`:"",
    "Metas: "+(Number(p.water_goal_ml)||2000)+" ml de água/dia, "+(Number(p.weekly_workouts)||5)+" treinos/semana, "+(Number(p.weekly_activity_min)||150)+" min de atividade/semana.",
    lines.length?"Registros dos últimos 7 dias:\n"+lines.slice(0,60).join("\n"):"Ainda não há registros de saúde nos últimos 7 dias."
   ].filter(Boolean).join("\n");

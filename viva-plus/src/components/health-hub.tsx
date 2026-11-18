@@ -3,7 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } fro
 import { Activity, BedDouble, Check, ChartColumn, Droplet, Dumbbell, Flame, HeartPulse, Info, Mic, Play, Salad, Scale, SendHorizontal, Settings2, Star, Target, Trash2, Trophy, X, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { CreditMeter, CreditNotice, OutOfCredits, UpgradeSheet, makeRequestKey, type Wallet } from "@/components/credit-ui";
-import { GOALS, PLANS, TIPS, WEEKDAYS, type HealthGoal } from "@/lib/health-plans";
+import { GOALS, PLANS, TIPS, WEEKDAYS, adaptPlan, type HealthGoal } from "@/lib/health-plans";
+import OnboardingChat from "@/components/onboarding-chat";
 
 type Kind = "water" | "sleep" | "weight" | "meal" | "activity" | "workout";
 type Log = { id: string; kind: Kind; value: number; note: string | null; logged_on: string; created_at: string };
@@ -26,8 +27,9 @@ function toLog(kind: Kind, r: Row): Log {
     case "workout": return { ...base, value: Number(r.duration_minutes), note: String(r.focus) };
   }
 }
-type Profile = { goal: HealthGoal; trainer: "mulher" | "homem"; water_goal_ml: number; weekly_workouts: number; weekly_activity_min: number; target_weight_kg: number | null };
-type ChatMessage = { role: "user" | "assistant"; content: string };
+type Personal = { onboarded: boolean; location: string | null; minutes: number | null; level: string | null; limitations: string | null };
+type Profile = { goal: HealthGoal; trainer: "mulher" | "homem"; water_goal_ml: number; weekly_workouts: number; weekly_activity_min: number; target_weight_kg: number | null; personal?: Personal };
+type ChatMessage = { role: "user" | "assistant"; content: string; credits?: number };
 type Sheet = Kind | "goals" | null;
 
 const DEFAULT_PROFILE: Profile = { goal: "saude", trainer: "mulher", water_goal_ml: 2000, weekly_workouts: 5, weekly_activity_min: 150, target_weight_kg: null };
@@ -76,7 +78,10 @@ export default function HealthHub() {
   const today = todayStr();
   const todayIdx = weekdayIdx(today);
   const weekStart = addDays(today, -todayIdx);
-  const plan = PLANS[profile.goal];
+  // Treino ajustado ao diagnóstico do Personal (dias, local, tempo e nível).
+  const plan = profile.personal?.onboarded ? adaptPlan(PLANS[profile.goal], { days: profile.weekly_workouts, location: profile.personal.location, minutes: profile.personal.minutes, level: profile.personal.level }) : PLANS[profile.goal];
+  const [setupOpen, setSetupOpen] = useState(false);
+  useEffect(() => { try { if (new URLSearchParams(window.location.search).get("configurar") === "1") setSetupOpen(true); } catch { } }, []);
   const goalInfo = GOALS.find(g => g.id === profile.goal) ?? GOALS[3];
   const tip = TIPS[Number(today.slice(8, 10)) % TIPS.length];
 
@@ -95,7 +100,7 @@ export default function HealthHub() {
       ]);
       const failed = [p, w, ...rest].find(x => x.error);
       if (failed) throw failed.error;
-      if (p.data) { const d = p.data as Row; setProfile({ goal: (d.goal as HealthGoal) || "saude", trainer: d.trainer === "homem" ? "homem" : "mulher", water_goal_ml: Number(d.water_goal_ml) || 2000, weekly_workouts: Number(d.weekly_workouts) || 5, weekly_activity_min: Number(d.weekly_activity_min) || 150, target_weight_kg: d.goal_weight_kg == null ? null : Number(d.goal_weight_kg) }); }
+      if (p.data) { const d = p.data as Row; setProfile({ goal: (d.goal as HealthGoal) || "saude", trainer: d.trainer === "homem" ? "homem" : "mulher", water_goal_ml: Number(d.water_goal_ml) || 2000, weekly_workouts: Number(d.weekly_workouts) || 5, weekly_activity_min: Number(d.weekly_activity_min) || 150, target_weight_kg: d.goal_weight_kg == null ? null : Number(d.goal_weight_kg), personal: { onboarded: Boolean(d.personal_onboarded_at), location: (d.train_location as string) ?? null, minutes: d.session_minutes == null ? null : Number(d.session_minutes), level: (d.experience_level as string) ?? null, limitations: (d.limitations as string) ?? null } }); }
       const weightLogs = ((w.data || []) as Row[]).map(r => toLog("weight", r));
       setWeights(weightLogs);
       setLogs([...weightLogs, ...rest.flatMap((res, i) => ((res.data || []) as Row[]).map(r => toLog(kinds[i], r)))].sort((a, b) => b.created_at.localeCompare(a.created_at)));
@@ -171,7 +176,7 @@ export default function HealthHub() {
       const d = await r.json().catch(() => ({}));
       if (d.wallet) setWallet(d.wallet);
       if (d.upgrade && d.reason !== "no_credits") setUpgrade(String(d.message || ""));
-      if (d.reason !== "no_credits") setMessages(m => [...m, { role: "assistant", content: String(d.answer || d.message || d.error || "Não consegui responder agora. Tente novamente.") }]);
+      if (d.reason !== "no_credits") setMessages(m => [...m, { role: "assistant", content: String(d.answer || d.message || d.error || "Não consegui responder agora. Tente novamente."), credits: Number(d.usage?.credits) || 0 }]);
       else if (d.wallet) setWallet(d.wallet);
     } catch { setMessages(m => [...m, { role: "assistant", content: "Sem conexão com o Personal agora. Tente novamente em instantes." }]); }
     finally { setChatBusy(false); }
@@ -193,6 +198,7 @@ export default function HealthHub() {
   ];
 
   return <div className="viva-health">
+    {setupOpen && <div className="vc-sheet-layer" role="dialog" aria-modal="true" aria-label="Configurar Personal"><button className="vc-sheet-backdrop" aria-label="Fechar" onClick={() => setSetupOpen(false)} /><div className="vc-sheet vh-setup-sheet"><button className="vh-setup-close" onClick={() => { setSetupOpen(false); load(); }} aria-label="Fechar">Fechar</button><OnboardingChat kind="personal" embedded onDone={() => { load(); }} onClose={() => { setSetupOpen(false); load(); }} /></div></div>}
     <section className="vh-banner">
       <span className="vh-banner-icon"><HeartPulse /></span>
       <div><h1>Saúde e Bem-Estar</h1><p>Cuidar de você nunca foi tão simples. Treino, alimentação, sono, hidratação e muito mais, com o apoio da IA do VIVA+.</p></div>
@@ -205,13 +211,14 @@ export default function HealthHub() {
           <div><h2>VIVA+ <span>PERSONAL</span></h2><p>{profile.trainer === "mulher" ? "Sua treinadora virtual" : "Seu treinador virtual"} com IA <em>IA</em></p></div>
           <span className="vh-online"><i />Online</span>
         </div>
+        {!loading && !profile.personal?.onboarded && <div className="vh-setup"><div><b>Configure seu Personal em 1 minuto</b><span>Objetivo, rotina e cuidados para treinos do seu jeito. Não consome créditos.</span></div><button type="button" onClick={() => setSetupOpen(true)}>Começar</button></div>}
         <div className="vh-trainers" role="radiogroup" aria-label="Escolha seu personal">
           {TRAINERS.map(t => <button key={t.id} type="button" role="radio" aria-checked={profile.trainer === t.id} className={profile.trainer === t.id ? "sel" : ""} onClick={() => saveProfile({ trainer: t.id })}>
             <span className="vh-trainer-face" style={{ backgroundImage: `url(/saude/personal-${t.id}.jpg)` }} />{t.label}{profile.trainer === t.id && <Check />}
           </button>)}
         </div>
         <div className="vh-thread" ref={threadRef} aria-live="polite">
-          {messages.map((m, i) => <div key={i} className={"vh-msg " + m.role}><p>{i === 0 ? greeting(profile.trainer) : m.content}</p></div>)}
+          {messages.map((m, i) => <div key={i} className={"vh-msg " + m.role}><p>{i === 0 ? greeting(profile.trainer) : m.content}{m.credits ? <span className="vh-credit-tag">−{m.credits} {m.credits === 1 ? "crédito" : "créditos"}</span> : null}</p></div>)}
           {chatBusy && <div className="vh-msg assistant"><p className="vh-typing"><span /><span /><span /></p></div>}
         </div>
         <div className="vh-actions">
@@ -253,7 +260,8 @@ export default function HealthHub() {
     <div className="vh-two" id="vh-treino">
       <section className="vh-card">
         <h3><Dumbbell />Meu treino da semana</h3>
-        <p className="vh-sub">Plano atual: <b>{goalInfo.plan}</b></p>
+        <p className="vh-sub">Plano atual: <b>{goalInfo.plan}</b>{profile.personal?.onboarded ? <> · {profile.weekly_workouts} dias{profile.personal.minutes ? ` · ${profile.personal.minutes} min` : ""}{profile.personal.location === "casa" ? " · em casa" : profile.personal.location === "academia" ? " · academia" : ""} · <button className="vh-inline" onClick={() => setSetupOpen(true)}>ajustar</button></> : null}</p>
+        {profile.personal?.limitations && <p className="vh-limit">Considerando: {profile.personal.limitations}. Em caso de dor, pare e procure um profissional.</p>}
         <div className="vh-days">
           {WEEKDAYS.map((d, i) => { const date = addDays(weekStart, i); const trained = logs.some(l => l.kind === "workout" && l.logged_on === date); return <button key={d} className={(i === selectedDay ? "sel " : "") + (i === todayIdx ? "today" : "")} onClick={() => setSelectedDay(i)}><b>{d}</b><span>{plan[i].short}</span>{trained && <Check className="vh-check" />}</button>; })}
         </div>
