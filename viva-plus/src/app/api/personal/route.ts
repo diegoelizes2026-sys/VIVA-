@@ -71,7 +71,7 @@ export async function POST(request:Request){
   const client=new OpenAI({apiKey:process.env.OPENAI_API_KEY});
   const response=await client.responses.create({
    model:configuredModel.trim(),
-   instructions:INSTRUCTIONS+"\n\nDados do usuário (use apenas como contexto, não repita tudo):\n"+context,
+   instructions:INSTRUCTIONS+(String(p.trainer)==="homem"?"\nVocê é o Personal VIVA+ (fale no masculino ao se referir a si mesmo).":"\nVocê é a Personal VIVA+ (fale no feminino ao se referir a si mesma).")+"\n\nDados do usuário (use apenas como contexto, não repita tudo):\n"+context,
    input:[...history,{role:"user" as const,content:message}],
    max_output_tokens:Math.max(400,Math.min(1600,Number(guard.max_output_tokens)||900))
   });
