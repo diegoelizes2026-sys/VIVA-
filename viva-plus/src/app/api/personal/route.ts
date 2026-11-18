@@ -10,7 +10,7 @@ const schema=z.object({
  history:z.array(z.object({role:z.enum(["user","assistant"]),content:z.string().max(4000)})).max(12).optional()
 });
 const GOAL_LABEL:Record<string,string>={hipertrofia:"ganhar massa muscular (hipertrofia)",emagrecimento:"perder peso (emagrecimento)",condicionamento:"melhorar o condicionamento físico",saude:"saúde geral e bem-estar"};
-const KIND_LABEL:Record<string,string>={water:"água (ml)",sleep:"sono (h)",weight:"peso (kg)",meal:"refeição (kcal)",activity:"atividade (min)",workout:"treino concluído"};
+type Row=Record<string,unknown>;
 
 const INSTRUCTIONS=`Você é o VIVA+ Personal, um personal trainer virtual acolhedor, motivador e prático do app VIVA+. Responda sempre em português brasileiro, de forma curta e organizada (use listas quando montar treinos).
 Você pode: montar treinos com exercícios, séries, repetições e descanso; explicar a execução correta; sugerir progressão; dar orientações gerais de hidratação, sono e alimentação equilibrada; motivar o usuário com base nos registros dele.
@@ -29,15 +29,33 @@ export async function POST(request:Request){
   if(!process.env.OPENAI_API_KEY)return NextResponse.json({error:"O Personal está temporariamente indisponível."},{status:503});
 
   const since=new Date(today()+"T12:00:00Z");since.setUTCDate(since.getUTCDate()-6);
-  const [{data:profile},{data:logs}]=await Promise.all([
-   supabase.from("viva_health_profiles").select("goal,water_goal_ml,weekly_workouts,weekly_activity_min,target_weight_kg").eq("user_id",user.id).maybeSingle(),
-   supabase.from("viva_health_logs").select("kind,value,note,logged_on").eq("user_id",user.id).gte("logged_on",since.toISOString().slice(0,10)).order("logged_on",{ascending:false}).limit(60)
+  const from=since.toISOString().slice(0,10);
+  const [{data:profile},water,sleep,weight,food,activity,workout]=await Promise.all([
+   supabase.from("viva_health_profiles").select("*").eq("user_id",user.id).maybeSingle(),
+   supabase.from("viva_water_logs").select("amount_ml,logged_on").eq("user_id",user.id).gte("logged_on",from).limit(100),
+   supabase.from("viva_sleep_logs").select("sleep_hours,sleep_date").eq("user_id",user.id).gte("sleep_date",from).limit(10),
+   supabase.from("viva_weight_logs").select("weight_kg,logged_on").eq("user_id",user.id).order("logged_on",{ascending:false}).limit(5),
+   supabase.from("viva_food_logs").select("meal_type,food_name,calories,logged_on").eq("user_id",user.id).gte("logged_on",from).limit(30),
+   supabase.from("viva_activity_logs").select("activity_type,duration_minutes,intensity,logged_on").eq("user_id",user.id).gte("logged_on",from).limit(30),
+   supabase.from("viva_workout_logs").select("focus,duration_minutes,logged_on").eq("user_id",user.id).gte("logged_on",from).limit(14)
   ]);
+  const p=(profile||{}) as Row;
+  const rows=(r:{data:unknown}|null)=>((r?.data as Row[]|null)||[]);
+  const waterByDay=new Map<string,number>();rows(water).forEach(r=>waterByDay.set(String(r.logged_on),(waterByDay.get(String(r.logged_on))||0)+Number(r.amount_ml)));
+  const lines=[
+   ...[...waterByDay].map(([d,ml])=>`- ${d}: água ${ml} ml`),
+   ...rows(sleep).map(r=>`- ${r.sleep_date}: sono ${Number(r.sleep_hours)} h`),
+   ...rows(weight).map(r=>`- ${r.logged_on}: peso ${Number(r.weight_kg)} kg`),
+   ...rows(food).map(r=>`- ${r.logged_on}: refeição (${r.meal_type}) ${String(r.food_name).slice(0,60)}${r.calories?`, ${Number(r.calories)} kcal`:""}`),
+   ...rows(activity).map(r=>`- ${r.logged_on}: atividade ${r.activity_type} ${r.duration_minutes} min (${r.intensity})`),
+   ...rows(workout).map(r=>`- ${r.logged_on}: treino concluído "${String(r.focus).slice(0,60)}" ${r.duration_minutes} min`)
+  ];
   const context=[
-   "Objetivo do usuário: "+(GOAL_LABEL[profile?.goal||"saude"]||GOAL_LABEL.saude)+".",
-   profile?.target_weight_kg?"Peso desejado: "+profile.target_weight_kg+" kg.":"",
-   "Metas: "+(profile?.water_goal_ml??2000)+" ml de água/dia, "+(profile?.weekly_workouts??5)+" treinos/semana, "+(profile?.weekly_activity_min??150)+" min de atividade/semana.",
-   logs?.length?"Registros dos últimos 7 dias:\n"+logs.map(l=>`- ${l.logged_on}: ${KIND_LABEL[l.kind]||l.kind} = ${Number(l.value)}${l.note?` (${String(l.note).slice(0,80)})`:""}`).join("\n"):"Ainda não há registros de saúde nos últimos 7 dias."
+   "Objetivo do usuário: "+(GOAL_LABEL[String(p.goal||"saude")]||GOAL_LABEL.saude)+".",
+   p.age?`Idade: ${p.age} anos.`:"",p.height_cm?`Altura: ${Number(p.height_cm)} cm.`:"",
+   p.goal_weight_kg?"Peso desejado: "+Number(p.goal_weight_kg)+" kg.":"",
+   "Metas: "+(Number(p.water_goal_ml)||2000)+" ml de água/dia, "+(Number(p.weekly_workouts)||5)+" treinos/semana, "+(Number(p.weekly_activity_min)||150)+" min de atividade/semana.",
+   lines.length?"Registros dos últimos 7 dias:\n"+lines.slice(0,60).join("\n"):"Ainda não há registros de saúde nos últimos 7 dias."
   ].filter(Boolean).join("\n");
 
   const history=(parsed.data.history||[]).slice(-8);
