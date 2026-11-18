@@ -5,3 +5,8 @@ out
 !.env.example
 .vercel
 *.log
+
+# Arquivos gerados pelo build/instalação
+next-env.d.ts
+*.tsbuildinfo
+viva-plus/package-lock.json
