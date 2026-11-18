@@ -1,38 +1,98 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 type InstallPromptEvent=Event&{prompt:()=>Promise<void>;userChoice:Promise<{outcome:"accepted"|"dismissed"}>};
+type Platform="ios"|"android"|"other";
+
+const SESSION_KEY="viva-install-guide-dismissed";
+const DONE_KEY="viva-install-done";
+
+function safeGet(store:"local"|"session",key:string){try{return (store==="local"?localStorage:sessionStorage).getItem(key);}catch{return null;}}
+function safeSet(store:"local"|"session",key:string,value:string){try{(store==="local"?localStorage:sessionStorage).setItem(key,value);}catch{/* storage indisponível */}}
+
+function detectPlatform():Platform{
+ const ua=navigator.userAgent;
+ const iPadOS=navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1;
+ if(/iphone|ipad|ipod/i.test(ua)||iPadOS)return "ios";
+ if(/android/i.test(ua))return "android";
+ return "other";
+}
+function isStandalone(){
+ return window.matchMedia("(display-mode: standalone)").matches||window.matchMedia("(display-mode: minimal-ui)").matches||("standalone" in navigator&&(navigator as Navigator&{standalone?:boolean}).standalone===true);
+}
+
 export default function PwaRegister(){
  const [installEvent,setInstallEvent]=useState<InstallPromptEvent|null>(null);
- const [showAndroid,setShowAndroid]=useState(false),[showIos,setShowIos]=useState(false),[updateReady,setUpdateReady]=useState(false);
+ const [guide,setGuide]=useState<Platform|null>(null);
+ const [updateReady,setUpdateReady]=useState(false);
  const reloading=useRef(false);
+
+ // Service worker
  useEffect(()=>{
-  if(!window.isSecureContext)return;
+  if(!window.isSecureContext||typeof navigator.serviceWorker==="undefined")return;
   let registration:ServiceWorkerRegistration|undefined;
   const onControllerChange=()=>{if(reloading.current){window.location.reload();}};
-  navigator.serviceWorker?.addEventListener("controllerchange",onControllerChange);
-  if(typeof navigator.serviceWorker !== "undefined"){
-   const register=()=>navigator.serviceWorker.register("/sw.js",{scope:"/",updateViaCache:"none"}).then(reg=>{
-    registration=reg;reg.update().catch(()=>undefined);
-    if(reg.waiting&&navigator.serviceWorker.controller)setUpdateReady(true);
-    reg.addEventListener("updatefound",()=>{const worker=reg.installing;if(!worker)return;worker.addEventListener("statechange",()=>{if(worker.state==="installed"&&navigator.serviceWorker.controller)setUpdateReady(true);});});
-    return reg;
-   }).catch(error=>{console.error("VIVA service worker registration failed",error);});
-   if(document.readyState==="complete")void register();else window.addEventListener("load",()=>void register(),{once:true});
-   const refresh=()=>{if(document.visibilityState==="visible")registration?.update().catch(()=>undefined);};
-   document.addEventListener("visibilitychange",refresh);
-   return()=>{document.removeEventListener("visibilitychange",refresh);navigator.serviceWorker.removeEventListener("controllerchange",onControllerChange);};
-  }
-  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent),standalone=window.matchMedia("(display-mode: standalone)").matches||("standalone" in navigator&&(navigator as Navigator&{standalone?:boolean}).standalone===true);
-  const visits=Number(localStorage.getItem("viva-visits")||"0")+1;localStorage.setItem("viva-visits",String(visits));
-  if(ios&&!standalone&&!sessionStorage.getItem("viva-ios-guide-dismissed"))setShowIos(true);
-  const onPrompt=(event:Event)=>{event.preventDefault();setInstallEvent(event as InstallPromptEvent);if(window.matchMedia("(max-width: 768px)").matches&&visits>=2&&!localStorage.getItem("viva-install-dismissed"))setShowAndroid(true);};
-  const onInstalled=()=>{setShowAndroid(false);setShowIos(false);setInstallEvent(null);};
-  window.addEventListener("beforeinstallprompt",onPrompt);window.addEventListener("appinstalled",onInstalled);
-  return()=>{window.removeEventListener("beforeinstallprompt",onPrompt);window.removeEventListener("appinstalled",onInstalled);};
+  navigator.serviceWorker.addEventListener("controllerchange",onControllerChange);
+  const register=()=>navigator.serviceWorker.register("/sw.js",{scope:"/",updateViaCache:"none"}).then(reg=>{
+   registration=reg;reg.update().catch(()=>undefined);
+   if(reg.waiting&&navigator.serviceWorker.controller)setUpdateReady(true);
+   reg.addEventListener("updatefound",()=>{const worker=reg.installing;if(!worker)return;worker.addEventListener("statechange",()=>{if(worker.state==="installed"&&navigator.serviceWorker.controller)setUpdateReady(true);});});
+   return reg;
+  }).catch(error=>{console.error("VIVA service worker registration failed",error);});
+  if(document.readyState==="complete")void register();else window.addEventListener("load",()=>void register(),{once:true});
+  const refresh=()=>{if(document.visibilityState==="visible")registration?.update().catch(()=>undefined);};
+  document.addEventListener("visibilitychange",refresh);
+  return()=>{document.removeEventListener("visibilitychange",refresh);navigator.serviceWorker.removeEventListener("controllerchange",onControllerChange);};
  },[]);
- async function install(){if(!installEvent)return;await installEvent.prompt();const choice=await installEvent.userChoice;if(choice.outcome==="accepted")setShowAndroid(false);setInstallEvent(null);}
- function update(){registrationUpdate();}
- function registrationUpdate(){navigator.serviceWorker?.getRegistration("/").then(reg=>{if(reg?.waiting){reloading.current=true;reg.waiting.postMessage({type:"SKIP_WAITING"});}else{reg?.update().catch(()=>undefined);setUpdateReady(false);}});}
- return <>{updateReady&&<div role="status" className="fixed left-3 right-3 top-3 z-[10000] flex items-center justify-between gap-3 rounded-2xl bg-[#24103f] px-4 py-3 text-sm font-semibold text-white shadow-xl"><span>Nova versão disponível. Atualizar</span><button className="rounded-xl bg-white px-3 py-2 font-bold text-[#6410C9]" onClick={update}>Atualizar</button></div>}
- {(showAndroid||showIos)&&<div className="viva-install-layer" role="dialog" aria-modal="true" aria-label="Instalar VIVA+"><button className="viva-install-backdrop" onClick={()=>{setShowAndroid(false);setShowIos(false);sessionStorage.setItem("viva-ios-guide-dismissed","1");localStorage.setItem("viva-install-dismissed","1")}} aria-label="Fechar"/><section className="viva-install-sheet"><div className="viva-install-handle"/><div className="viva-install-brand">V<span>+</span></div>{showIos?<><span className="viva-install-kicker">VIVA+ NO SEU IPHONE</span><h2>Tenha a VIVA na sua Tela de Início</h2><p>No Safari, toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.</p><div className="viva-ios-steps"><span>1 <b>Compartilhar</b> <i>□↑</i></span><span>2 <b>Adicionar à Tela de Início</b> <i>＋</i></span></div><button className="viva-install-primary" onClick={()=>{setShowIos(false);sessionStorage.setItem("viva-ios-guide-dismissed","1")}}>Entendi</button></>:<><span className="viva-install-kicker">SEU APP PESSOAL</span><h2>Instale o VIVA+</h2><p>Abra direto na conversa, com uma experiência de aplicativo no seu celular.</p><button className="viva-install-primary" onClick={install}>Instalar VIVA+</button><button className="viva-install-later" onClick={()=>{setShowAndroid(false);localStorage.setItem("viva-install-dismissed","1")}}>Agora não</button></>}</section></div>}</>;
+
+ // Instruções para adicionar à tela de início: aparecem ao entrar no site (celular/tablet)
+ useEffect(()=>{
+  if(isStandalone()||safeGet("local",DONE_KEY)||safeGet("session",SESSION_KEY))return;
+  const platform=detectPlatform();
+  const mobile=platform!=="other"||window.matchMedia("(pointer: coarse) and (max-width: 1024px)").matches;
+  if(!mobile)return;
+  const timer=window.setTimeout(()=>setGuide(platform==="ios"?"ios":"android"),1200);
+  const onPrompt=(event:Event)=>{event.preventDefault();setInstallEvent(event as InstallPromptEvent);};
+  const onInstalled=()=>{safeSet("local",DONE_KEY,"1");setGuide(null);setInstallEvent(null);};
+  window.addEventListener("beforeinstallprompt",onPrompt);window.addEventListener("appinstalled",onInstalled);
+  return()=>{window.clearTimeout(timer);window.removeEventListener("beforeinstallprompt",onPrompt);window.removeEventListener("appinstalled",onInstalled);};
+ },[]);
+
+ function closeGuide(){setGuide(null);safeSet("session",SESSION_KEY,"1");}
+ function markDone(){setGuide(null);safeSet("local",DONE_KEY,"1");}
+ async function install(){if(!installEvent)return;await installEvent.prompt();const choice=await installEvent.userChoice;if(choice.outcome==="accepted")markDone();setInstallEvent(null);}
+ function update(){navigator.serviceWorker?.getRegistration("/").then(reg=>{if(reg?.waiting){reloading.current=true;reg.waiting.postMessage({type:"SKIP_WAITING"});}else{reg?.update().catch(()=>undefined);setUpdateReady(false);}});}
+
+ return <>
+  {updateReady&&<div role="status" className="fixed left-3 right-3 top-3 z-[10000] flex items-center justify-between gap-3 rounded-2xl bg-[#24103f] px-4 py-3 text-sm font-semibold text-white shadow-xl"><span>Nova versão disponível. Atualizar</span><button className="rounded-xl bg-white px-3 py-2 font-bold text-[#6410C9]" onClick={update}>Atualizar</button></div>}
+  {guide&&<div className="viva-install-layer" role="dialog" aria-modal="true" aria-labelledby="viva-install-title">
+   <button className="viva-install-backdrop" onClick={closeGuide} aria-label="Fechar"/>
+   <section className="viva-install-sheet">
+    <div className="viva-install-handle"/>
+    <button className="viva-install-close" onClick={closeGuide} aria-label="Fechar">×</button>
+    <div className="viva-install-brand">V<span>+</span></div>
+    {guide==="ios"?<>
+     <span className="viva-install-kicker">ATALHO NO SEU IPHONE</span>
+     <h2 id="viva-install-title">Coloque a VIVA+ na sua Tela de Início</h2>
+     <p>Abra a VIVA+ com um toque, como um aplicativo. Siga os passos no <b>Safari</b>:</p>
+     <ol className="viva-ios-steps">
+      <li><em>1</em><span>Toque em <b>Compartilhar</b> na barra do navegador</span><i aria-hidden>⬆︎</i></li>
+      <li><em>2</em><span>Role e toque em <b>Adicionar à Tela de Início</b></span><i aria-hidden>＋</i></li>
+      <li><em>3</em><span>Toque em <b>Adicionar</b> no canto superior</span><i aria-hidden>✓</i></li>
+     </ol>
+    </>:<>
+     <span className="viva-install-kicker">ATALHO NO SEU CELULAR</span>
+     <h2 id="viva-install-title">Coloque a VIVA+ na sua tela inicial</h2>
+     <p>Abra a VIVA+ com um toque, como um aplicativo.</p>
+     {installEvent?<button className="viva-install-primary" onClick={install}>Adicionar à tela inicial</button>:
+     <ol className="viva-ios-steps">
+      <li><em>1</em><span>Toque no menu <b>⋮</b> do navegador</span><i aria-hidden>⋮</i></li>
+      <li><em>2</em><span>Toque em <b>Adicionar à tela inicial</b> ou <b>Instalar app</b></span><i aria-hidden>＋</i></li>
+      <li><em>3</em><span>Confirme em <b>Adicionar</b></span><i aria-hidden>✓</i></li>
+     </ol>}
+    </>}
+    <button className={installEvent&&guide==="android"?"viva-install-later":"viva-install-primary"} onClick={closeGuide}>{installEvent&&guide==="android"?"Agora não":"Entendi"}</button>
+    <button className="viva-install-later" onClick={markDone}>Já adicionei, não mostrar mais</button>
+   </section>
+  </div>}
+ </>;
 }
