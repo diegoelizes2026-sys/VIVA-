@@ -43,7 +43,8 @@ const KIND_META: Record<Kind, { label: string; title: string; unit: string; icon
   activity: { label: "Atividade", title: "Registrar atividade", unit: "min", icon: Activity },
   workout: { label: "Treino de hoje", title: "Treino de hoje", unit: "min", icon: Dumbbell },
 };
-const GREETING = "👋 Olá! Eu sou o seu Personal VIVA+. Posso montar seu treino, orientar os exercícios, repetições, séries, descanso e ajustar conforme sua evolução. Qual é o seu objetivo hoje?";
+const greeting = (t: "mulher" | "homem") => `👋 Olá! Eu sou ${t === "mulher" ? "a sua Personal" : "o seu Personal"} VIVA+. Posso montar seu treino, orientar os exercícios, repetições, séries, descanso e ajustar conforme sua evolução. Qual é o seu objetivo hoje?`;
+const TRAINERS: { id: "mulher" | "homem"; label: string }[] = [{ id: "mulher", label: "Personal Mulher" }, { id: "homem", label: "Personal Homem" }];
 
 type SpeechRec = { lang: string; interimResults: boolean; start: () => void; stop: () => void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: (() => void) | null };
 
@@ -58,7 +59,7 @@ export default function HealthHub() {
   const [sheet, setSheet] = useState<Sheet>(null);
   const [selectedDay, setSelectedDay] = useState(() => weekdayIdx(todayStr()));
   const [done, setDone] = useState<number[]>([]);
-  const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", content: GREETING }]);
+  const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", content: "" }]);
   const [input, setInput] = useState("");
   const [chatBusy, setChatBusy] = useState(false);
   const [listening, setListening] = useState(false);
@@ -192,11 +193,16 @@ export default function HealthHub() {
       <div className="vh-hero-photo" style={{ backgroundImage: `url(/saude/personal-${profile.trainer}.jpg)` }} role="img" aria-label="Seu Personal VIVA+" />
       <div className="vh-hero-body">
         <div className="vh-hero-title">
-          <div><h2>VIVA+ <span>PERSONAL</span></h2><p>Seu treinador virtual com IA <em>IA</em></p></div>
+          <div><h2>VIVA+ <span>PERSONAL</span></h2><p>{profile.trainer === "mulher" ? "Sua treinadora virtual" : "Seu treinador virtual"} com IA <em>IA</em></p></div>
           <span className="vh-online"><i />Online</span>
         </div>
+        <div className="vh-trainers" role="radiogroup" aria-label="Escolha seu personal">
+          {TRAINERS.map(t => <button key={t.id} type="button" role="radio" aria-checked={profile.trainer === t.id} className={profile.trainer === t.id ? "sel" : ""} onClick={() => saveProfile({ trainer: t.id })}>
+            <span className="vh-trainer-face" style={{ backgroundImage: `url(/saude/personal-${t.id}.jpg)` }} />{t.label}{profile.trainer === t.id && <Check />}
+          </button>)}
+        </div>
         <div className="vh-thread" ref={threadRef} aria-live="polite">
-          {messages.map((m, i) => <div key={i} className={"vh-msg " + m.role}><p>{m.content}</p></div>)}
+          {messages.map((m, i) => <div key={i} className={"vh-msg " + m.role}><p>{i === 0 ? greeting(profile.trainer) : m.content}</p></div>)}
           {chatBusy && <div className="vh-msg assistant"><p className="vh-typing"><span /><span /><span /></p></div>}
         </div>
         <div className="vh-actions">
@@ -207,10 +213,10 @@ export default function HealthHub() {
         </div>
         <form className="vh-composer" onSubmit={(e: FormEvent) => { e.preventDefault(); send(input); }}>
           {speechOk && <button type="button" className={"vh-mic" + (listening ? " on" : "")} onClick={toggleMic} aria-label={listening ? "Parar de ouvir" : "Falar por voz"}><Mic /></button>}
-          <input value={input} onChange={e => setInput(e.target.value)} placeholder="Digite sua mensagem para o Personal VIVA+..." maxLength={2000} aria-label="Mensagem para o Personal" />
+          <input value={input} onChange={e => setInput(e.target.value)} placeholder={`Digite sua mensagem para ${profile.trainer === "mulher" ? "a" : "o"} Personal VIVA+...`} maxLength={2000} aria-label="Mensagem para o Personal" />
           <button type="submit" className="vh-send" disabled={chatBusy || !input.trim()} aria-label="Enviar"><SendHorizontal /></button>
         </form>
-        <button type="button" className="vh-switch" onClick={() => saveProfile({ trainer: profile.trainer === "mulher" ? "homem" : "mulher" })}>Trocar para personal {profile.trainer === "mulher" ? "masculino" : "feminina"}</button>
+
       </div>
     </section>
 
