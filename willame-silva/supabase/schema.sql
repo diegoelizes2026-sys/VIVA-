@@ -2,7 +2,7 @@
 -- O site acessa o banco só pelo servidor com a service_role key; RLS fica ligado e sem políticas
 -- públicas, então ninguém lê leads direto pelo navegador.
 
-create table if not exists empreendimentos (
+create table if not exists ws_empreendimentos (
   id text primary key,
   slug text unique not null,
   nome text not null,
@@ -29,7 +29,7 @@ create table if not exists empreendimentos (
   updated_at timestamptz default now()
 );
 
-create table if not exists slides (
+create table if not exists ws_slides (
   id text primary key,
   sobretitulo text default '',
   titulo text not null,
@@ -42,7 +42,7 @@ create table if not exists slides (
   created_at timestamptz default now()
 );
 
-create table if not exists leads (
+create table if not exists ws_leads (
   id text primary key,
   session_id text unique,
   nome text default '',
@@ -66,9 +66,9 @@ create table if not exists leads (
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
-create index if not exists leads_updated_idx on leads (updated_at desc);
+create index if not exists ws_leads_updated_idx on ws_leads (updated_at desc);
 
-create table if not exists configuracoes (
+create table if not exists ws_configuracoes (
   id int primary key default 1,
   corretor_nome text, creci text, whatsapp text, instagram text, email text,
   regiao_atuacao text, bio text, foto text, manifesto text,
@@ -77,11 +77,11 @@ create table if not exists configuracoes (
   updated_at timestamptz default now()
 );
 
-alter table empreendimentos enable row level security;
-alter table slides enable row level security;
-alter table leads enable row level security;
-alter table configuracoes enable row level security;
+alter table ws_empreendimentos enable row level security;
+alter table ws_slides enable row level security;
+alter table ws_leads enable row level security;
+alter table ws_configuracoes enable row level security;
 
 -- Bucket público para fotos enviadas pelo painel
-insert into storage.buckets (id, name, public) values ('midia', 'midia', true)
+insert into storage.buckets (id, name, public) values ('ws-midia', 'ws-midia', true)
 on conflict (id) do nothing;

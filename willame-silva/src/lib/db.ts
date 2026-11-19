@@ -20,6 +20,14 @@ type Tabelas = {
 };
 type NomeTabela = keyof Tabelas;
 
+// Prefixo das tabelas no Supabase (o projeto é compartilhado com outros apps).
+const TABELA: Record<NomeTabela, string> = {
+  empreendimentos: "ws_empreendimentos",
+  slides: "ws_slides",
+  leads: "ws_leads",
+  configuracoes: "ws_configuracoes",
+};
+
 let _sb: SupabaseClient | null = null;
 function supabase(): SupabaseClient | null {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -70,7 +78,7 @@ function serial<T>(fn: () => Promise<T>): Promise<T> {
 async function listar<K extends NomeTabela>(t: K, ordem?: { col: string; asc: boolean }): Promise<Tabelas[K][]> {
   const sb = supabase();
   if (sb) {
-    let q = sb.from(t).select("*");
+    let q = sb.from(TABELA[t]).select("*");
     if (ordem) q = q.order(ordem.col, { ascending: ordem.asc });
     const { data, error } = await q;
     if (error) throw new Error(`[${t}] ${error.message}`);
@@ -92,7 +100,7 @@ async function listar<K extends NomeTabela>(t: K, ordem?: { col: string; asc: bo
 async function upsert<K extends NomeTabela>(t: K, row: Tabelas[K]): Promise<Tabelas[K]> {
   const sb = supabase();
   if (sb) {
-    const { data, error } = await sb.from(t).upsert(row).select().single();
+    const { data, error } = await sb.from(TABELA[t]).upsert(row).select().single();
     if (error) throw new Error(`[${t}] ${error.message}`);
     return data as Tabelas[K];
   }
@@ -110,7 +118,7 @@ async function upsert<K extends NomeTabela>(t: K, row: Tabelas[K]): Promise<Tabe
 async function remover(t: NomeTabela, id: string | number) {
   const sb = supabase();
   if (sb) {
-    const { error } = await sb.from(t).delete().eq("id", id);
+    const { error } = await sb.from(TABELA[t]).delete().eq("id", id);
     if (error) throw new Error(`[${t}] ${error.message}`);
     return;
   }
@@ -151,7 +159,7 @@ export const listarLeads = () => listar("leads", { col: "updated_at", asc: false
 export async function buscarLeadPorSessao(sessionId: string) {
   const sb = supabase();
   if (sb) {
-    const { data } = await sb.from("leads").select("*").eq("session_id", sessionId).maybeSingle();
+    const { data } = await sb.from(TABELA.leads).select("*").eq("session_id", sessionId).maybeSingle();
     return (data as Lead) ?? null;
   }
   const rows = await listar("leads");

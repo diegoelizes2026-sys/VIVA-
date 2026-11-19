@@ -22,9 +22,9 @@ export async function POST(req: Request) {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (url && key) {
     const sb = createClient(url, key, { auth: { persistSession: false } });
-    const { error } = await sb.storage.from("midia").upload(nome, bytes, { contentType: file.type });
+    const { error } = await sb.storage.from("ws-midia").upload(nome, bytes, { contentType: file.type });
     if (error) return NextResponse.json({ erro: error.message }, { status: 500 });
-    return NextResponse.json({ url: sb.storage.from("midia").getPublicUrl(nome).data.publicUrl });
+    return NextResponse.json({ url: sb.storage.from("ws-midia").getPublicUrl(nome).data.publicUrl });
   }
   if (process.env.VERCEL) {
     return NextResponse.json(
