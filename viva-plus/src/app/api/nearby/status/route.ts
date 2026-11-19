@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { OVERPASS_ENDPOINTS } from "@/lib/nearby";
+import { OVERPASS_ENDPOINTS, photonUrl } from "@/lib/nearby";
 
 // Verificação pública e sem dados de usuários: o servidor consegue falar com o OpenStreetMap?
 // Consulta mínima num ponto fixo (Praça da Sé, SP), com cache de 10 minutos.
@@ -18,6 +18,11 @@ export async function GET() {
       return { host, status: res.status, ok, ms: Date.now() - t0, sample: ok ? undefined : text.slice(0, 120) };
     } catch (e) { return { host, status: 0, ok: false, ms: Date.now() - t0, error: e instanceof Error ? `${e.name}: ${e.message}`.slice(0, 120) : "erro" }; }
   }));
+  const t0 = Date.now();
+  const photon = await fetch(photonUrl("farmacia", -23.5505, -46.6333, 500), { headers: { "User-Agent": "VIVA-Plus/1.0 (lugares proximos)" }, signal: AbortSignal.timeout(12000), cache: "no-store" })
+    .then(async r => { const t = await r.text(); let ok = false; try { ok = Array.isArray(JSON.parse(t).features); } catch { /* */ } return { host: "photon.komoot.io", status: r.status, ok, ms: Date.now() - t0, sample: ok ? undefined : t.slice(0, 120) }; })
+    .catch(e => ({ host: "photon.komoot.io", status: 0, ok: false, ms: Date.now() - t0, error: e instanceof Error ? `${e.name}: ${e.message}`.slice(0, 120) : "erro" }));
+  results.unshift(photon as typeof results[number]);
   const body = { ok: results.some(r => r.ok), checkedAt: new Date().toISOString(), results };
   last = { at: Date.now(), body };
   return NextResponse.json(body);

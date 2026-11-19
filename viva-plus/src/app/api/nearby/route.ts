@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { OVERPASS_ENDPOINTS, overpassQuery, parsePlaces, queryOverpass, type NearbyKind } from "@/lib/nearby";
+import { OVERPASS_ENDPOINTS, searchPlaces, type NearbyKind } from "@/lib/nearby";
 
 // Lugares próximos via OpenStreetMap (Overpass). A localização não é gravada: só é usada nesta busca,
 // arredondada (~100 m) antes de sair do servidor, e o resultado fica em cache por 10 minutos.
@@ -41,13 +41,13 @@ export async function GET(request: Request) {
   recent.push(now); perUser.set(user.id, recent);
 
   try {
-    const elements = await queryOverpass(overpassQuery(type as NearbyKind, lat, lon, radius), { endpoints: ENDPOINTS, timeoutMs: 20000, headers: { "User-Agent": "VIVA-Plus/1.0 (lugares proximos)" } });
-    const data = { type, radius, places: parsePlaces(type as NearbyKind, lat, lon, elements), source: "OpenStreetMap" };
+    const found = await searchPlaces(type as NearbyKind, lat, lon, radius, { overpassEndpoints: ENDPOINTS, photonBase: process.env.PHOTON_URL || undefined, headers: { "User-Agent": "VIVA-Plus/1.0 (lugares proximos)" } });
+    const data = { type, radius, places: found.places, source: found.source };
     if (cache.size > 500) cache.clear();
     cache.set(key, { at: now, data });
     return NextResponse.json(data, { headers: { "Cache-Control": "private, max-age=300" } });
   } catch (e) {
-    const reason = e instanceof Error ? e.message.replace(/^overpass_failed\s*/, "").slice(0, 300) : "erro";
+    const reason = e instanceof Error ? e.message.replace(/^search_failed\s*/, "").slice(0, 300) : "erro";
     console.error("VIVA nearby", reason);
     // O navegador tenta direto no OpenStreetMap quando o servidor não consegue.
     return NextResponse.json({ error: "Não consegui buscar os lugares agora. Tente de novo em instantes.", reason, fallback: true }, { status: 502 });

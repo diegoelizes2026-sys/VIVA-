@@ -178,6 +178,61 @@ export async function queryOverpass(query: string, opts: { endpoints?: string[];
   } finally { clearTimeout(timer); ctrl.abort(); }
 }
 
+// ---------- Photon (busca do OpenStreetMap feita pela komoot; aceita chamadas do navegador) ----------
+const PHOTON_TAGS: Record<NearbyKind, string[]> = {
+  mercado: ["shop:supermarket", "shop:convenience", "shop:greengrocer", "shop:wholesale", "shop:butcher", "shop:bakery"],
+  farmacia: ["amenity:pharmacy", "healthcare:pharmacy"],
+  restaurante: ["amenity:restaurant", "amenity:fast_food", "amenity:food_court"],
+  academia: ["leisure:fitness_centre", "leisure:sports_centre", "amenity:gym"],
+};
+export const PHOTON_URL = "https://photon.komoot.io/reverse";
+
+export function photonUrl(kind: NearbyKind, lat: number, lon: number, radius: number, base = PHOTON_URL) {
+  const q = new URLSearchParams({ lat: String(lat), lon: String(lon), radius: String(Math.max(0.3, Math.min(5, radius / 1000))), limit: "50", lang: "default" });
+  for (const t of PHOTON_TAGS[kind]) q.append("osm_tag", t);
+  return `${base}?${q.toString()}`;
+}
+
+type PhotonFeature = { geometry?: { coordinates?: [number, number] }; properties?: Record<string, string | number | undefined> };
+const OSM_TYPE: Record<string, string> = { N: "node", W: "way", R: "relation" };
+
+/** Converte a resposta do Photon para o mesmo formato do OpenStreetMap (mesmos ids → mesmas avaliações). */
+export function photonToElements(features: PhotonFeature[]): OsmElement[] {
+  const out: OsmElement[] = [];
+  for (const f of features || []) {
+    const p = f.properties || {}; const c = f.geometry?.coordinates;
+    if (!c || !p.name || !p.osm_id || !p.osm_key) continue;
+    const tags: Record<string, string> = { name: String(p.name), [String(p.osm_key)]: String(p.osm_value || "") };
+    if (p.street) tags["addr:street"] = String(p.street);
+    if (p.housenumber) tags["addr:housenumber"] = String(p.housenumber);
+    if (p.district || p.locality) tags["addr:suburb"] = String(p.district || p.locality);
+    out.push({ type: OSM_TYPE[String(p.osm_type)] || "node", id: Number(p.osm_id), lat: c[1], lon: c[0], tags });
+  }
+  return out;
+}
+
+export async function queryPhoton(kind: NearbyKind, lat: number, lon: number, radius: number, opts: { timeoutMs?: number; headers?: Record<string, string>; base?: string } = {}) {
+  const res = await fetch(photonUrl(kind, lat, lon, radius, opts.base), { headers: opts.headers, signal: AbortSignal.timeout(opts.timeoutMs ?? 10000), cache: "no-store" });
+  if (!res.ok) throw new Error("photon:" + res.status);
+  const json = await res.json();
+  if (!Array.isArray(json?.features)) throw new Error("photon:invalid");
+  return photonToElements(json.features);
+}
+
+/** Busca completa: Photon primeiro (rápido e estável), OpenStreetMap/Overpass como reserva. */
+export async function searchPlaces(kind: NearbyKind, lat: number, lon: number, radius: number, opts: { overpassEndpoints?: string[]; photonBase?: string; headers?: Record<string, string> } = {}) {
+  const errors: string[] = [];
+  try {
+    const els = await queryPhoton(kind, lat, lon, radius, { headers: opts.headers, base: opts.photonBase });
+    return { places: parsePlaces(kind, lat, lon, els).filter(p => p.distance <= radius * 1.05), source: "photon" as const };
+  } catch (e) { errors.push(e instanceof Error ? e.message : "photon:erro"); }
+  try {
+    const els = await queryOverpass(overpassQuery(kind, lat, lon, radius), { endpoints: opts.overpassEndpoints, timeoutMs: 15000, headers: opts.headers });
+    return { places: parsePlaces(kind, lat, lon, els), source: "overpass" as const };
+  } catch (e) { errors.push(e instanceof Error ? e.message.replace(/^overpass_failed\s*/, "") : "overpass:erro"); }
+  throw new Error("search_failed " + errors.join(" | "));
+}
+
 // ---------- Chat: "farmácia perto", "mercado mais próximo", "onde comer aqui perto" ----------
 export function detectNearbyIntent(message: string): NearbyKind | null {
   const low = message.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();

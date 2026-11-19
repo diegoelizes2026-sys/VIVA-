@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { NEARBY_KINDS, directionsLinks, distanceMeters, formatDistance, isOpenNow, overpassQuery, parsePlaces, queryOverpass, travelHint, type NearbyKind, type Place } from "@/lib/nearby";
+import { NEARBY_KINDS, directionsLinks, distanceMeters, formatDistance, isOpenNow, searchPlaces, travelHint, type NearbyKind, type Place } from "@/lib/nearby";
 
 type Coords = { lat: number; lon: number };
 type Status = "idle" | "locating" | "loading" | "ready" | "denied" | "error";
@@ -75,12 +75,11 @@ export default function NearbyPlaces() {
   useEffect(() => {
     if (!coords) return;
     const ctrl = new AbortController();
-    setStatus("loading"); setError(""); setSelected(null);
+    setStatus("loading"); setError(""); setSelected(null); setPlaces([]); setCommunity([]); setRatings({});
     // 1º o servidor (cache e coordenadas arredondadas); se ele falhar, o próprio navegador consulta o OpenStreetMap.
     const direct = async () => {
       const lat = Math.round(coords.lat * 1000) / 1000, lon = Math.round(coords.lon * 1000) / 1000;
-      const elements = await queryOverpass(overpassQuery(kind, lat, lon, radius), { timeoutMs: 20000 });
-      return parsePlaces(kind, lat, lon, elements);
+      return (await searchPlaces(kind, lat, lon, radius)).places;
     };
     (async () => {
       let list: Place[] | null = null; let serverMsg = "";
@@ -141,7 +140,8 @@ export default function NearbyPlaces() {
 
   const now = new Date();
   const enriched = merged.map(p => ({ ...p, open: isOpenNow(p.openingHours, now), rating: ratings[refOf(p)] }));
-  const filtered = openOnly ? enriched.filter(p => p.open === true) : enriched;
+  const hasHours = enriched.some(p => p.openingHours);
+  const filtered = openOnly && hasHours ? enriched.filter(p => p.open === true) : enriched;
   const score = (r?: Rating) => (r?.avg ? (r.avg * r.count + 3.5 * 2) / (r.count + 2) : 0); // média “bayesiana”: 1 avaliação não vale tanto quanto 20
   const shown = sort === "best" ? [...filtered].sort((a, b) => score(b.rating) - score(a.rating) || a.distance - b.distance) : filtered;
   const reminder = kind === "mercado" || kind === "farmacia" ? pending[kind] : [];
@@ -184,7 +184,7 @@ export default function NearbyPlaces() {
         <div className="np-radius" role="group" aria-label="Distância">
           {RADII.map(r => <button key={r} className={radius === r ? "on" : ""} onClick={() => setRadius(r)}>{r / 1000} km</button>)}
         </div>
-        <label className="np-open"><input type="checkbox" checked={openOnly} onChange={e => setOpenOnly(e.target.checked)} />Aberto agora</label>
+        {hasHours && <label className="np-open"><input type="checkbox" checked={openOnly} onChange={e => setOpenOnly(e.target.checked)} />Aberto agora</label>}
       </div>
       <div className="np-tools">
         <div className="np-sort" role="group" aria-label="Ordenar">
@@ -237,7 +237,7 @@ export default function NearbyPlaces() {
 function Radar({ places, radius, center, selected, onPick }: { places: (Place & { open: boolean | null })[]; radius: number; center: Coords; selected: string | null; onPick: (id: string) => void }) {
   const R = 46; // raio útil do desenho (viewBox 100x100)
   const kx = 111320 * Math.cos((center.lat * Math.PI) / 180), ky = 110540;
-  const dots = places.slice(0, 30).map((p, i) => {
+  const dots = places.slice(0, 12).map((p, i) => {
     let x = ((p.lon - center.lon) * kx) / radius, y = -((p.lat - center.lat) * ky) / radius;
     const len = Math.hypot(x, y); if (len > 1) { x /= len; y /= len; }
     return { p, i, x: 50 + x * R, y: 50 + y * R };
