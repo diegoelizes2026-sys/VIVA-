@@ -9,6 +9,7 @@ import {handlePurchaseDecision} from "@/lib/finance-ai/purchase";
 import {blockedResponse,classifyFinanceOperation,readRequestKey} from "@/lib/credits";
 import {detectProfileChange,financeMemoryText,loadFinanceProfile} from "@/lib/finance-memory";
 import {detectShoppingIntent,runShoppingIntent} from "@/lib/shopping";
+import {detectNearbyIntent,NEARBY_KINDS} from "@/lib/nearby";
 export const runtime="nodejs";
 const normalizeModelId=(value:string)=>value.trim().toLowerCase().replace(/-\d{4}-\d{2}-\d{2}$/,"").trim();
 const schema=z.object({message:z.string().trim().max(4000).optional(),history:z.array(z.object({role:z.enum(["user","assistant"]),content:z.string().max(4000),clarification:z.object({amount:z.number().nullable(),description:z.string(),category:z.string(),occurred_on:z.string(),payment_method:z.string()}).optional()})).max(12).optional(),feature:z.enum(["chat","voice","photo","radar"]).optional(),receiptUploadId:z.string().uuid().optional(),requestId:z.string().max(80).optional()});
@@ -18,7 +19,9 @@ async function deterministicResponse(supabase:Awaited<ReturnType<typeof createCl
  if(pending){const kindMatch=message.match(/^\\s*(despesas?|receitas?|expense|income)\\s*[.!]?\\s*$/i);const amount=extractMoneyAmount(message);if(kindMatch){const kind=/receita|income/i.test(kindMatch[1])?"income":"expense";return NextResponse.json({transactionDraft:{...pending,amount:amount??pending.amount??0,kind}})}if(amount)return NextResponse.json({clarification:{...pending,amount},clarificationPrompt:"Anotei "+Number(amount).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})+". Falta escolher: despesa ou receita."})}
  const lower=message.toLocaleLowerCase("pt-BR");
  // Lista de compras pelo chat: executa direto, sem IA e sem créditos.
- const shopping=detectShoppingIntent(message);
+ const nearby=detectNearbyIntent(message);
+  if(nearby){const k=NEARBY_KINDS[nearby];return NextResponse.json({answer:`Vou te mostrar ${k.plural.toLowerCase()} perto de você, com distância, se está aberto e o caminho até lá. ${k.emoji}`,action:{href:`/perto?tipo=${nearby}`,label:`Ver ${k.plural.toLowerCase()} perto de mim`}})}
+  const shopping=detectShoppingIntent(message);
  if(shopping){try{return NextResponse.json(await runShoppingIntent(supabase,userId,shopping))}catch(e){console.error("VIVA shopping intent",e);return NextResponse.json({answer:"Não consegui mexer na sua lista agora. Tente de novo em instantes."})}}
  // Mudanças no perfil financeiro ditas no chat: pedem confirmação antes de salvar (não consome créditos).
  const profileChange=detectProfileChange(message,await loadFinanceProfile(supabase,userId));

@@ -16,6 +16,7 @@ const ICONS:Record<string,React.ReactNode>={
  bills:<><path d="M7 4h14v20l-2.5-1.6L16 24l-2-1.6-2 1.6-2.5-1.6L7 24z"/><path d="M11 10h6M11 14h6M11 18h3"/></>,
  cart:<><path d="M3.5 5h3l2.6 12.2a1.5 1.5 0 0 0 1.5 1.2h9.6a1.5 1.5 0 0 0 1.5-1.1L24 9H8"/><circle cx="11.5" cy="22.5" r="1.4"/><circle cx="20" cy="22.5" r="1.4"/></>,
  price:<><path d="M4 14.6V5.5A1.5 1.5 0 0 1 5.5 4h9.1a2 2 0 0 1 1.4.6l8 8a2 2 0 0 1 0 2.8l-8.5 8.5a2 2 0 0 1-2.8 0l-8-8A2 2 0 0 1 4 14.6Z"/><circle cx="9.5" cy="9.5" r="1.8"/></>,
+ nearby:<><path d="M14 24.5s7.5-6.6 7.5-13a7.5 7.5 0 0 0-15 0c0 6.4 7.5 13 7.5 13Z"/><circle cx="14" cy="11.5" r="2.8"/></>,
  agenda:<><rect x="4.5" y="6" width="19" height="17" rx="3"/><path d="M9 3.5v5M19 3.5v5M4.5 11.5h19M9.5 16h3"/></>,
  notifications:<><path d="M19 10a5 5 0 0 0-10 0c0 7-3 8-3 9.5h16c0-1.5-3-2.5-3-9.5"/><path d="M11.5 23a2.6 2.6 0 0 0 5 0"/></>,
  credits:<><circle cx="11" cy="14" r="7.5"/><path d="M11 10v8M8.5 12.5c.5-1.6 4.5-1.6 4.5.6 0 2.3-4.8 1.3-4.8 3.6 0 1.8 4.3 1.8 5-.2"/><path d="M19 7.5a7.5 7.5 0 0 1 0 13"/></>,
@@ -33,7 +34,7 @@ export default function AppShell({children,email,isAdmin=false,entryOfferPlans=[
  async function logout(){if(loggingOut)return;setLoggingOut(true);try{const supabase=createClient();await supabase.auth.signOut();router.replace("/login");router.refresh()}finally{setLoggingOut(false)}}
  // Menu organizado: destaques (VIVA e Saúde) e ferramentas agrupadas por assunto.
  const groups:{title:string;items:{href:string;label:string;kind:string}[]}[]=[
-  {title:"Dinheiro",items:[{href:"/financas",label:"Meu dinheiro",kind:"wallet"},{href:"/planejamento",label:"Planejamento financeiro",kind:"planning"},{href:"/contas",label:"Contas a pagar",kind:"bills"},{href:"/lista-de-compras",label:"Lista de compras",kind:"cart"},{href:"/economizar",label:"Radar de preços",kind:"price"}]},
+  {title:"Dinheiro",items:[{href:"/financas",label:"Meu dinheiro",kind:"wallet"},{href:"/planejamento",label:"Planejamento financeiro",kind:"planning"},{href:"/contas",label:"Contas a pagar",kind:"bills"},{href:"/lista-de-compras",label:"Lista de compras",kind:"cart"},{href:"/perto",label:"Perto de mim",kind:"nearby"},{href:"/economizar",label:"Radar de preços",kind:"price"}]},
   {title:"Organização",items:[{href:"/agenda",label:"Minha agenda",kind:"agenda"},{href:"/configuracoes/notificacoes",label:"Notificações",kind:"notifications"}]},
   {title:"Conta",items:[{href:"/creditos",label:"Meus créditos",kind:"credits"},{href:"/planos",label:"Planos",kind:"plans"},{href:"/meus-dados",label:"Meus dados",kind:"mydata"},{href:"/perfil",label:"Minha conta",kind:"account"},...(isAdmin?[{href:"/admin",label:"Painel administrativo",kind:"admin"}]:[])]},
  ];
