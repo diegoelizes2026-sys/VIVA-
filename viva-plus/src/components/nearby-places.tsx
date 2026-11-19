@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { NEARBY_KINDS, directionsLinks, formatDistance, isOpenNow, travelHint, type NearbyKind, type Place } from "@/lib/nearby";
+import { NEARBY_KINDS, directionsLinks, formatDistance, isOpenNow, overpassQuery, parsePlaces, queryOverpass, travelHint, type NearbyKind, type Place } from "@/lib/nearby";
 
 type Coords = { lat: number; lon: number };
 type Status = "idle" | "locating" | "loading" | "ready" | "denied" | "error";
@@ -63,10 +63,28 @@ export default function NearbyPlaces() {
     if (!coords) return;
     const ctrl = new AbortController();
     setStatus("loading"); setError(""); setSelected(null);
-    fetch(`/api/nearby?lat=${coords.lat}&lon=${coords.lon}&type=${kind}&radius=${radius}`, { signal: ctrl.signal })
-      .then(async r => { const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || "Não consegui buscar os lugares agora."); return d; })
-      .then(d => { setPlaces(d.places || []); setStatus("ready"); })
-      .catch(e => { if (ctrl.signal.aborted) return; setStatus("error"); setError(e instanceof Error ? e.message : "Erro ao buscar."); });
+    // 1º o servidor (cache e coordenadas arredondadas); se ele falhar, o próprio navegador consulta o OpenStreetMap.
+    const direct = async () => {
+      const lat = Math.round(coords.lat * 1000) / 1000, lon = Math.round(coords.lon * 1000) / 1000;
+      const elements = await queryOverpass(overpassQuery(kind, lat, lon, radius), { timeoutMs: 20000 });
+      return parsePlaces(kind, lat, lon, elements);
+    };
+    (async () => {
+      let list: Place[] | null = null; let serverMsg = "";
+      try {
+        const r = await fetch(`/api/nearby?lat=${coords.lat}&lon=${coords.lon}&type=${kind}&radius=${radius}`, { signal: ctrl.signal });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok) list = d.places || [];
+        else if (r.status === 400 || r.status === 401 || r.status === 429) throw new Error(d.error || "Não consegui buscar os lugares agora.");
+        else serverMsg = d.reason || String(r.status);
+      } catch (e) { if (ctrl.signal.aborted) return; if (e instanceof Error && e.name !== "TypeError") throw e; serverMsg = "rede"; }
+      if (!list) {
+        try { list = await direct(); }
+        catch (e) { console.warn("VIVA nearby", serverMsg, e); throw new Error("Não consegui buscar os lugares agora. Confira sua internet e tente de novo."); }
+      }
+      if (ctrl.signal.aborted) return;
+      setPlaces(list); setStatus("ready");
+    })().catch(e => { if (ctrl.signal.aborted) return; setStatus("error"); setError(e instanceof Error ? e.message : "Erro ao buscar."); });
     return () => ctrl.abort();
   }, [coords, kind, radius]);
 
@@ -75,7 +93,7 @@ export default function NearbyPlaces() {
   const now = new Date();
   const enriched = places.map(p => ({ ...p, open: isOpenNow(p.openingHours, now) }));
   const shown = openOnly ? enriched.filter(p => p.open === true) : enriched;
-  const reminder = kind === "restaurante" ? [] : pending[kind];
+  const reminder = kind === "mercado" || kind === "farmacia" ? pending[kind] : [];
 
   const pick = (id: string) => { setSelected(id); cardRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "center" }); };
 
