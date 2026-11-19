@@ -102,25 +102,25 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
 
   const title = mode === "signup" ? "Crie sua conta" : mode === "reset" ? "Recuperar senha" : "Que bom ter você de volta";
   return <main className="auth-page grid min-h-[100svh] place-items-center bg-white px-4 py-8">
-    <div className="grid w-full max-w-5xl overflow-hidden rounded-[28px] border bg-white shadow-[0_24px_80px_rgba(25,21,31,.08)] md:grid-cols-[.9fr_1.1fr]" style={{ borderColor: "var(--color-gray)" }}><div className="auth-mobile-hero md:hidden"><div className="auth-mobile-orbit"/><div className="auth-mobile-brand"><span className="auth-mobile-emblem">V<sup>+</sup></span><span><strong>VIVA</strong><small>VIDA EM MOVIMENTO</small></span></div><h2>{mode === "signup" ? "Seu próximo capítulo começa aqui." : mode === "reset" ? "Vamos recuperar seu acesso." : "Que bom ter você de volta."}</h2><p>{mode === "signup" ? "Um espaço só seu para organizar escolhas, planos e conquistas." : mode === "reset" ? "Recupere seu acesso com segurança e continue de onde parou." : "Sua rotina e seus planos esperam por você."}</p></div>
+    <div className="grid w-full max-w-5xl overflow-hidden rounded-[28px] border bg-white shadow-[0_24px_80px_rgba(25,21,31,.08)] md:grid-cols-[.9fr_1.1fr]" style={{ borderColor: "var(--color-gray)" }}><div className="auth-mobile-hero md:hidden"><div className="auth-mobile-orbit"/><div className="auth-mobile-brand"><span className="auth-mobile-emblem">V<sup>+</sup></span><span><strong>VIVA</strong><small>VIDA EM MOVIMENTO</small></span></div><h2>{mode === "signup" ? "Bora organizar sua vida financeira?" : mode === "reset" ? "Vamos recuperar seu acesso." : "Olá! Que bom te ver de novo."}</h2><p>{mode === "signup" ? "Leva 2 minutos. A VIVA te ajuda a sair das dívidas e a juntar dinheiro." : mode === "reset" ? "Recupere seu acesso com segurança e continue de onde parou." : "Seu dinheiro, sua rotina e sua saúde num lugar só."}</p></div>
       <section className="auth-brand-panel relative hidden min-h-[680px] flex-col justify-between overflow-hidden p-10 md:flex">
         <div className="auth-brand-grid" aria-hidden="true"/>
         <Link href="/" className="auth-wordmark relative"><span className="auth-wordmark-main">VIVA<span>+</span></span><small>UM JEITO MAIS LEVE DE VIVER</small></Link>
         <div className="auth-brand-story relative">
-          <span className="auth-kicker"><Sparkles size={14}/> SEU ESPAÇO. SEU RITMO.</span>
-          <h2>{mode === "signup" ? <>Sua vida não cabe em uma planilha.<br/><em>Ela merece um lugar inteiro.</em></> : mode === "reset" ? <>Seu caminho continua.<br/><em>Vamos abrir a próxima porta.</em></> : <>Tudo o que importa,<br/><em>mais perto de você.</em></>}</h2>
-          <p>{mode === "signup" ? "Organize compromissos, acompanhe seu dinheiro e transforme planos em pequenas conquistas diárias." : "Uma visão mais clara da sua rotina, das suas finanças e das escolhas que fazem sentido para você."}</p>
+          <span className="auth-kicker"><Sparkles size={14}/> SEU ASSISTENTE PESSOAL</span>
+          <h2>{mode === "signup" ? <>Saia do aperto.<br/><em>Comece a juntar.</em></> : mode === "reset" ? <>Seu caminho continua.<br/><em>Vamos abrir a próxima porta.</em></> : <>Seu dinheiro organizado.<br/><em>Sua vida mais leve.</em></>}</h2>
+          <p>{mode === "signup" ? "Conte como está sua vida financeira e a VIVA monta um plano para você: contas, dívidas, metas e o dia do pagamento." : "A VIVA lembra do seu pagamento, organiza suas contas e te diz quanto dá para gastar até o fim do mês."}</p>
         </div>
         <div className="auth-brand-stats relative">
-          <span><CalendarDays size={17}/> ROTINA COM INTENÇÃO</span>
-          <span><Wallet size={17}/> FINANÇAS COM CLAREZA</span>
-          <span><ShieldCheck size={17}/> SEU ESPAÇO PESSOAL</span>
+          <span><CalendarDays size={17}/> LEMBRA DO SEU PAGAMENTO</span>
+          <span><Wallet size={17}/> CONTAS E DÍVIDAS EM DIA</span>
+          <span><ShieldCheck size={17}/> SEUS DADOS PROTEGIDOS</span>
         </div>
-        <span className="auth-brand-index" aria-hidden="true">V+ / 01</span>
+        
       </section>
       <section className="auth-form-panel p-6 sm:p-10 md:p-14">
         <Link href="/" className="auth-back inline-flex items-center gap-2 text-sm font-semibold text-neutral-500 hover:text-neutral-900"><ArrowLeft size={16}/> Voltar ao início</Link>
-        <div className="auth-heading mt-9 md:mt-12"><span className="auth-eyebrow">{mode === "signup" ? "COMECE POR VOCÊ" : mode === "reset" ? "ACESSO SEGURO" : "SEU ESPAÇO VIVA+"}</span><h1 className="mt-3 text-3xl font-black tracking-tight text-neutral-900">{mode === "login" ? "Entre no seu espaço." : mode === "signup" ? "Crie seu espaço." : title}</h1><p className="mt-2 text-sm leading-6 text-neutral-500">{mode === "login" ? "Continue seus planos de onde parou." : mode === "signup" ? "Poucos passos para começar a organizar o que importa." : "Informe seu e-mail para receber o link de recuperação."}</p></div>
+        <div className="auth-heading mt-9 md:mt-12"><span className="auth-eyebrow">{mode === "signup" ? "COMECE POR VOCÊ" : mode === "reset" ? "ACESSO SEGURO" : "SEU ESPAÇO VIVA+"}</span><h1 className="mt-3 text-3xl font-black tracking-tight text-neutral-900">{mode === "login" ? "Acesse sua conta" : mode === "signup" ? "Crie sua conta grátis" : title}</h1><p className="mt-2 text-sm leading-6 text-neutral-500">{mode === "login" ? "Use o e-mail e a senha do seu cadastro." : mode === "signup" ? "Grátis e sem cartão. Você já começa com 20 créditos para usar a VIVA." : "Informe seu e-mail para receber o link de recuperação."}</p></div>
         <form onSubmit={submit} onKeyDown={e => { if (mode === "signup" && e.key === "Enter" && !termsAccepted) { e.preventDefault(); setTermsAttempted(true); setMessage("Marque para continuar"); termsRef.current?.focus(); } }} className="auth-form mt-8 space-y-5">
           {mode === "signup" && <label className="auth-field-label block text-sm font-semibold text-neutral-800">Como podemos chamar você?<input className="field mt-2" autoComplete="name" required value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome completo"/></label>}
           <label className="auth-field-label block text-sm font-semibold text-neutral-800">Seu e-mail<span className="relative mt-2 block"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={17}/><input className="field pl-10" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="maria@email.com"/></span></label>

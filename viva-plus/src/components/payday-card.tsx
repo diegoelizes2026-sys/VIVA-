@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PaySchedule } from "@/lib/payday";
+import { BadgeDollarSign, CalendarClock } from "lucide-react";
 
 type Status = {
   configured: boolean; schedule: PaySchedule; label: string | null; today: string; next: string | null; last: string | null;
@@ -20,6 +21,12 @@ export default function PaydayCard() {
   const [receiving, setReceiving] = useState(false);
   const load = useCallback(() => fetch("/api/payday").then(r => (r.ok ? r.json() : null)).then(setS).catch(() => setS(null)), []);
   useEffect(() => { load(); }, [load]);
+  // Atalho "Recebi" da tela inicial abre o registro (ou a configuração, se ainda não disse quando recebe).
+  useEffect(() => {
+    const open = () => { if (s?.configured) setReceiving(true); else setSetup(true); };
+    window.addEventListener("viva:open-receive", open);
+    return () => window.removeEventListener("viva:open-receive", open);
+  }, [s?.configured]);
   if (!s) return null;
 
   const done = (next: Status) => { setS(next); router.refresh(); };
@@ -30,7 +37,7 @@ export default function PaydayCard() {
     <button className="pd-btn" onClick={() => setSetup(true)}>Configurar</button>
   </>;
   else if (s.received && !s.due) body = <>
-    <div className="pd-text"><b>✓ Pagamento registrado: {brl(s.received.amount)}</b><span>Em {dm(s.received.date)}{s.next ? ` · próximo ${when(s.daysToNext)} (${dm(s.next)})` : ""}</span></div>
+    <div className="pd-text"><b>{s.next ? `Próximo pagamento ${when(s.daysToNext)}` : "Pagamento registrado"}</b><span>✓ Último: {brl(s.received.amount)} em {dm(s.received.date)}{s.next ? ` · ${dm(s.next)}` : ""}</span></div>
     <button className="pd-link" onClick={() => setReceiving(true)}>Recebi outro valor</button>
   </>;
   else if (s.due) body = <>
@@ -47,7 +54,7 @@ export default function PaydayCard() {
   </>;
 
   return <section className={"pd-card" + (s.due ? " due" : "")} aria-label="Pagamento">
-    <span className="pd-ico" aria-hidden>{s.due ? "💸" : s.received ? "✅" : "📅"}</span>
+    <span className="pd-ico" aria-hidden>{s.due ? <BadgeDollarSign size={24} /> : <CalendarClock size={22} />}</span>
     {body}
     {s.configured && <button className="pd-edit" onClick={() => setSetup(true)} aria-label="Mudar quando recebo">Mudar</button>}
     {setup && <SetupSheet current={s.schedule} onClose={() => setSetup(false)} onSaved={st => { setSetup(false); done(st); }} />}
