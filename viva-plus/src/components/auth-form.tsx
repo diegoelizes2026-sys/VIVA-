@@ -2,7 +2,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, LockKeyhole, Mail, Sparkles, Eye, EyeOff, ArrowRight, CalendarDays, Wallet, ShieldCheck } from "lucide-react";
+import { ArrowLeft, LockKeyhole, Mail, Eye, EyeOff, ArrowRight, CalendarDays, ShieldCheck, Receipt, BadgeDollarSign, CalendarClock, ShoppingCart, MapPin, Mic } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" }) {
@@ -103,20 +103,26 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
   const title = mode === "signup" ? "Crie sua conta" : mode === "reset" ? "Recuperar senha" : "Que bom ter você de volta";
   return <main className="auth-page grid min-h-[100svh] place-items-center bg-white px-4 py-8">
     <div className="grid w-full max-w-5xl overflow-hidden rounded-[28px] border bg-white shadow-[0_24px_80px_rgba(25,21,31,.08)] md:grid-cols-[.9fr_1.1fr]" style={{ borderColor: "var(--color-gray)" }}><div className="auth-mobile-hero md:hidden"><div className="auth-mobile-orbit"/><div className="auth-mobile-brand"><span className="auth-mobile-emblem">V<sup>+</sup></span><span><strong>VIVA</strong><small>VIDA EM MOVIMENTO</small></span></div><h2>{mode === "signup" ? "Bora organizar sua vida financeira?" : mode === "reset" ? "Vamos recuperar seu acesso." : "Olá! Que bom te ver de novo."}</h2><p>{mode === "signup" ? "Leva 2 minutos. A VIVA te ajuda a sair das dívidas e a juntar dinheiro." : mode === "reset" ? "Recupere seu acesso com segurança e continue de onde parou." : "Seu dinheiro, sua rotina e sua saúde num lugar só."}</p></div>
-      <section className="auth-brand-panel relative hidden min-h-[680px] flex-col justify-between overflow-hidden p-10 md:flex">
-        <div className="auth-brand-grid" aria-hidden="true"/>
+      <section className="auth-brand-panel ap relative hidden min-h-[680px] flex-col justify-between overflow-hidden p-10 md:flex">
         <Link href="/" className="auth-wordmark relative"><span className="auth-wordmark-main">VIVA<span>+</span></span><small>UM JEITO MAIS LEVE DE VIVER</small></Link>
-        <div className="auth-brand-story relative">
-          <span className="auth-kicker"><Sparkles size={14}/> SEU ASSISTENTE PESSOAL</span>
-          <h2>{mode === "signup" ? <>Saia do aperto.<br/><em>Comece a juntar.</em></> : mode === "reset" ? <>Seu caminho continua.<br/><em>Vamos abrir a próxima porta.</em></> : <>Seu dinheiro organizado.<br/><em>Sua vida mais leve.</em></>}</h2>
-          <p>{mode === "signup" ? "Conte como está sua vida financeira e a VIVA monta um plano para você: contas, dívidas, metas e o dia do pagamento." : "A VIVA lembra do seu pagamento, organiza suas contas e te diz quanto dá para gastar até o fim do mês."}</p>
+        <div className="ap-copy">
+          <h2>{mode === "signup" ? "Comece hoje a sair do aperto." : mode === "reset" ? "Seu acesso de volta em minutos." : "Seu dinheiro em dia, sem planilha."}</h2>
+          <p>Converse com a VIVA, registre gastos em segundos e saiba quanto pode gastar até o próximo pagamento.</p>
         </div>
-        <div className="auth-brand-stats relative">
-          <span><CalendarDays size={17}/> LEMBRA DO SEU PAGAMENTO</span>
-          <span><Wallet size={17}/> CONTAS E DÍVIDAS EM DIA</span>
-          <span><ShieldCheck size={17}/> SEUS DADOS PROTEGIDOS</span>
+        {/* Prévia ilustrativa do app (valores de exemplo). */}
+        <div className="ap-stage" aria-hidden="true">
+          <div className="ap-phone"><span className="ap-notch" />
+            <div className="ap-screen">
+              <div className="ap-bar"><b>VIVA<span>+</span></b></div>
+              <div className="ap-card"><b>Oi, Ana!</b><small>O que vamos resolver hoje?</small><em>Saldo do mês</em><strong>R$ 2.076,70</strong><i>2 contas na semana · R$ 248,80</i></div>
+              <div className="ap-tiles">{([["Lancei um gasto", <Receipt key="a" />], ["Recebi dinheiro", <BadgeDollarSign key="b" />], ["Contas", <CalendarClock key="c" />], ["Lista de compras", <ShoppingCart key="d" />], ["Meu dia", <CalendarDays key="e" />], ["Perto de mim", <MapPin key="f" />]] as const).map(([t, ic]) => <span key={t}><i>{ic}</i>{t}</span>)}</div>
+              <div className="ap-input">Converse com a VIVA…<span><Mic size={13} /></span></div>
+            </div>
+          </div>
+          <div className="ap-bubble b1"><span className="ap-orb" />Anotado: R$ 35,90 em Farmácia ✅</div>
+          <div className="ap-bubble b2"><BadgeDollarSign size={18} />Dia de pagamento! Já caiu?</div>
         </div>
-        
+        <p className="ap-trust"><ShieldCheck size={16} /> Seus dados são só seus · conexão protegida</p>
       </section>
       <section className="auth-form-panel p-6 sm:p-10 md:p-14">
         <Link href="/" className="auth-back inline-flex items-center gap-2 text-sm font-semibold text-neutral-500 hover:text-neutral-900"><ArrowLeft size={16}/> Voltar ao início</Link>

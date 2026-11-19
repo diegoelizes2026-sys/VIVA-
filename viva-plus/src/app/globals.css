@@ -1549,3 +1549,35 @@ a { color: inherit; text-decoration: none; }
 .ct .pd-card{border-radius:22px;box-shadow:none}
 @media(min-width:769px){.ct-tiles{grid-template-columns:repeat(6,minmax(0,1fr))}}
 @media(prefers-color-scheme:dark){.ct-card{background:linear-gradient(135deg,#4c0d9c,#6410C9)}.ct-tile{background:#1e1727;border-color:#2e2539;color:#f3eef8}.ct-ico{background:#2c2140;color:#d4b6ff}}
+
+/* ===== Login no computador: prévia do app no lugar de frases genéricas ===== */
+.auth-back{display:none!important}
+.auth-brand-panel.ap{background:radial-gradient(120% 80% at 100% 100%,#8b3de8 0%,transparent 55%),#6410C9!important;gap:18px}
+.auth-brand-panel.ap:before,.auth-brand-panel.ap .auth-brand-grid{display:none!important}
+.ap-copy{max-width:440px}.ap-copy h2{margin:0;font-size:clamp(30px,2.6vw,40px);line-height:1.08;font-weight:950;letter-spacing:-.04em;color:#fff}
+.ap-copy p{margin:12px 0 0;max-width:400px;color:#eadbff;font-size:15px;line-height:1.6}
+.ap-stage{position:relative;flex:1;display:grid;place-items:center;min-height:360px}
+.ap-phone{position:relative;width:236px;height:420px;padding:10px;border-radius:38px;background:#140b22;box-shadow:0 30px 60px rgba(20,6,46,.45),inset 0 0 0 2px rgba(255,255,255,.08);transform:rotate(-4deg)}
+.ap-notch{position:absolute;top:14px;left:50%;width:70px;height:18px;margin-left:-35px;border-radius:99px;background:#140b22;z-index:2}
+.ap-screen{height:100%;display:flex;flex-direction:column;gap:8px;padding:34px 10px 10px;border-radius:30px;background:#f5f3f8;overflow:hidden;color:#1d1426}
+.ap-bar{text-align:center;font-size:13px;font-weight:950;letter-spacing:-.05em;color:#6410C9}.ap-bar span{color:#8b3de8}
+.ap-card{display:grid;gap:1px;padding:11px 12px;border-radius:16px;background:#6410C9;color:#fff}
+.ap-card b{font-size:13px;font-weight:950}.ap-card small{font-size:9px;opacity:.85;font-weight:700}
+.ap-card em{margin-top:6px;font-size:8.5px;font-style:normal;font-weight:700;opacity:.85}.ap-card strong{font-size:19px;font-weight:950;letter-spacing:-.03em}
+.ap-card i{justify-self:start;margin-top:5px;padding:3px 7px;border-radius:99px;background:rgba(255,255,255,.16);font-size:8px;font-style:normal;font-weight:800}
+.ap-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.ap-tiles>span{display:grid;justify-items:center;gap:3px;padding:7px 2px 6px;border-radius:11px;background:#fff;border:1px solid #eeeaf3;font-size:7.5px;font-weight:800;text-align:center;line-height:1.15}
+.ap-tiles i{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#f1eafc;color:#6410C9}.ap-tiles svg{width:12px;height:12px}
+.ap-input{margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding:7px 7px 7px 11px;border-radius:99px;background:#fff;border:1px solid #eeeaf3;font-size:9px;color:#8a8096}
+.ap-input span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#6410C9;color:#fff}
+.ap-bubble{position:absolute;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:16px;background:#fff;color:#1d1426;font-size:13px;font-weight:800;box-shadow:0 16px 34px rgba(20,6,46,.3);white-space:nowrap;animation:apFloat 5s ease-in-out infinite}
+.ap-bubble.b1{left:2%;top:18%}.ap-bubble.b2{right:0;bottom:16%;animation-delay:-2.5s;color:#15803d}.ap-bubble.b2 svg{color:#16a34a}
+.ap-orb{width:22px;height:22px;flex:none;border-radius:50%;background:radial-gradient(circle at 35% 30%,#e2c8ff,#a565f2 38%,#6410C9 72%,#3d0a86)}
+@keyframes apFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@media(prefers-reduced-motion:reduce){.ap-bubble{animation:none}}
+.ap-trust{display:flex;align-items:center;gap:8px;margin:0;color:#eadbff;font-size:13px;font-weight:700}.ap-trust svg{color:#ffd43b}
+@media(max-width:1100px){.ap-bubble.b1{left:-4%}.ap-bubble.b2{right:-4%}}
+.ap-bubble.b1{left:0;top:0}
+.ap-card i{white-space:nowrap}
+@media(max-height:820px){.ap-phone{transform:rotate(-4deg) scale(.86)}.ap-stage{min-height:320px}.ap-bubble.b1{top:-2%}.ap-bubble.b2{bottom:8%}}
+@media(max-width:1100px){.ap-bubble.b1{left:-6%}}
