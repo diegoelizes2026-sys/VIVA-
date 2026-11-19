@@ -1,32 +1,57 @@
 import { partesTitulo } from "@/lib/format";
 
 export function Monograma({ className = "" }: { className?: string }) {
+  // Telhado com janela — o símbolo da marca
   return (
-    <svg viewBox="0 0 48 48" className={className} aria-hidden>
-      <circle cx="24" cy="24" r="23" fill="none" stroke="currentColor" strokeWidth="1" opacity=".5" />
-      <path
-        d="M10 15 L16.5 34 L24 19 L31.5 34 L38 15"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M14 38.5 Q24 34.5 34 38.5" fill="none" stroke="var(--color-sol)" strokeWidth="1.6" strokeLinecap="round" />
+    <svg viewBox="0 0 64 48" className={className} aria-hidden>
+      <defs>
+        <linearGradient id="ouro" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#f3d27a" />
+          <stop offset=".55" stopColor="#d8a93d" />
+          <stop offset="1" stopColor="#a8761f" />
+        </linearGradient>
+      </defs>
+      <path d="M4 30 L32 6 L60 30" fill="none" stroke="url(#ouro)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="43" y="6" width="6" height="12" rx="1" fill="url(#ouro)" />
+      <g fill="url(#ouro)">
+        <rect x="27" y="19" width="4.6" height="4.6" rx=".6" />
+        <rect x="32.6" y="19" width="4.6" height="4.6" rx=".6" />
+        <rect x="27" y="24.6" width="4.6" height="4.6" rx=".6" />
+        <rect x="32.6" y="24.6" width="4.6" height="4.6" rx=".6" />
+      </g>
+      <path d="M10 42 Q32 50 54 42" fill="none" stroke="url(#ouro)" strokeWidth="2.6" strokeLinecap="round" />
     </svg>
   );
 }
 
-export function Logo({ claro = false, creci }: { claro?: boolean; creci?: string }) {
+export function Logo({ claro = false, creci, compacto = false }: { claro?: boolean; creci?: string; compacto?: boolean }) {
   return (
-    <span className={`flex items-center gap-3 ${claro ? "text-osso" : "text-ink"}`}>
-      <Monograma className="h-10 w-10 shrink-0" />
-      <span className="leading-none">
-        <span className="font-display block text-[22px] font-medium">Willame Silva</span>
-        <span className={`rotulo mt-1 block !text-[9.5px] ${claro ? "text-osso/60" : "text-ink/55"}`}>
-          Corretor de imóveis{creci ? ` · CRECI ${creci}` : ""}
-        </span>
+    <span className={`relative inline-flex flex-col items-center leading-none ${claro ? "text-white" : "text-ink"}`}>
+      <svg viewBox="0 0 64 30" className={compacto ? "mb-0 h-5 w-10" : "mb-0.5 h-7 w-14"} aria-hidden>
+        <defs>
+          <linearGradient id="ouro-logo" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#f3d27a" />
+            <stop offset=".55" stopColor="#d8a93d" />
+            <stop offset="1" stopColor="#a8761f" />
+          </linearGradient>
+        </defs>
+        <path d="M5 28 L32 5 L59 28" fill="none" stroke="url(#ouro-logo)" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="43" y="5" width="5.5" height="11" rx="1" fill="url(#ouro-logo)" />
+        <g fill="url(#ouro-logo)">
+          <rect x="27.4" y="16" width="4.2" height="4.2" rx=".5" />
+          <rect x="32.4" y="16" width="4.2" height="4.2" rx=".5" />
+          <rect x="27.4" y="21" width="4.2" height="4.2" rx=".5" />
+          <rect x="32.4" y="21" width="4.2" height="4.2" rx=".5" />
+        </g>
+      </svg>
+      <span className={`font-display font-extrabold tracking-[0.02em] ${compacto ? "text-[20px]" : "text-[27px]"}`}>WILLAME</span>
+      <span className={`font-display mt-1 font-semibold tracking-[0.2em] ${compacto ? "text-[7.5px]" : "text-[9px]"} ${claro ? "text-white/85" : "text-ink/70"}`}>
+        NEGÓCIOS <b className="font-extrabold">IMOBILIÁRIO</b>
       </span>
+      <svg viewBox="0 0 120 10" className={compacto ? "mt-0.5 h-1.5 w-20" : "mt-1 h-2 w-28"} aria-hidden>
+        <path d="M4 2 Q60 12 116 2" fill="none" stroke="url(#ouro-logo)" strokeWidth="2.4" strokeLinecap="round" />
+      </svg>
+      {creci && !compacto && <span className={`mt-0.5 text-[8.5px] font-semibold tracking-wider ${claro ? "text-white/50" : "text-ink/45"}`}>CRECI {creci}</span>}
     </span>
   );
 }

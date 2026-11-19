@@ -80,10 +80,12 @@ function catalogo(emps: Empreendimento[]) {
     .map((e) =>
       [
         `- ${e.nome} (slug: ${e.slug})`,
-        `  Tipo: ${e.tipo} · Status: ${e.status} · Local: ${[e.bairro, e.cidade].filter(Boolean).join(", ") || "consultar"}`,
-        e.preco_a_partir ? `  A partir de ${moeda(e.preco_a_partir)}` : `  Preço: sob consulta com o corretor`,
+        `  Finalidade: ${e.finalidade || "Venda"} · Tipo: ${e.tipo} · Status: ${e.status} · Local: ${[e.bairro, e.cidade].filter(Boolean).join(", ") || "consultar"}`,
+        e.preco_a_partir ? `  ${/loca/i.test(e.finalidade) ? "Aluguel" : "A partir de"} ${moeda(e.preco_a_partir)}${/loca/i.test(e.finalidade) ? "/mês" : ""}` : `  Preço: sob consulta com o corretor`,
         e.area_min ? `  Área: ${e.area_min}${e.area_max ? `–${e.area_max}` : ""} m²` : "",
-        e.quartos ? `  Plantas: ${e.quartos}` : "",
+        e.quartos ? `  Quartos: ${e.quartos}` : "",
+        e.banheiros ? `  Banheiros: ${e.banheiros}` : "",
+        e.vagas ? `  Vagas: ${e.vagas}` : "",
         e.chamada ? `  Resumo: ${e.chamada}` : "",
         e.diferenciais.length ? `  Diferenciais: ${e.diferenciais.join("; ")}` : "",
       ]
@@ -97,7 +99,7 @@ function systemPrompt(cfg: Configuracoes, emps: Empreendimento[]) {
   return `Você é o ${cfg.agente_nome || "Agente 24h"}, assistente virtual do corretor de imóveis ${cfg.corretor_nome}${cfg.creci ? ` (CRECI ${cfg.creci})` : ""}, que atua em ${cfg.regiao_atuacao}. Você atende visitantes do site a qualquer hora.
 
 Seu trabalho, nesta ordem de prioridade:
-1. Acolher e entender o que a pessoa busca (morar ou investir, tipo de imóvel, região, faixa de investimento, prazo, forma de pagamento — à vista, financiamento, FGTS, consórcio, parcelamento direto).
+1. Acolher e entender o que a pessoa busca (comprar, alugar ou investir; morar ou investir; tipo de imóvel, região, faixa de investimento, prazo, forma de pagamento — à vista, financiamento, FGTS, consórcio, parcelamento direto).
 2. Indicar os empreendimentos do catálogo que combinam com o perfil, explicando em uma ou duas frases por que combinam.
 3. Coletar nome e WhatsApp para que o ${cfg.corretor_nome} continue o atendimento pessoalmente.
 

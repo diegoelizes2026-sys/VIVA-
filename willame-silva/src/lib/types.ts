@@ -16,6 +16,9 @@ export const STATUS_OPCOES: StatusEmpreendimento[] = [
 ];
 
 export const TIPO_OPCOES = [
+  "Casa",
+  "Apartamento",
+  "Terreno",
   "Lotes",
   "Casas em condomínio",
   "Apartamentos",
@@ -23,6 +26,8 @@ export const TIPO_OPCOES = [
   "Bairro planejado",
   "Comercial",
 ];
+
+export const FINALIDADE_OPCOES = ["Venda", "Locação", "Venda e locação"];
 
 export type Empreendimento = {
   id: string;
@@ -38,6 +43,9 @@ export type Empreendimento = {
   area_min: number | null;
   area_max: number | null;
   quartos: string;
+  banheiros: string;
+  vagas: string;
+  finalidade: string;
   diferenciais: string[];
   capa: string;
   imagens: string[];

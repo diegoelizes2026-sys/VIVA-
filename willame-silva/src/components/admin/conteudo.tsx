@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowDown, ArrowUp, Eye, EyeOff, ExternalLink, Pencil, Plus, Star, Trash2, X } from "lucide-react";
-import { STATUS_OPCOES, TIPO_OPCOES, type Configuracoes, type Empreendimento, type Slide } from "@/lib/types";
+import { FINALIDADE_OPCOES, STATUS_OPCOES, TIPO_OPCOES, type Configuracoes, type Empreendimento, type Slide } from "@/lib/types";
 import { corStatus, moeda } from "@/lib/format";
 import { Titulo } from "@/components/marca";
 import { api } from "./api";
@@ -24,6 +24,9 @@ const novoEmp = (): Empreendimento => ({
   area_min: null,
   area_max: null,
   quartos: "",
+  banheiros: "",
+  vagas: "",
+  finalidade: "Venda",
   diferenciais: [],
   capa: "",
   imagens: [],
@@ -61,7 +64,7 @@ export function Empreendimentos({ lista, onMudou }: { lista: Empreendimento[]; o
       <div className="mb-6 flex items-center justify-between">
         <p className="text-[14px] text-ink/55">{lista.length} empreendimentos · a ordem aqui é a ordem do site</p>
         <Botao onClick={() => setEditando(novoEmp())}>
-          <Plus className="h-4 w-4" /> Lançar empreendimento
+          <Plus className="h-4 w-4" /> Cadastrar imóvel
         </Botao>
       </div>
       {!lista.length ? (
@@ -176,7 +179,7 @@ function EditorEmpreendimento({ inicial, onFechar, onSalvo }: { inicial: Empreen
       }
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        <Campo label="Nome *"><input className={inputCls} value={e.nome} onChange={(x) => set("nome", x.target.value)} placeholder="Ex.: Lagoar" /></Campo>
+        <Campo label="Nome *"><input className={inputCls} value={e.nome} onChange={(x) => set("nome", x.target.value)} placeholder="Ex.: Casa no Centro" /></Campo>
         <Campo label="Status">
           <select className={inputCls} value={e.status} onChange={(x) => set("status", x.target.value as Empreendimento["status"])}>
             {STATUS_OPCOES.map((s) => <option key={s}>{s}</option>)}
@@ -197,12 +200,19 @@ function EditorEmpreendimento({ inicial, onFechar, onSalvo }: { inicial: Empreen
         </Campo>
         <Campo label="Cidade"><input className={inputCls} value={e.cidade} onChange={(x) => set("cidade", x.target.value)} placeholder="Aquiraz · CE" /></Campo>
         <Campo label="Bairro / região"><input className={inputCls} value={e.bairro} onChange={(x) => set("bairro", x.target.value)} /></Campo>
-        <Campo label="Preço a partir de (R$)" dica="Deixe vazio para 'sob consulta'.">
+        <Campo label="Preço (R$)" dica="Venda: valor ou 'a partir de'. Locação: valor mensal. Vazio = sob consulta.">
           <input className={inputCls} inputMode="numeric" value={e.preco_a_partir ?? ""} onChange={(x) => set("preco_a_partir", num(x.target.value))} />
         </Campo>
         <Campo label="Área mín. (m²)"><input className={inputCls} inputMode="numeric" value={e.area_min ?? ""} onChange={(x) => set("area_min", num(x.target.value))} /></Campo>
         <Campo label="Área máx. (m²)"><input className={inputCls} inputMode="numeric" value={e.area_max ?? ""} onChange={(x) => set("area_max", num(x.target.value))} /></Campo>
-        <Campo label="Plantas / quartos"><input className={inputCls} value={e.quartos} onChange={(x) => set("quartos", x.target.value)} placeholder="2 e 3 suítes" /></Campo>
+        <Campo label="Finalidade">
+          <select className={inputCls} value={e.finalidade || "Venda"} onChange={(x) => set("finalidade", x.target.value)}>
+            {FINALIDADE_OPCOES.map((s) => <option key={s}>{s}</option>)}
+          </select>
+        </Campo>
+        <Campo label="Quartos"><input className={inputCls} value={e.quartos} onChange={(x) => set("quartos", x.target.value)} placeholder="3 quartos / 2 e 3 suítes" /></Campo>
+        <Campo label="Banheiros"><input className={inputCls} value={e.banheiros ?? ""} onChange={(x) => set("banheiros", x.target.value)} placeholder="2" /></Campo>
+        <Campo label="Vagas de garagem"><input className={inputCls} value={e.vagas ?? ""} onChange={(x) => set("vagas", x.target.value)} placeholder="2" /></Campo>
         <Campo label="Construtora / incorporadora" className="sm:col-span-2"><input className={inputCls} value={e.construtora} onChange={(x) => set("construtora", x.target.value)} /></Campo>
       </div>
       <Campo label="Diferenciais" dica="Um por linha.">

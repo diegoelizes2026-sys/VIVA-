@@ -161,7 +161,7 @@ export function Agente24h({ nome, boasVindas, corretor }: { nome: string; boasVi
                 <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-ink bg-zap" />
               </span>
               <div>
-                <p className="font-display text-[22px] leading-none">{nome}</p>
+                <p className="font-display text-[20px] font-bold leading-none">{nome}</p>
                 <p className="mt-1.5 text-[12.5px] text-osso/65">Online agora · responde na hora</p>
               </div>
             </div>
@@ -326,18 +326,19 @@ export function Agente24h({ nome, boasVindas, corretor }: { nome: string; boasVi
             setAberto((v) => !v);
             setConvite(false);
           }}
-          className={`group relative grid h-[68px] w-[68px] place-items-center rounded-full bg-ink text-osso shadow-[0_14px_40px_-8px_rgba(11,31,30,.7)] transition hover:scale-105 ${aberto ? "" : "pulso"}`}
+          className={`group relative flex items-center rounded-full bg-ink text-white shadow-[0_14px_40px_-8px_rgba(15,26,44,.7)] ring-1 ring-white/10 transition hover:scale-[1.03] ${aberto ? "p-1.5" : "p-1.5 sm:pr-6"}`}
           aria-label={aberto ? "Fechar Agente 24h" : "Abrir Agente 24h"}
         >
-          {aberto ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <span className="relative flex flex-col items-center leading-none">
-              <span className="font-display text-[22px] font-medium italic text-sol">24h</span>
-              <span className="mt-0.5 text-[8.5px] font-bold uppercase tracking-[0.2em] text-osso/80">Agente</span>
+          <span className={`relative grid h-14 w-14 place-items-center rounded-full ${aberto ? "bg-white/10" : "bg-zap"} ${aberto ? "" : "pulso"}`}>
+            {aberto ? <X className="h-6 w-6" /> : <IconeWhatsapp className="h-8 w-8" />}
+          </span>
+          {!aberto && (
+            <span className="ml-3 hidden text-left leading-tight sm:block">
+              <span className="font-display block text-[18px] font-bold">{nome}</span>
+              <span className="block text-[13px] text-white/80">Fale conosco agora!</span>
             </span>
           )}
-          {!aberto && <span className="absolute right-1 top-1 h-3.5 w-3.5 rounded-full border-2 border-ink bg-zap" />}
+          {!aberto && <span className="absolute right-1.5 top-1 h-3.5 w-3.5 rounded-full border-2 border-ink bg-zap" />}
         </button>
       </div>
     </>

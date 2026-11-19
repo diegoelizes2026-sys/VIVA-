@@ -1,19 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #0b1f1e;
-  --color-lagoa: #12403c;
-  --color-lagoa-2: #1e6a62;
-  --color-espuma: #9cc7bd;
-  --color-areia: #ede4d3;
-  --color-osso: #f6f1e8;
-  --color-sol: #d4a24c;
-  --color-sol-2: #b9852f;
-  --color-coral: #e2643c;
-  --color-zap: #1fa855;
-  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
-  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --color-ink: #0f1a2c;
+  --color-marinho: #13213a;
+  --color-lagoa: #1c3152;
+  --color-lagoa-2: #b8862b;
+  --color-espuma: #93a4bd;
+  --color-areia: #eef1f5;
+  --color-osso: #f5f6f8;
+  --color-sol: #d8a93d;
+  --color-sol-2: #b8862b;
+  --color-coral: #e0573a;
+  --color-zap: #22c35e;
+  --font-display: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-open), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
@@ -40,19 +41,17 @@ body {
 
 .font-display {
   font-family: var(--font-display);
-  font-optical-sizing: auto;
-  font-variation-settings: "SOFT" 50, "WONK" 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
 }
 .font-display em {
-  font-style: italic;
-  font-variation-settings: "SOFT" 100, "WONK" 1;
+  font-style: normal;
 }
 
 .rotulo {
   font-family: var(--font-mono);
+  font-weight: 600;
   font-size: 11px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
@@ -70,9 +69,9 @@ body {
 /* Fundo de reserva enquanto as fotos carregam */
 .foto-fallback {
   background:
-    radial-gradient(120% 80% at 20% 10%, #1e6a62 0%, transparent 60%),
-    radial-gradient(90% 70% at 90% 90%, #d4a24c55 0%, transparent 60%),
-    linear-gradient(160deg, #12403c, #0b1f1e);
+    radial-gradient(120% 80% at 20% 10%, #2a4470 0%, transparent 60%),
+    radial-gradient(90% 70% at 90% 90%, #d8a93d40 0%, transparent 60%),
+    linear-gradient(160deg, #1c3152, #0f1a2c);
 }
 
 @keyframes kenburns {
@@ -118,7 +117,7 @@ body {
   position: absolute;
   inset: 0;
   border-radius: 9999px;
-  border: 1.5px solid var(--color-sol);
+  border: 2px solid var(--color-zap);
   animation: pulso 2.4s ease-out infinite;
 }
 .pulso::after {

@@ -1,24 +1,67 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { ArrowUpRight, MapPin } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Bath, BedDouble, Car, Heart, MapPin, Maximize2 } from "lucide-react";
 import type { Empreendimento } from "@/lib/types";
-import { corStatus, moeda } from "@/lib/format";
+import { moeda } from "@/lib/format";
+import { BuscaImoveis, type Filtros } from "./busca-imoveis";
 
-const FILTROS = [
-  { id: "todos", nome: "Todos", f: () => true },
-  { id: "lanc", nome: "Lançamentos", f: (e: Empreendimento) => /lançamento/i.test(e.status) },
-  { id: "obras", nome: "Em obras", f: (e: Empreendimento) => e.status === "Em obras" },
-  { id: "prontos", nome: "Prontos", f: (e: Empreendimento) => /pronto|últimas/i.test(e.status) },
-  { id: "vendidos", nome: "Cases vendidos", f: (e: Empreendimento) => e.status === "100% vendido" },
-];
+export const ehLocacao = (e: Empreendimento) => /loca/i.test(e.finalidade || "") && !/venda/i.test(e.finalidade || "");
 
-export function CardEmpreendimento({ e, grande = false, n }: { e: Empreendimento; grande?: boolean; n?: number }) {
-  const local = [e.bairro, e.cidade].filter(Boolean).join(" · ");
+function Favorito({ id }: { id: string }) {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    try {
+      setOn((JSON.parse(localStorage.getItem("favoritos") || "[]") as string[]).includes(id));
+    } catch {}
+  }, [id]);
   return (
-    <Link href={`/empreendimentos/${e.slug}`} className="group block">
-      <div className={`foto-fallback relative overflow-hidden rounded-[22px] ${grande ? "aspect-[4/5] lg:aspect-[16/12]" : "aspect-[4/5]"}`}>
+    <button
+      type="button"
+      aria-label={on ? "Remover dos favoritos" : "Favoritar"}
+      onClick={(ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        try {
+          const l = new Set(JSON.parse(localStorage.getItem("favoritos") || "[]") as string[]);
+          if (l.has(id)) l.delete(id);
+          else l.add(id);
+          localStorage.setItem("favoritos", JSON.stringify([...l]));
+        } catch {}
+        setOn((v) => !v);
+      }}
+      className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full text-white drop-shadow-[0_1px_3px_rgba(0,0,0,.6)] transition hover:scale-110"
+    >
+      <Heart className={`h-7 w-7 ${on ? "fill-coral text-coral" : ""}`} strokeWidth={1.8} />
+    </button>
+  );
+}
+
+export function precoTexto(e: Empreendimento) {
+  if (e.status === "100% vendido") return { v: "Vendido", s: "" };
+  if (!e.preco_a_partir) return { v: "Sob consulta", s: "" };
+  return { v: moeda(e.preco_a_partir), s: ehLocacao(e) ? "/mês" : "" };
+}
+
+export function CardEmpreendimento({ e }: { e: Empreendimento; grande?: boolean; n?: number }) {
+  const local = [e.bairro, e.cidade].filter(Boolean).join(", ");
+  const loc = ehLocacao(e);
+  const p = precoTexto(e);
+  const area = e.area_min ? `${e.area_min}${e.area_max && e.area_max !== e.area_min ? `–${e.area_max}` : ""} m²` : "";
+  const specs = [
+    e.quartos && { i: BedDouble, t: /^\d+$/.test(e.quartos) ? `${e.quartos} quarto${e.quartos === "1" ? "" : "s"}` : e.quartos },
+    e.banheiros && { i: Bath, t: /^\d+$/.test(e.banheiros) ? `${e.banheiros} banheiro${e.banheiros === "1" ? "" : "s"}` : e.banheiros },
+    e.vagas && { i: Car, t: /^\d+$/.test(e.vagas) ? `${e.vagas} vaga${e.vagas === "1" ? "" : "s"}` : e.vagas },
+    area && { i: Maximize2, t: area },
+  ].filter(Boolean) as { i: React.ElementType; t: string }[];
+
+  return (
+    <Link
+      href={`/empreendimentos/${e.slug}`}
+      className="group flex flex-col overflow-hidden rounded-xl border border-ink/10 bg-white shadow-[0_6px_24px_-12px_rgba(15,26,44,.25)] transition hover:-translate-y-1 hover:shadow-[0_18px_40px_-16px_rgba(15,26,44,.35)]"
+    >
+      <div className="foto-fallback relative aspect-[16/9] overflow-hidden">
         {e.capa && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -26,84 +69,91 @@ export function CardEmpreendimento({ e, grande = false, n }: { e: Empreendimento
             alt={e.nome}
             loading="lazy"
             onError={(ev) => (ev.currentTarget.style.display = "none")}
-            className={`h-full w-full object-cover transition duration-[1200ms] ease-out group-hover:scale-[1.06] ${e.status === "100% vendido" ? "saturate-[.7]" : ""}`}
+            className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
           />
         )}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,31,30,.25),transparent_30%,transparent_55%,rgba(11,31,30,.85))]" />
-        <div className="absolute left-4 right-4 top-4 flex items-start justify-between">
-          <span className={`rounded-full px-3 py-1.5 text-[11.5px] font-bold uppercase tracking-wider ${corStatus(e.status)}`}>{e.status}</span>
-          {n != null && <span className="font-display text-sm italic text-osso/80">nº {String(n).padStart(2, "0")}</span>}
-        </div>
-        <div className="absolute inset-x-0 bottom-0 p-5 text-osso sm:p-6">
-          <p className="rotulo mb-2 text-osso/70">{e.tipo}</p>
-          <h3 className={`font-display font-light leading-[0.95] ${grande ? "text-5xl sm:text-6xl" : "text-4xl"}`}>{e.nome}</h3>
-          {e.chamada && <p className={`mt-3 max-w-md text-[14.5px] leading-snug text-osso/80 ${grande ? "" : "line-clamp-2"}`}>{e.chamada}</p>}
-        </div>
-        <span className="absolute bottom-5 right-5 grid h-12 w-12 translate-y-2 place-items-center rounded-full bg-osso text-ink opacity-0 transition duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-          <ArrowUpRight className="h-5 w-5" />
+        <span
+          className={`absolute left-4 top-3 rounded-md px-3.5 py-1.5 text-[14px] font-bold shadow ${
+            loc ? "bg-ink text-white" : "bg-gradient-to-b from-[#e7bd55] to-sol-2 text-white"
+          }`}
+        >
+          {loc ? "Locação" : e.finalidade === "Venda e locação" ? "Venda · Locação" : "Venda"}
         </span>
+        {e.status && e.status !== "Pronto para morar" && (
+          <span className={`absolute bottom-3 left-4 rounded-md px-2.5 py-1 text-[11.5px] font-bold uppercase tracking-wide ${e.status === "100% vendido" ? "bg-coral text-white" : "bg-white/95 text-ink"}`}>
+            {e.status}
+          </span>
+        )}
+        <Favorito id={e.id} />
       </div>
-      <div className="mt-4 flex items-center justify-between gap-3 px-1 text-[13.5px]">
-        <span className="flex min-w-0 items-center gap-1.5 text-ink/60">
-          <MapPin className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate">{local || "Ceará"}</span>
-        </span>
-        <span className="shrink-0 font-semibold">
-          {e.status === "100% vendido" ? "Esgotado" : e.preco_a_partir ? `a partir de ${moeda(e.preco_a_partir)}` : "Valores sob consulta"}
-        </span>
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="font-display text-[19px] font-bold leading-tight text-ink">{e.nome}</h3>
+        <p className="mt-1.5 flex items-center gap-1.5 text-[14.5px] text-ink/75">
+          <MapPin className="h-4 w-4 shrink-0" /> <span className="truncate">{local || "Ceará"}</span>
+        </p>
+        {specs.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13.5px] text-ink/75">
+            {specs.map((s, k) => (
+              <span key={k} className={`flex items-center gap-1.5 ${k > 0 ? "border-l border-ink/15 pl-3" : ""}`}>
+                <s.i className="h-4 w-4" strokeWidth={1.6} /> {s.t}
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+          <p className="font-display text-[22px] font-bold leading-none text-sol-2">
+            {p.v}
+            {p.s && <span className="ml-1 text-[14px] font-semibold text-ink/70">{p.s}</span>}
+          </p>
+          <span className="shrink-0 rounded-md border-2 border-sol px-4 py-1.5 text-[13.5px] font-semibold text-ink transition group-hover:bg-sol">
+            Ver Detalhes
+          </span>
+        </div>
       </div>
     </Link>
   );
 }
 
-export function Vitrine({ empreendimentos }: { empreendimentos: Empreendimento[] }) {
-  const [filtro, setFiltro] = useState("todos");
-  const lista = useMemo(() => {
-    const f = FILTROS.find((x) => x.id === filtro)!.f;
-    return empreendimentos.filter(f);
-  }, [filtro, empreendimentos]);
+export function filtrar(lista: Empreendimento[], f: Partial<Filtros>) {
+  return lista.filter((e) => {
+    if (f.tipo && e.tipo !== f.tipo) return false;
+    if (f.cidade && e.cidade !== f.cidade) return false;
+    if (f.finalidade === "Venda" && ehLocacao(e)) return false;
+    if (f.finalidade === "Locação" && !/loca/i.test(e.finalidade || "")) return false;
+    if (f.preco) {
+      const aluguel = f.preco.startsWith("aluguel-");
+      const [min, max] = f.preco.replace("aluguel-", "").split("-").map((x) => (x ? Number(x) : null));
+      if (aluguel !== ehLocacao(e)) return false;
+      if (e.preco_a_partir == null) return false;
+      if (min != null && e.preco_a_partir < min) return false;
+      if (max != null && e.preco_a_partir > max) return false;
+    }
+    return true;
+  });
+}
 
-  const contagem = (id: string) => empreendimentos.filter(FILTROS.find((x) => x.id === id)!.f).length;
-  const [primeiro, ...resto] = lista;
+export function Vitrine({ empreendimentos, inicial }: { empreendimentos: Empreendimento[]; inicial?: Partial<Filtros> }) {
+  const [f, setF] = useState<Partial<Filtros>>(inicial ?? {});
+  const lista = useMemo(() => filtrar(empreendimentos, f), [empreendimentos, f]);
+  const tipos = [...new Set(empreendimentos.map((e) => e.tipo).filter(Boolean))];
+  const cidades = [...new Set(empreendimentos.map((e) => e.cidade).filter(Boolean))];
 
   return (
     <div>
-      <div className="sem-barra -mx-4 mb-10 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        {FILTROS.map((f) => {
-          const c = contagem(f.id);
-          if (!c && f.id !== "todos") return null;
-          return (
-            <button
-              key={f.id}
-              onClick={() => setFiltro(f.id)}
-              className={`flex shrink-0 items-center gap-2 rounded-full border px-5 py-2.5 text-[14px] font-medium transition ${
-                filtro === f.id ? "border-ink bg-ink text-osso" : "border-ink/15 hover:border-ink"
-              }`}
-            >
-              {f.nome}
-              <sup className={`text-[10px] ${filtro === f.id ? "text-sol" : "text-ink/45"}`}>{c}</sup>
-            </button>
-          );
-        })}
-      </div>
-
-      {!lista.length && <p className="py-16 text-center text-ink/55">Nenhum empreendimento nesta categoria no momento.</p>}
-
-      {primeiro && (
-        <div className="grid gap-x-6 gap-y-12 lg:grid-cols-12">
-          <div className="lg:col-span-7">
-            <CardEmpreendimento e={primeiro} grande n={1} />
-          </div>
-          <div className="grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1">
-            {resto.slice(0, 1).map((e) => (
-              <CardEmpreendimento key={e.id} e={e} n={2} />
-            ))}
-          </div>
-          {resto.slice(1).map((e, k, arr) => (
-            <div key={e.id} className={arr.length % 3 === 2 && k >= arr.length - 2 ? "lg:col-span-6" : arr.length % 3 === 1 && k === arr.length - 1 ? "lg:col-span-12" : "lg:col-span-4"}>
-              <CardEmpreendimento e={e} n={k + 3} />
-            </div>
+      <BuscaImoveis tipos={tipos} cidades={cidades} inicial={inicial} onBuscar={setF} />
+      <p className="mb-6 mt-8 text-[14.5px] text-ink/60">
+        {lista.length} {lista.length === 1 ? "imóvel encontrado" : "imóveis encontrados"}
+      </p>
+      {lista.length ? (
+        <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+          {lista.map((e) => (
+            <CardEmpreendimento key={e.id} e={e} />
           ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-ink/20 bg-white px-6 py-16 text-center">
+          <p className="font-display text-xl font-bold">Nenhum imóvel com esses filtros agora</p>
+          <p className="mt-2 text-ink/60">Fale com o Agente 24h: ele avisa o corretor do que você procura.</p>
         </div>
       )}
     </div>

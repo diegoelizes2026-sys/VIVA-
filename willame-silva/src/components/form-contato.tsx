@@ -35,7 +35,7 @@ export function FormContato({
     window.open(d.whatsapp, "_blank", "noopener");
   }
 
-  const campo = `w-full rounded-2xl border px-4 py-3.5 text-[15px] transition focus:outline-none ${
+  const campo = `w-full rounded-lg border px-4 py-3.5 text-[15px] transition focus:outline-none ${
     escuro
       ? "border-osso/15 bg-osso/5 text-osso placeholder:text-osso/40 focus:border-sol"
       : "border-ink/12 bg-white placeholder:text-ink/40 focus:border-lagoa"
@@ -49,7 +49,7 @@ export function FormContato({
         </span>
         <p className="font-display mt-4 text-3xl">Recebido!</p>
         <p className={`mt-2 text-[15px] ${escuro ? "text-osso/70" : "text-ink/65"}`}>
-          Seu contato já está com o Willame. Se o WhatsApp não abriu sozinho, toque abaixo.
+          Seu contato já está com o nosso corretor. Se o WhatsApp não abriu sozinho, toque abaixo.
         </p>
         <a href={zap} target="_blank" rel="noopener" className="mt-5 inline-flex items-center gap-2 rounded-full bg-zap px-5 py-3 font-semibold text-white">
           <IconeWhatsapp className="h-4 w-4" /> Abrir WhatsApp
@@ -67,7 +67,7 @@ export function FormContato({
               type="button"
               key={o}
               onClick={() => setObjetivo(o)}
-              className={`flex-1 rounded-full border py-2.5 text-[13.5px] font-medium transition ${
+              className={`flex-1 rounded-lg border py-2.5 text-[13.5px] font-medium transition ${
                 objetivo === o
                   ? escuro
                     ? "border-sol bg-sol text-ink"
@@ -88,12 +88,10 @@ export function FormContato({
       {erro && <p className="text-[13.5px] text-coral">{erro}</p>}
       <button
         disabled={enviando}
-        className={`group flex w-full items-center justify-between rounded-full py-2 pl-6 pr-2 text-[15px] font-semibold transition disabled:opacity-60 ${
-          escuro ? "bg-sol text-ink hover:bg-osso" : "bg-ink text-osso hover:bg-lagoa"
-        }`}
+        className="group flex w-full items-center justify-between rounded-lg bg-gradient-to-b from-[#e7bd55] to-sol-2 py-2 pl-6 pr-2 text-[15.5px] font-bold text-ink transition hover:brightness-110 disabled:opacity-60"
       >
         {enviando ? "Enviando…" : empreendimento ? "Quero receber a tabela" : "Quero ser atendido"}
-        <span className={`grid h-10 w-10 place-items-center rounded-full transition group-hover:translate-x-0.5 ${escuro ? "bg-ink text-osso" : "bg-osso text-ink"}`}>
+        <span className="grid h-10 w-10 place-items-center rounded-md bg-ink text-white transition group-hover:translate-x-0.5">
           <ArrowRight className="h-4 w-4" />
         </span>
       </button>

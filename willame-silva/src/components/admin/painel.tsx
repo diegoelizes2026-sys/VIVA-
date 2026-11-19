@@ -31,7 +31,7 @@ const ABAS = [
   { id: "geral", nome: "Visão geral", i: LayoutDashboard },
   { id: "crm", nome: "CRM · Funil", i: Columns3 },
   { id: "leads", nome: "Leads", i: Users },
-  { id: "empreendimentos", nome: "Empreendimentos", i: Building2 },
+  { id: "empreendimentos", nome: "Imóveis", i: Building2 },
   { id: "carrossel", nome: "Carrossel", i: GalleryHorizontalEnd },
   { id: "config", nome: "Configurações", i: Settings },
 ] as const;
