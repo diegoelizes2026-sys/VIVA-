@@ -1315,3 +1315,31 @@ a { color: inherit; text-decoration: none; }
 .vao-legend{display:flex;align-items:center;gap:6px;margin:6px 0 0;font-size:11px;color:#6f6579}.vao-legend span{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:6px}
 .vao-list{display:grid;margin:0;padding:0;list-style:none}.vao-list li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1ebf6;font-size:13px}
 @media(max-width:700px){.vao-grid{grid-template-columns:1fr}}
+
+/* ===== Menu lateral organizado (destaques + grupos, ícones únicos) ===== */
+.viva-drawer nav{margin-top:18px}
+.viva-drawer-featured{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+.viva-drawer nav a.viva-feature{display:flex!important;flex-direction:column;align-items:flex-start!important;gap:6px!important;min-height:118px;padding:14px!important;border-radius:20px!important;color:#fff!important;font-size:13px;line-height:1.2;box-shadow:0 10px 24px rgba(61,10,134,.18);transition:transform .15s}
+.viva-drawer nav a.viva-feature:active{transform:scale(.98)}
+.viva-feature b{font-size:14px;font-weight:900}.viva-feature small{font-size:11px;font-weight:600;opacity:.85;line-height:1.3}
+.viva-feature-chat{background:linear-gradient(140deg,#6410C9,#8b3de8)}
+.viva-feature-health{background:linear-gradient(140deg,#c2185b,#8b3de8)}
+.viva-feature.active{outline:3px solid #f0e3ff;outline-offset:2px}
+.viva-feature-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.18);margin-bottom:auto}
+.viva-feature-icon svg{width:22px;height:22px;color:#fff}.viva-feature-icon .viva-mini-orb{width:22px!important;height:22px!important;flex:none}
+.viva-drawer-group{display:grid;gap:2px}
+.viva-drawer-group .viva-drawer-label{margin:16px 0 4px 10px!important;font-size:10px}
+.viva-drawer nav .viva-drawer-group a{gap:12px;padding:10px 12px}
+.viva-nav-icon{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:11px;background:#f4ecfe;color:#6410C9}
+.viva-nav-icon svg{width:19px!important;height:19px!important}
+.viva-nav-wallet,.viva-nav-planning,.viva-nav-bills,.viva-nav-price{background:#ecfdf3;color:#15803d}
+.viva-nav-agenda,.viva-nav-notifications{background:#eff6ff;color:#1d4ed8}
+.viva-nav-credits,.viva-nav-plans{background:#fff7ed;color:#c2410c}
+.viva-drawer nav a.active .viva-nav-icon{background:#6410C9;color:#fff}
+@media(prefers-color-scheme:dark){
+ .viva-nav-icon{background:#33264a;color:#d8b8ff}
+ .viva-nav-wallet,.viva-nav-planning,.viva-nav-bills,.viva-nav-price{background:#123322;color:#86efac}
+ .viva-nav-agenda,.viva-nav-notifications{background:#172554;color:#93c5fd}
+ .viva-nav-credits,.viva-nav-plans{background:#3d2614;color:#fdba74}}
+.viva-drawer nav .viva-nav-icon svg{color:inherit!important;stroke:currentColor}
+.viva-drawer nav .viva-feature-icon svg{color:#fff!important;width:22px!important;height:22px!important}
