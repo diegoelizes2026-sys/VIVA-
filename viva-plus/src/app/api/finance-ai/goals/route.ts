@@ -71,7 +71,7 @@ export async function POST(request:NextRequest){
   },{onConflict:"user_id,goal_id"}).select("id,goal_id,monthly_target,weekly_target,remaining_amount,months_remaining,steps,status,updated_at").single();
   if(error||!plan)throw new Error("Não foi possível salvar o plano.");
   let explanation="Organizei sua meta em passos menores. Siga o ritmo sugerido e revise o plano sempre que sua renda ou suas prioridades mudarem.";
-  const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:"chat",p_estimated_input_tokens:900,p_prefer_cheap:true});
+  const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:"chat",p_estimated_input_tokens:900,p_prefer_cheap:true,p_operation:"simple_question"});
   if(!guardError&&guard?.allowed){
    const modelKey=String(guard.model_key||"cheap");
    const model=process.env[modelKey==="balanced"?"OPENAI_MODEL_BALANCED":"OPENAI_MODEL_CHEAP"]||"";
@@ -79,7 +79,7 @@ export async function POST(request:NextRequest){
    if(process.env.OPENAI_API_KEY&&model&&norm(model)===norm(String(guard.model_id||""))){
     try{
      const response=await new OpenAI({apiKey:process.env.OPENAI_API_KEY}).responses.create({model,max_output_tokens:130,instructions:"Você é a VIVA+, assistente financeira acolhedora. Explique em duas frases curtas como seguir o plano de uma meta. Não escreva números, valores, datas, percentuais nem moedas; o aplicativo já mostra os cálculos. Não invente dados nem faça novos cálculos.",input:JSON.stringify({goal:goal.title,remaining,monthly_target:monthly,weekly_target:weekly,months_remaining:months,steps:steps.map(s=>s.title)})});
-     const raw=String(response.output_text||"").trim();if(raw&&!/\\d|R\\$|%/.test(raw))explanation=raw;
+     const raw=String(response.output_text||"").trim();if(!raw)throw new Error("Resposta vazia da IA");if(!/\\d|R\\$|%/.test(raw))explanation=raw;
      const ti=response.usage?.input_tokens??0,to=response.usage?.output_tokens??0;
      const usd=(ti*Number(guard.input_usd_per_million)+to*Number(guard.output_usd_per_million))/1000000;
      const brlCost=usd*Number(guard.usd_brl_rate||6.5)*1.25;

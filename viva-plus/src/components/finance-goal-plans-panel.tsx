@@ -12,6 +12,9 @@ export default function FinanceGoalPlansPanel(){
  const [error,setError]=useState("");
  const [notice,setNotice]=useState("");
  const [contributions,setContributions]=useState<Record<string,string>>({});
+ // Lista compacta: cada meta abre o plano de ação completo com um toque.
+ const [openGoal,setOpenGoal]=useState<string|null>(null);
+ const [collapsed,setCollapsed]=useState(false);
  async function load(){
   setLoading(true);setError("");
   try{const r=await fetch("/api/finance-ai/goals",{cache:"no-store"});const d=await r.json();if(!r.ok){if(r.status===403||r.status===401){setGoals([]);setPlans([]);return}throw new Error(d.error||"Não foi possível carregar suas metas.")}setGoals(d.goals||[]);setPlans(d.plans||[])}
@@ -47,25 +50,29 @@ export default function FinanceGoalPlansPanel(){
   catch(e){setPlans(previous);setError(e instanceof Error?e.message:"Não foi possível atualizar a etapa.")}
   finally{setBusy("")}
  }
- if(loading)return <div className="mx-1 my-3 rounded-2xl border p-4 text-sm text-neutral-500" style={{borderColor:"var(--line)"}}>Carregando suas metas e planos…</div>;
+ if(loading)return <div className="mx-1 my-2 rounded-2xl border px-4 py-3 text-xs text-neutral-500" style={{borderColor:"var(--line)"}}>Carregando suas metas…</div>;
  if(!goals.length)return null;
- return <section className="mx-1 my-3 min-w-0 overflow-hidden rounded-2xl border p-4 sm:p-5" style={{borderColor:"var(--line)",background:"var(--surface)"}} aria-label="Planos de ação das metas">
-  <div className="flex items-start justify-between gap-3">
-   <div className="min-w-0"><span className="text-[10px] font-black tracking-[.16em]" style={{color:"#8B45D7"}}>VIVA+ · PLANEJAMENTO</span><h2 className="mt-1 text-base font-extrabold" style={{color:"var(--text)"}}>Transforme metas em conquistas</h2><p className="mt-1 text-xs leading-relaxed text-neutral-500">Planos calculados com base no valor guardado e no prazo da sua meta.</p></div>
-   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl" style={{background:"#F2E9FC",color:"#6410C9"}} aria-hidden="true">✦</span>
-  </div>
+ return <section className="mx-1 my-2 min-w-0 overflow-hidden rounded-2xl border p-3 sm:p-4" style={{borderColor:"var(--line)",background:"var(--surface)"}} aria-label="Planos de ação das metas">
+  <button type="button" onClick={()=>setCollapsed(c=>!c)} aria-expanded={!collapsed} className="flex w-full items-center justify-between gap-3 text-left">
+   <span className="min-w-0"><span className="text-[10px] font-black tracking-[.16em]" style={{color:"#8B45D7"}}>VIVA+ · PLANEJAMENTO</span><h2 className="mt-0.5 text-base font-extrabold" style={{color:"var(--text)"}}>Minhas metas <span className="text-xs font-bold text-neutral-500">({goals.length})</span></h2>{!collapsed&&<p className="mt-0.5 text-xs leading-relaxed text-neutral-500">Transforme metas em conquistas. Toque em uma meta para ver o plano.</p>}</span>
+   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-black" style={{background:"#F2E9FC",color:"#6410C9"}} aria-hidden="true">{collapsed?"+":"−"}</span>
+  </button>
+  {!collapsed&&<>
   {notice&&<p role="status" className="mt-3 rounded-xl p-3 text-xs font-semibold" style={{background:"#ECF8F0",color:"#176B42"}}>{notice}</p>}
   {error&&<p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-xs text-red-700">{error}</p>}
-  <div className="mt-3 grid gap-3">
+  <div className="mt-3 grid gap-2">
    {goals.map(goal=>{
     const plan=plans.find(p=>p.goal_id===goal.id);
     const target=Number(goal.target_amount),current=Number(goal.current_amount||0);
     const progress=target>0?Math.min(100,Math.max(0,current/target*100)):0;
     const completed=plan?.steps.filter(s=>s.done).length||0;
-    return <article key={goal.id} className="min-w-0 rounded-xl border p-3 sm:p-4" style={{borderColor:"var(--line)",background:"var(--background, #fff)"}}>
-     <div className="flex min-w-0 items-start justify-between gap-3"><div className="min-w-0"><b className="block break-words text-sm" style={{color:"var(--text)"}}>{goal.title}</b><p className="mt-1 text-xs text-neutral-500">{money(current)} guardados de {money(target)}</p></div><span className="shrink-0 text-xs font-bold" style={{color:"#6410C9"}}>{Math.round(progress)}%</span></div>
-     <div className="mt-2 h-2 overflow-hidden rounded-full" style={{background:"#EEE7F5"}}><div className="h-full rounded-full" style={{width:progress+"%",background:"linear-gradient(90deg,#6410C9,#A76BEA)"}}/></div>
-     {plan?<div className="mt-3">
+    const isOpen=openGoal===goal.id;
+    return <article key={goal.id} className="min-w-0 rounded-xl border p-3" style={{borderColor:isOpen?"#D9C6F3":"var(--line)",background:"var(--background, #fff)"}}>
+     <button type="button" onClick={()=>setOpenGoal(isOpen?null:goal.id)} aria-expanded={isOpen} className="block w-full text-left">
+      <span className="flex min-w-0 items-start justify-between gap-3"><span className="min-w-0"><b className="block break-words text-sm" style={{color:"var(--text)"}}>{goal.title}</b><span className="mt-0.5 block text-xs text-neutral-500">{money(current)} de {money(target)}{plan&&!isOpen?` · ${money(Number(plan.monthly_target))}/mês`:""}</span></span><span className="shrink-0 text-xs font-bold" style={{color:"#6410C9"}}>{Math.round(progress)}% <span aria-hidden="true">{isOpen?"▴":"▾"}</span></span></span>
+      <span className="mt-2 block h-2 overflow-hidden rounded-full" style={{background:"#EEE7F5"}}><span className="block h-full rounded-full" style={{width:progress+"%",background:"linear-gradient(90deg,#6410C9,#A76BEA)"}}/></span>
+     </button>
+     {!isOpen?null:plan?<div className="mt-3">
       <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-bold" style={{color:"var(--text)"}}>Seu plano de ação</span><span className="text-[11px] text-neutral-500">{completed}/{plan.steps.length} etapas concluídas</span></div>
       <div className="mt-2 grid grid-cols-2 gap-2">
        <div className="rounded-lg p-2" style={{background:"#F4EDFC"}}><span className="block text-[10px] text-neutral-500">Guardar por mês</span><b className="text-sm" style={{color:"#6410C9"}}>{money(Number(plan.monthly_target))}</b></div>
@@ -80,6 +87,7 @@ export default function FinanceGoalPlansPanel(){
     </article>
    })}
   </div>
-  <p className="mt-3 text-[10px] leading-relaxed text-neutral-400">Os valores são calculados pelo VIVA+ a partir da meta cadastrada. Atualizar o acumulado da meta não cria uma movimentação no extrato; registre a transação separadamente se necessário.</p>
+  {openGoal&&<p className="mt-3 text-[10px] leading-relaxed text-neutral-400">Os valores são calculados pelo VIVA+ a partir da meta cadastrada. Atualizar o acumulado da meta não cria uma movimentação no extrato; registre a transação separadamente se necessário.</p>}
+  </>}
  </section>
 }

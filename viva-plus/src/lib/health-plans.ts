@@ -64,3 +64,35 @@ export const TIPS = [
   "Prato colorido = mais vitaminas. Metade do prato com legumes e verduras.",
   "Respire: solte o ar na fase de esforço e puxe na fase de volta.",
 ];
+
+// Ajusta o plano semanal ao perfil do Personal (onboarding): dias disponíveis, local, tempo e nível.
+export type PersonalSettings = { days?: number | null; location?: string | null; minutes?: number | null; level?: string | null };
+const HOME_SWAP: [RegExp, string][] = [
+  [/Puxada alta \(ou remada com elástico\)/, "Remada com elástico ou toalha presa na porta"],
+  [/Supino com halteres \(ou flexão\)/, "Flexão de braços (apoie os joelhos se precisar)"],
+  [/Supino inclinado/, "Flexão com os pés elevados"],
+  [/Crucifixo invertido/, "Abertura de braços com garrafas de água"],
+  [/Crucifixo/, "Flexão com mãos afastadas"],
+  [/halteres?/i, "garrafas de água ou mochila com peso"],
+  [/Caminhada rápida ou bike/, "Caminhada rápida ou polichinelos"],
+  [/Caminhada rápida, bike ou elíptico/, "Caminhada rápida ou dança"],
+];
+const TRAIN_ORDER = [0, 2, 4, 1, 3, 5, 6]; // distribui os dias de treino com descanso entre eles
+export function adaptPlan(plan: WorkoutDay[], s: PersonalSettings): WorkoutDay[] {
+  const days = Math.max(1, Math.min(7, Number(s.days) || 0));
+  const training = s.days ? new Set(TRAIN_ORDER.slice(0, days)) : null;
+  const keep = !s.minutes ? 99 : s.minutes <= 20 ? 3 : s.minutes <= 30 ? 4 : s.minutes <= 45 ? 5 : 99;
+  const sorted = plan.filter(d => !d.rest);
+  return plan.map((day, i) => {
+    let d: WorkoutDay = day;
+    if (training) {
+      if (!training.has(i)) return { ...REST_DAY };
+      if (day.rest) d = sorted[[...training].indexOf(i) % Math.max(1, sorted.length)] || day;
+    }
+    let exercises = d.exercises.slice(0, keep);
+    if (s.location === "casa") exercises = exercises.map(e => { let name = e.name; for (const [re, sub] of HOME_SWAP) if (re.test(name)) { name = name.replace(re, sub); break; } return { ...e, name }; });
+    if (s.level === "iniciante") exercises = exercises.map(e => /^\d+$/.test(e.sets) && Number(e.sets) > 3 ? { ...e, sets: "3" } : e);
+    if (s.level === "avancado") exercises = exercises.map(e => /^\d+$/.test(e.sets) && Number(e.sets) >= 3 && e.rest !== "—" ? { ...e, sets: String(Number(e.sets) + 1) } : e);
+    return { ...d, exercises };
+  });
+}

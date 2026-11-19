@@ -2,12 +2,14 @@ import OpenAI from "openai";
 import {NextResponse} from "next/server";
 import {z} from "zod";
 import {createClient} from "@/lib/supabase/server";
+import {blockedResponse,classifyPersonalOperation,readRequestKey} from "@/lib/credits";
 export const runtime="nodejs";
 
 const normalizeModelId=(value:string)=>value.trim().toLowerCase().replace(/-\d{4}-\d{2}-\d{2}$/,"").trim();
 const schema=z.object({
  message:z.string().trim().min(1).max(2000),
- history:z.array(z.object({role:z.enum(["user","assistant"]),content:z.string().max(4000)})).max(12).optional()
+ history:z.array(z.object({role:z.enum(["user","assistant"]),content:z.string().max(4000)})).max(12).optional(),
+ requestId:z.string().max(80).optional()
 });
 const GOAL_LABEL:Record<string,string>={hipertrofia:"ganhar massa muscular (hipertrofia)",emagrecimento:"perder peso (emagrecimento)",condicionamento:"melhorar o condicionamento físico",saude:"saúde geral e bem-estar"};
 type Row=Record<string,unknown>;
@@ -54,6 +56,10 @@ export async function POST(request:Request){
    "Objetivo do usuário: "+(GOAL_LABEL[String(p.goal||"saude")]||GOAL_LABEL.saude)+".",
    p.age?`Idade: ${p.age} anos.`:"",p.height_cm?`Altura: ${Number(p.height_cm)} cm.`:"",
    p.goal_weight_kg?"Peso desejado: "+Number(p.goal_weight_kg)+" kg.":"",
+   p.experience_level?`Nível de experiência: ${p.experience_level}.`:"",
+   p.train_location?`Treina: ${({casa:"em casa (sem aparelhos de academia)",academia:"na academia",ar_livre:"ao ar livre",misto:"em casa e na academia"} as Record<string,string>)[String(p.train_location)]||p.train_location}.`:"",
+   p.session_minutes?`Tempo por treino: ${p.session_minutes} minutos.`:"",
+   p.limitations?`ATENÇÃO — limitações/orientações informadas pelo usuário: ${String(p.limitations).slice(0,300)}. Adapte os exercícios e recomende acompanhamento profissional.`:"",
    "Metas: "+(Number(p.water_goal_ml)||2000)+" ml de água/dia, "+(Number(p.weekly_workouts)||5)+" treinos/semana, "+(Number(p.weekly_activity_min)||150)+" min de atividade/semana.",
    lines.length?"Registros dos últimos 7 dias:\n"+lines.slice(0,60).join("\n"):"Ainda não há registros de saúde nos últimos 7 dias."
   ].filter(Boolean).join("\n");
@@ -61,9 +67,10 @@ export async function POST(request:Request){
   const history=(parsed.data.history||[]).slice(-8);
   const message=parsed.data.message;
   const estimatedInputTokens=Math.ceil((message.length+context.length+INSTRUCTIONS.length+history.reduce((s,i)=>s+i.content.length,0))/4);
-  const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:"chat",p_estimated_input_tokens:estimatedInputTokens,p_prefer_cheap:false});
+  const operation=classifyPersonalOperation(message);
+  const {data:guard,error:guardError}=await supabase.rpc("viva_reserve_ai_credits",{p_feature:"chat",p_estimated_input_tokens:estimatedInputTokens,p_prefer_cheap:false,p_operation:operation,p_request_key:readRequestKey(parsed.data.requestId)});
   if(guardError){console.error("VIVA personal quota reservation failed",guardError);return NextResponse.json({error:"Não foi possível validar seus créditos. Tente novamente."},{status:503})}
-  if(!guard?.allowed){const reason=guard?.reason||"daily_limit";const text=reason==="daily_limit"?"Você usou seus créditos de hoje. Eles voltam à meia-noite, ou faça upgrade em Planos e créditos.":reason==="paused_global"||reason==="paused_user"?"O VIVA+ está temporariamente pausado.":reason==="rate_limit"?"Muitas mensagens seguidas. Aguarde alguns segundos.":"Não foi possível liberar esta solicitação.";return NextResponse.json({state:reason==="daily_limit"?"limit_reached":"blocked",reason,error:text},{status:reason==="rate_limit"?429:200})}
+  if(!guard?.allowed){const blocked=blockedResponse(guard,"Personal");return NextResponse.json(blocked.body,{status:blocked.status})}
   reservationId=guard.reservation_id;
   const modelKey=String(guard.model_key||"cheap");const envKey=modelKey==="balanced"?"OPENAI_MODEL_BALANCED":"OPENAI_MODEL_CHEAP";const configuredModel=process.env[envKey]||"";
   if(!normalizeModelId(configuredModel)||normalizeModelId(configuredModel)!==normalizeModelId(String(guard.model_id||""))){console.error("VIVA personal model/pricing mismatch",{configuredModel,priced:guard.model_id,modelKey});await supabase.rpc("viva_release_ai_reservation",{p_reservation_id:reservationId});reservationId=null;return NextResponse.json({error:"O Personal está em manutenção rápida. Tente novamente em instantes."},{status:503})}
@@ -75,15 +82,18 @@ export async function POST(request:Request){
    input:[...history,{role:"user" as const,content:message}],
    max_output_tokens:Math.max(400,Math.min(1600,Number(guard.max_output_tokens)||900))
   });
+  const answer=(response.output_text||"").trim();
+  // Sem resposta válida da IA: devolve a reserva, nada é descontado.
+  if(!answer){await supabase.rpc("viva_release_ai_reservation",{p_reservation_id:reservationId});reservationId=null;return NextResponse.json({error:"O Personal não conseguiu responder agora. Nenhum crédito foi descontado."},{status:502})}
   const tokensIn=response.usage?.input_tokens??0;const tokensOut=response.usage?.output_tokens??0;
   const costUsd=(tokensIn*Number(guard.input_usd_per_million)+tokensOut*Number(guard.output_usd_per_million))/1_000_000;const costBrl=costUsd*Number(guard.usd_brl_rate||6.5)*1.25;
-  const {error:settleError}=await supabase.rpc("viva_settle_ai_usage",{p_reservation_id:reservationId,p_model:configuredModel,p_tokens_in:tokensIn,p_tokens_out:tokensOut,p_cost_usd:costUsd,p_cost_brl:costBrl});
+  const {data:settled,error:settleError}=await supabase.rpc("viva_settle_ai_usage",{p_reservation_id:reservationId,p_model:configuredModel,p_tokens_in:tokensIn,p_tokens_out:tokensOut,p_cost_usd:costUsd,p_cost_brl:costBrl,p_response_text:answer});
   if(settleError){console.error("VIVA personal settlement failed",settleError);await supabase.rpc("viva_release_ai_reservation",{p_reservation_id:reservationId});reservationId=null;return NextResponse.json({error:"Não foi possível registrar o consumo. Tente novamente."},{status:503})}
   reservationId=null;
-  return NextResponse.json({answer:response.output_text||"Estou aqui com você! Me conte seu objetivo de hoje. 💪"});
+  return NextResponse.json({answer,usage:{credits:Number(guard.credits_cost||0),operation:guard.operation_label||operation},wallet:settled?.wallet??null});
  }catch(error){
   console.error("VIVA personal error",error);
   if(supabase&&reservationId){try{await supabase.rpc("viva_release_ai_reservation",{p_reservation_id:reservationId})}catch(releaseError){console.error("VIVA personal release failed",releaseError)}}
-  return NextResponse.json({error:"O Personal não conseguiu responder agora. Tente novamente."},{status:500});
+  return NextResponse.json({error:"O Personal não conseguiu responder agora. Nenhum crédito foi descontado."},{status:500});
  }
 }

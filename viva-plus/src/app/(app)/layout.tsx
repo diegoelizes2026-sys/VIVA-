@@ -26,6 +26,11 @@ export default async function ProtectedLayout({children}:{children:React.ReactNo
     .maybeSingle();
   if(profileError || !profile?.terms_of_use_version || !profile?.privacy_policy_version || !profile?.terms_accepted_at) redirect("/aceite-termos");
 
+  // Primeiro acesso: quem ainda não tem conversa de boas-vindas começa por ela (nunca cai num painel vazio).
+  // Quem pulou ou concluiu segue normalmente; contas antigas foram marcadas na migração e não são redirecionadas.
+  const {data:onboarding}=await supabase.from("viva_onboarding").select("status").eq("user_id",user.id).eq("kind","finance").maybeSingle();
+  if(!onboarding || onboarding.status==="in_progress") redirect("/boas-vindas");
+
   const [{data:isAdmin},{data:planPayload},{data:subscription}] = await Promise.all([
     supabase.rpc("viva_is_admin"),
     supabase.rpc("viva_get_public_plans"),
