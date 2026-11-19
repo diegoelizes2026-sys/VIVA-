@@ -53,7 +53,15 @@ export default function OnboardingChat({ kind, embedded = false, onDone, onClose
     return () => { alive = false; };
   }, [kind, flow, embedded]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [answers, typing, phase, misunderstood]);
+  useEffect(() => {
+    // Na tela cheia (celular), a própria página rola: vai até o fim, onde a pergunta atual fica logo acima das opções.
+    const id = requestAnimationFrame(() => {
+      const page = endRef.current?.closest(".ob-page") as HTMLElement | null;
+      if (page && page.scrollHeight > page.clientHeight) page.scrollTo({ top: page.scrollHeight, behavior: "smooth" });
+      else endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [answers, typing, phase, misunderstood]);
   useEffect(() => { if (phase === "chat" && !typing) inputRef.current?.focus({ preventScroll: true }); }, [phase, typing, current?.id]);
   useEffect(() => { if (phase === "diagnosis" && !diag && kind === "finance") loadDiagnosis(); }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
