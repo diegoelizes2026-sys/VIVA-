@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { PaySchedule } from "@/lib/payday";
 import { BadgeDollarSign, CalendarClock } from "lucide-react";
@@ -14,7 +15,7 @@ const dm = (iso: string) => { const [, m, d] = iso.split("-"); return `${d}/${m}
 const when = (n: number | null) => (n == null ? "" : n === 0 ? "hoje" : n === 1 ? "amanhã" : `em ${n} dias`);
 const parseMoney = (t: string) => { const n = Number(t.replace(/[^\d,.-]/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".")); return Number.isFinite(n) ? n : NaN; };
 
-export default function PaydayCard() {
+export default function PaydayCard({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [s, setS] = useState<Status | null>(null);
   const [setup, setSetup] = useState(false);
@@ -53,6 +54,11 @@ export default function PaydayCard() {
     <button className="pd-btn ghost" onClick={() => setReceiving(true)}>Já recebi</button>
   </>;
 
+  // No chat (compacto) o cartão só aparece no dia do pagamento; os registros continuam abrindo pelo atalho "Recebi".
+  if (compact && !s.due) return <>
+    {setup && <SetupSheet current={s.schedule} onClose={() => setSetup(false)} onSaved={st => { setSetup(false); done(st); }} />}
+    {receiving && <ReceiveSheet status={s} onClose={() => setReceiving(false)} onSaved={st => done(st)} />}
+  </>;
   return <section className={"pd-card" + (s.due ? " due" : "")} aria-label="Pagamento">
     <span className="pd-ico" aria-hidden>{s.due ? <BadgeDollarSign size={24} /> : <CalendarClock size={22} />}</span>
     {body}
@@ -63,7 +69,8 @@ export default function PaydayCard() {
 }
 
 function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return <div className="vc-sheet-layer" role="dialog" aria-modal="true" aria-label={title}><button className="vc-sheet-backdrop" aria-label="Fechar" onClick={onClose} /><div className="vc-sheet sl-sheet"><div className="md-head"><h2>{title}</h2><button className="ob-link" onClick={onClose}>Fechar</button></div>{children}</div></div>;
+  // Portal: abre por cima de tudo (no chat, a barra de digitação não cobre os botões).
+  return createPortal(<div className="vc-sheet-layer" role="dialog" aria-modal="true" aria-label={title}><button className="vc-sheet-backdrop" aria-label="Fechar" onClick={onClose} /><div className="vc-sheet sl-sheet"><div className="md-head"><h2>{title}</h2><button className="ob-link" onClick={onClose}>Fechar</button></div>{children}</div></div>, document.body);
 }
 
 const FREQ: { v: PaySchedule["frequency"]; l: string }[] = [{ v: "monthly", l: "Todo mês" }, { v: "biweekly", l: "A cada 15 dias" }, { v: "weekly", l: "Toda semana" }, { v: "irregular", l: "Sem data certa" }];

@@ -1532,3 +1532,20 @@ a { color: inherit; text-decoration: none; }
 .vx-months{justify-content:center;gap:18px}.vx-months b{display:grid;justify-items:center;min-width:150px;font-size:18px;font-weight:900;letter-spacing:-.01em}.vx-months b small,.vx-months b a{font-size:12px;font-weight:700;color:var(--vx-muted);text-decoration:none}.vx-months b a{color:var(--vx-p)}
 @media(prefers-color-scheme:dark){.pd-ico{color:#d4b6ff}.pd-card.due .pd-ico{color:#86efac}}
 @media(prefers-color-scheme:dark){.pd-link{color:#d4b6ff}.pd-edit{color:#a79bb6}}
+
+/* ===== Topo do chat: o dia em um olhar ===== */
+.ct{display:grid;gap:12px;margin:2px 0 14px}
+.ct-card{display:grid;gap:10px;padding:16px 18px 16px;border-radius:24px;background:#6410C9;color:#fff;position:relative;overflow:hidden;isolation:isolate}
+.ct-card:after{content:"";position:absolute;right:-60px;top:-70px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 70%);z-index:-1}
+.ct-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.ct-top b{font-size:19px;font-weight:950;letter-spacing:-.02em;line-height:1.25}.ct-top b span{display:block;font-size:14px;font-weight:700;opacity:.85;letter-spacing:0}
+.ct-eye{flex:none;display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,.15);color:#fff}
+.ct-money{display:grid;gap:0;color:#fff;text-decoration:none}.ct-money span{display:inline-flex;align-items:center;gap:2px;font-size:13px;font-weight:700;opacity:.85}.ct-money strong{font-size:30px;font-weight:950;letter-spacing:-.03em;font-variant-numeric:tabular-nums}.ct-money strong.neg{color:#ffd1d1}
+.ct-bills{display:inline-flex;align-items:center;gap:6px;justify-self:start;padding:7px 12px;border-radius:99px;background:rgba(255,255,255,.15);color:#fff;font-size:13px;font-weight:800;text-decoration:none}
+.ct-bills.warn{background:#fff;color:#b42318}.ct-bills.ok{background:rgba(255,255,255,.12)}
+.ct-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ct-tile{display:grid;justify-items:center;align-content:start;gap:7px;min-height:88px;padding:12px 6px 11px;border:1px solid #eeeaf3;border-radius:20px;background:#fff;color:#1d1426;font-size:13px;font-weight:800;line-height:1.2;text-align:center;text-decoration:none;transition:transform .12s}
+.ct-tile:active{transform:scale(.97)}.ct-tile:disabled{opacity:.5}
+.ct-ico{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#f1eafc;color:#6410C9}.ct-ico svg{width:22px;height:22px}
+.ct .pd-card{border-radius:22px;box-shadow:none}
+@media(min-width:769px){.ct-tiles{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media(prefers-color-scheme:dark){.ct-card{background:linear-gradient(135deg,#4c0d9c,#6410C9)}.ct-tile{background:#1e1727;border-color:#2e2539;color:#f3eef8}.ct-ico{background:#2c2140;color:#d4b6ff}}
