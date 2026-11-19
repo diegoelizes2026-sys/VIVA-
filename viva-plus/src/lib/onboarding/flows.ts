@@ -2,13 +2,14 @@
 // Código puro, usado no navegador (fluxo da conversa) e no servidor (validação e diagnóstico).
 // As perguntas se adaptam às respostas anteriores e nada é inventado: o que não foi respondido fica "desconhecido".
 import { extractMoneyAmount } from "@/lib/finance-intent";
+import { decodeDays, encodeDays, parsePayDays, parseWeekday } from "@/lib/payday";
 
 export type Certainty = "confirmed" | "estimated" | "unknown";
 export type AnswerValue = number | string | string[] | boolean | null;
 export type Answer = { value: AnswerValue; certainty: Certainty; raw?: string; skipped?: boolean; inferred?: boolean };
 export type Answers = Record<string, Answer>;
 export type Option = { value: string; label: string };
-export type QType = "money" | "choice" | "multi" | "yesno" | "text";
+export type QType = "money" | "choice" | "multi" | "yesno" | "text" | "days";
 export type Question = {
   id: string; block: string; type: QType; ask: (a: Answers) => string; hint?: (a: Answers) => string | null;
   options?: Option[] | ((a: Answers) => Option[]); quick?: { label: string; value: AnswerValue }[];
@@ -75,7 +76,9 @@ export function readAnswer(q: Question, text: string, a: Answers): Answer | null
   if (UNKNOWN.test(raw)) return { value: null, certainty: "unknown", raw, skipped: true };
   if (q.type === "money") { const m = readMoney(raw); return m.value == null ? null : { value: m.value, certainty: m.certainty, raw }; }
   if (q.type === "yesno") { const y = readYesNo(raw); return y == null ? null : { value: y, certainty: "confirmed", raw }; }
+  if (q.type === "days") { const d = parsePayDays(raw, q.id === "pay_days2" ? 2 : 1); return d ? { value: encodeDays(d.days, d.business), certainty: "confirmed", raw } : null; }
   const opts = typeof q.options === "function" ? q.options(a) : q.options || [];
+  if (q.type === "choice" && q.id === "pay_weekday") { const w = parseWeekday(raw); return w == null ? null : { value: String(w), certainty: "confirmed", raw }; }
   if (q.type === "choice") { const m = matchOptions(raw, opts); return { value: m[0] || raw.slice(0, 200), certainty: "confirmed", raw }; }
   if (q.type === "multi") { const m = matchOptions(raw, opts); return { value: m.length ? m : [raw.slice(0, 120)], certainty: "confirmed", raw }; }
   return { value: raw.slice(0, 300), certainty: "confirmed", raw };
@@ -105,6 +108,17 @@ export const FINANCE_FLOW: Question[] = [
   { id: "income_min", block: "Renda", type: "money", when: VARIABLE, placeholder: "Ex.: 1.800",
     ask: () => "Entendi. Num mês mais fraco, quanto costuma entrar?", hint: () => "Vou planejar pelo mês mais fraco, para você não ficar no aperto." },
   { id: "income_max", block: "Renda", type: "money", when: VARIABLE, ask: () => "E num mês bom?" },
+  { id: "pay_frequency", block: "Renda", type: "choice", ask: () => "E de quanto em quanto tempo você recebe?",
+    hint: () => "Assim eu te lembro no dia do pagamento e ajudo a dividir o dinheiro.",
+    options: [{ value: "monthly", label: "Todo mês" }, { value: "biweekly", label: "A cada 15 dias" }, { value: "weekly", label: "Toda semana" }, { value: "irregular", label: "Sem data certa" }] },
+  { id: "pay_days", block: "Renda", type: "days", when: a => has(a, "pay_frequency", "monthly"), placeholder: "Ex.: dia 5",
+    ask: () => "Em que dia do mês o dinheiro costuma cair?",
+    quick: [{ label: "Dia 5", value: "5" }, { label: "5º dia útil", value: "5u" }, { label: "Dia 10", value: "10" }, { label: "Dia 15", value: "15" }, { label: "Dia 20", value: "20" }, { label: "Último dia", value: "31" }] },
+  { id: "pay_days2", block: "Renda", type: "days", when: a => has(a, "pay_frequency", "biweekly"), placeholder: "Ex.: 5 e 20",
+    ask: () => "Em quais dias você recebe?",
+    quick: [{ label: "Dias 5 e 20", value: "5,20" }, { label: "Dias 15 e 30", value: "15,30" }, { label: "Dias 1 e 15", value: "1,15" }, { label: "Dias 10 e 25", value: "10,25" }] },
+  { id: "pay_weekday", block: "Renda", type: "choice", when: a => has(a, "pay_frequency", "weekly"), ask: () => "Em que dia da semana?",
+    options: [{ value: "1", label: "Segunda" }, { value: "2", label: "Terça" }, { value: "3", label: "Quarta" }, { value: "4", label: "Quinta" }, { value: "5", label: "Sexta" }, { value: "6", label: "Sábado" }, { value: "0", label: "Domingo" }] },
   { id: "work_type", block: "Renda", type: "choice", ask: () => "Como você trabalha hoje?",
     options: [{ value: "clt", label: "Carteira assinada" }, { value: "servidor", label: "Servidor público" }, { value: "autonomo", label: "Autônomo(a)" },
       { value: "empreendedor", label: "Tenho meu negócio" }, { value: "aposentado", label: "Aposentado(a)" }, { value: "estudante", label: "Estudante" },
@@ -172,6 +186,7 @@ export function labelOf(q: Question, a: Answers, v: AnswerValue): string {
   if (v == null) return "Pulei";
   if (q.type === "money") return brl(Number(v));
   if (q.type === "yesno") return v ? "Sim" : "Não";
+  if (q.type === "days") { const d = decodeDays(v); if (!d) return String(v); return d.business ? `${d.days.join("º e ")}º dia útil` : d.days.length > 1 ? `Dias ${d.days.join(" e ")}` : d.days[0] === 31 ? "Último dia do mês" : `Dia ${d.days[0]}`; }
   const opts = optionsOf(q, a);
   if (Array.isArray(v)) return v.map(x => opts.find(o => o.value === x)?.label || x).join(", ");
   return opts.find(o => o.value === v)?.label || String(v);
@@ -188,6 +203,7 @@ export function sanitizeAnswers(flow: Question[], input: unknown): Answers {
     let v: AnswerValue = null;
     if (q.type === "money") { const n = Number(a.value); if (Number.isFinite(n) && n >= 0 && n <= 100000000) v = Math.round(n * 100) / 100; }
     else if (q.type === "yesno") { if (typeof a.value === "boolean") v = a.value; }
+    else if (q.type === "days") { const d = decodeDays(a.value); if (d) v = encodeDays(d.days, d.business); }
     else if (q.type === "multi") { if (Array.isArray(a.value)) v = a.value.filter(x => typeof x === "string").slice(0, 12).map(x => x.slice(0, 120)); }
     else if (typeof a.value === "string") v = a.value.trim().slice(0, 300);
     if (v === null || (Array.isArray(v) && !v.length) || v === "") continue;
@@ -295,8 +311,22 @@ export function toFinanceProfile(a: Answers, d: Diagnosis) {
     has_overdue: typeof val(a, "has_overdue") === "boolean" ? (val(a, "has_overdue") as boolean) : null, debt_types: arr("debt_types"), debt_payment_capacity: num(a, "debt_capacity"),
     main_difficulty: val(a, "difficulty") ? String(val(a, "difficulty")).slice(0, 300) : null, goals: arr("goals"),
     purchase_goal: val(a, "purchase_goal") ? String(val(a, "purchase_goal")).slice(0, 120) : null, purchase_amount: num(a, "purchase_amount") || null,
+    ...paySchedule(a),
     certainty, focus: d.focus,
     diagnosis: { focusTitle: d.focusTitle, flags: d.flags, recommendations: d.recommendations, leftover: d.leftover, commitmentPct: d.commitmentPct, debtMonthsToPay: d.debtMonthsToPay },
+  };
+}
+
+function paySchedule(a: Answers) {
+  const f = val(a, "pay_frequency");
+  const freq = ["monthly", "biweekly", "weekly", "irregular"].includes(String(f)) ? String(f) : null;
+  const d = decodeDays(val(a, freq === "biweekly" ? "pay_days2" : "pay_days"));
+  const w = Number(val(a, "pay_weekday"));
+  return {
+    pay_frequency: freq,
+    pay_days: (freq === "monthly" || freq === "biweekly") && d ? d.days : [],
+    pay_business_day: (freq === "monthly" || freq === "biweekly") && d ? d.business : false,
+    pay_weekday: freq === "weekly" && Number.isInteger(w) && w >= 0 && w <= 6 ? w : null,
   };
 }
 

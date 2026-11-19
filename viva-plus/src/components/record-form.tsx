@@ -15,6 +15,7 @@ function localDateTimeToIso(value: string) {
   return new Date(wallClock.getTime() - offset).toISOString();
 }
 
+const OPTION_LABEL:Record<string,string>={income:"Receita (dinheiro que entrou)",expense:"Despesa (dinheiro que saiu)"};
 export default function RecordForm({table,fields,submitLabel="Salvar",onSaved}:{table:"viva_events"|"events"|"tasks"|"transactions";fields:{name:string;label:string;type?:string;required?:boolean;options?:string[]}[];submitLabel?:string;onSaved?:()=>void}) {
  const [values,setValues]=useState<Record<string,string>>({});const [msg,setMsg]=useState("");const [busy,setBusy]=useState(false);
  async function submit(e:FormEvent){e.preventDefault();setBusy(true);setMsg("");
@@ -26,6 +27,6 @@ export default function RecordForm({table,fields,submitLabel="Salvar",onSaved}:{
  setValues({});setMsg("Registro salvo com sucesso.");onSaved?.();
  }catch(e){setMsg(e instanceof Error?e.message:"Não foi possível salvar.");}finally{setBusy(false);}}
  return <form onSubmit={submit} className="space-y-4">{fields.map(f=><label key={f.name} className="block text-sm font-semibold">{f.label}
- {f.type==="boolean"?<select className="field mt-2" required={f.required} value={values[f.name]??"true"} onChange={e=>setValues({...values,[f.name]:e.target.value})}><option value="true">Ativado</option><option value="false">Desativado</option></select>:f.options?<select className="field mt-2" required={f.required} value={values[f.name]||""} onChange={e=>setValues({...values,[f.name]:e.target.value})}><option value="">Selecione</option>{f.options.map(o=><option key={o} value={o}>{o}</option>)}</select>:<input className="field mt-2" required={f.required} type={f.type||"text"} value={values[f.name]||""} onChange={e=>setValues({...values,[f.name]:e.target.value})}/>}
+ {f.type==="boolean"?<select className="field mt-2" required={f.required} value={values[f.name]??"true"} onChange={e=>setValues({...values,[f.name]:e.target.value})}><option value="true">Ativado</option><option value="false">Desativado</option></select>:f.options?<select className="field mt-2" required={f.required} value={values[f.name]||""} onChange={e=>setValues({...values,[f.name]:e.target.value})}><option value="">Selecione</option>{f.options.map(o=><option key={o} value={o}>{OPTION_LABEL[o]||o}</option>)}</select>:<input className="field mt-2" required={f.required} type={f.type||"text"} value={values[f.name]||""} onChange={e=>setValues({...values,[f.name]:e.target.value})}/>}
  </label>)}<button disabled={busy} className="btn-primary">{busy?"Salvando...":submitLabel}</button>{msg&&<p role="status" className="text-sm" style={{color:"var(--purple)"}}>{msg}</p>}</form>
 }

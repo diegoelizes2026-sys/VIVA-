@@ -1,39 +1,61 @@
-import { CalendarDays, Wallet, CheckCircle2, Sparkles, ArrowRight, Clock3 } from "lucide-react";
+import { CalendarDays, CheckCircle2, Sparkles, ArrowRight, Clock3, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import PaydayCard from "@/components/payday-card";
+import MoneyHero from "@/components/money-hero";
+import QuickActions from "@/components/quick-actions";
+import TxList, { type Tx } from "@/components/tx-list";
+import { todayBR } from "@/lib/payday";
 
+// Tela inicial: resumo do mês na faixa roxa, atalhos, pagamento, últimos lançamentos, agenda e tarefas.
 export default async function Page() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const first = (user?.user_metadata?.full_name || user?.email || "").split(" ")[0] || "bem-vindo";
-  const today = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
-  const [{ data: events }, { data: tasks }, { data: tx }] = await Promise.all([
-    supabase.from("events").select("id,title,start_at").gte("start_at", new Date(new Date().setHours(0,0,0,0)).toISOString()).lte("start_at", new Date(new Date().setHours(23,59,59,999)).toISOString()).order("start_at").limit(4),
-    supabase.from("tasks").select("id,title,due_at,is_done").eq("is_done", false).order("due_at", { ascending: true }).limit(5),
-    supabase.from("transactions").select("kind,amount").gte("occurred_on", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0,10))
+  const name = String(user?.user_metadata?.full_name || "").trim();
+  const first = name.split(" ")[0] || "bem-vindo";
+  const initials = (name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("") || first[0] || "V").toUpperCase();
+  const today = todayBR();
+  const monthStart = today.slice(0, 7) + "-01";
+  const dateLabel = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", weekday: "long", day: "numeric", month: "long" }).format(new Date()).replace(/^./, c => c.toUpperCase());
+  const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Sao_Paulo", hour: "numeric", hourCycle: "h23" }).format(new Date()));
+  const hello = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+  const uid = user?.id || "";
+  const [{ data: monthTx }, { data: recent }, { data: events }, { data: tasks }] = await Promise.all([
+    supabase.from("viva_transactions").select("kind,amount").eq("user_id", uid).gte("occurred_on", monthStart).limit(2000),
+    supabase.from("viva_transactions").select("id,kind,amount,description,category,occurred_on,payment_method,source").eq("user_id", uid).order("occurred_on", { ascending: false }).order("created_at", { ascending: false }).limit(5),
+    supabase.from("viva_events").select("id,title,start_at").eq("user_id", uid).gte("start_at", `${today}T00:00:00-03:00`).lte("start_at", `${today}T23:59:59-03:00`).order("start_at").limit(4),
+    supabase.from("viva_tasks").select("id,title,due_at").eq("user_id", uid).eq("is_done", false).order("due_at", { ascending: true, nullsFirst: false }).limit(5),
   ]);
-  const income = (tx || []).filter(x => x.kind === "income").reduce((a,x) => a + Number(x.amount), 0);
-  const expense = (tx || []).filter(x => x.kind === "expense").reduce((a,x) => a + Number(x.amount), 0);
-  const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const income = (monthTx || []).filter(x => x.kind === "income").reduce((a, x) => a + Number(x.amount), 0);
+  const expense = (monthTx || []).filter(x => x.kind === "expense").reduce((a, x) => a + Number(x.amount), 0);
 
-  return <div>
-    <div className="mb-5 hidden items-center justify-between gap-4 md:flex"><div><p className="text-sm font-semibold capitalize text-neutral-500">{today}</p><h1 className="mt-2 text-3xl font-black tracking-tight text-neutral-950 md:text-4xl">Olá, {first}!</h1><p className="mt-2 text-sm text-neutral-500">Vamos organizar seu dia?</p></div><Link href="/agenda" className="btn-primary">Novo compromisso <ArrowRight size={16}/></Link></div>
+  return <div className="vx-page">
+    <MoneyHero greeting={`${hello}, ${first}`} subtitle={dateLabel} initials={initials} label="Saldo do mês" balance={income - expense} income={income} expense={expense} href="/financas" />
+    <QuickActions />
+    <PaydayCard />
 
-    <div className="mt-0 grid grid-cols-2 gap-3 md:mt-8 md:grid-cols-3 md:gap-4">
-      <div className="mobile-balance-card card col-span-2 p-5 md:col-span-1"><div className="flex items-center justify-between"><span className="text-sm text-neutral-500">Saldo previsto</span><Wallet size={20} style={{color:"var(--color-primary)"}}/></div><p className="mt-4 text-3xl font-black md:mt-5" style={{color:"var(--color-primary)"}}>{brl(income-expense)}</p><p className="mt-2 text-xs text-neutral-500">Receitas − despesas do mês</p></div>
-      <div className="mobile-stat-card card p-4 md:p-5"><p className="text-sm text-neutral-500">Receitas</p><p className="mt-5 text-2xl font-extrabold text-neutral-900">{brl(income)}</p><p className="mt-2 text-xs text-emerald-700">Dados dos seus lançamentos</p></div>
-      <div className="mobile-stat-card card p-4 md:p-5"><p className="text-sm text-neutral-500">Despesas</p><p className="mt-5 text-2xl font-extrabold text-neutral-900">{brl(expense)}</p><p className="mt-2 text-xs text-neutral-500">Dados dos seus lançamentos</p></div>
+    <section className="vx-card">
+      <Link href="/financas" className="vx-card-head"><h2>Últimos lançamentos</h2><ChevronRight size={20} aria-hidden /></Link>
+      <TxList rows={(recent || []) as Tx[]} empty="Nenhum lançamento ainda. Toque em “Lançar gasto” ou fale com a VIVA." />
+    </section>
+
+    <div className="vx-two">
+      <section className="vx-card">
+        <Link href="/agenda" className="vx-card-head"><h2><CalendarDays size={19} aria-hidden /> Agenda de hoje</h2><ChevronRight size={20} aria-hidden /></Link>
+        {events?.length ? <ul className="vx-rows">{events.map(e => <li key={e.id}><Clock3 size={17} aria-hidden /><b>{e.title}</b><small>{new Date(e.start_at).toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" })}</small></li>)}</ul>
+          : <p className="vx-empty">Nada marcado para hoje. <Link href="/agenda">Adicionar compromisso</Link></p>}
+      </section>
+      <section className="vx-card">
+        <div className="vx-card-head"><h2><CheckCircle2 size={19} aria-hidden /> Tarefas pendentes</h2></div>
+        {tasks?.length ? <ul className="vx-rows">{tasks.map(t => <li key={t.id}><span className="vx-dot" aria-hidden /><b>{t.title}</b>{t.due_at && <small>{new Date(t.due_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</small>}</li>)}</ul>
+          : <p className="vx-empty">Você não tem tarefas pendentes.</p>}
+      </section>
     </div>
 
-    <div className="mt-5 grid gap-5 lg:grid-cols-2">
-      <section className="card p-5 md:p-6"><div className="flex items-center justify-between"><h2 className="text-lg font-extrabold text-neutral-900">Agenda de hoje</h2><span className="icon-surface h-10 w-10"><CalendarDays size={19}/></span></div>
-        {events?.length ? events.map(e => <div key={e.id} className="mt-4 flex gap-3 border-t pt-4" style={{ borderColor: "var(--color-gray)" }}><Clock3 size={17} style={{ color: "var(--color-primary)" }}/><div><p className="font-semibold text-neutral-800">{e.title}</p><p className="text-xs text-neutral-500">{new Date(e.start_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p></div></div>) : <p className="mt-6 text-sm text-neutral-500">Nenhum compromisso cadastrado para hoje. <Link className="font-bold" style={{ color: "var(--color-primary)" }} href="/agenda">Adicionar agora</Link></p>}
-      </section>
-      <section className="card p-5 md:p-6"><div className="flex items-center justify-between"><h2 className="text-lg font-extrabold text-neutral-900">Tarefas pendentes</h2><span className="icon-surface h-10 w-10"><CheckCircle2 size={19}/></span></div>
-        {tasks?.length ? tasks.map(t => <div key={t.id} className="mt-4 border-t pt-4" style={{ borderColor: "var(--color-gray)" }}><p className="font-semibold text-neutral-800">{t.title}</p>{t.due_at && <p className="mt-1 text-xs text-neutral-500">Prazo: {new Date(t.due_at).toLocaleDateString("pt-BR")}</p>}</div>) : <p className="mt-6 text-sm text-neutral-500">Você não tem tarefas pendentes.</p>}
-      </section>
-    </div>
-
-    <section className="card mt-5 flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between md:p-6"><div className="flex gap-3"><span className="icon-surface h-11 w-11 shrink-0"><Sparkles size={21}/></span><div><h2 className="font-extrabold text-neutral-900">Assistente VIVA+</h2><p className="mt-1 text-sm text-neutral-500">Converse sobre sua rotina e seus objetivos.</p></div></div><Link href="/assistente" className="btn-primary">Conversar com IA <ArrowRight size={16}/></Link></section>
+    <Link href="/assistente" className="vx-banner">
+      <span className="vx-banner-ico" aria-hidden><Sparkles size={22} /></span>
+      <span><b>Fale com a VIVA</b><small>Pergunte sobre seu dinheiro, sua rotina ou peça para lançar um gasto.</small></span>
+      <ArrowRight size={20} aria-hidden />
+    </Link>
   </div>;
 }
