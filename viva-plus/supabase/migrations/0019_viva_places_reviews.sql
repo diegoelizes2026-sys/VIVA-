@@ -41,7 +41,8 @@ begin
     end if;
   elsif tg_op = 'UPDATE' and not public.viva_is_admin() then
     new.hidden := old.hidden;            -- só a administração esconde ou mostra um lugar
-    new.created_by := old.created_by;
+    -- O autor nunca muda para outra pessoa; só pode ficar vazio (conta excluída → lugar anônimo).
+    if new.created_by is not null then new.created_by := old.created_by; end if;
   end if;
   return new;
 end $$;
