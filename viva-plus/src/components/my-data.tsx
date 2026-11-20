@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import WhatsAppConnect from "@/components/whatsapp-connect";
 
 type Row = Record<string, unknown>;
 type FieldDef = { key: string; label: string; type: "money" | "bool" | "text" | "select"; cert?: string; options?: [string, string][] };
@@ -65,6 +66,7 @@ export default function MyData() {
   return <div className="md-page">
     <header><span className="vc-eyebrow">MEUS DADOS</span><h1>O que a VIVA sabe sobre você</h1><p>Só você tem acesso a estas informações. Elas são usadas para personalizar o painel, a VIVA e o Personal, e você pode corrigir ou excluir tudo quando quiser.</p></header>
     {msg && <p className="md-msg" role="status">{msg}</p>}
+    <WhatsAppConnect />
     <section className="vc-card">
       <div className="md-head"><h2>Perfil financeiro</h2>{fin && <button className="vac-mini" onClick={redo}>Refazer diagnóstico</button>}</div>
       {!data ? <p className="vc-muted">Carregando…</p> : !fin ? <p className="vc-muted">Você ainda não fez o diagnóstico. <Link href="/boas-vindas">Fazer agora</Link></p> : <>
