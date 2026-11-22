@@ -1691,3 +1691,9 @@ html:has(.lp),body:has(.lp){background:#fff}
 @media(max-width:560px){.lp-sticky{transform:translateY(140%);transition:transform .25s ease}.lp-sticky.on{transform:none}}
 .lp-hero h1{font-size:clamp(38px,5vw,58px)}
 .lp-sec,#planos,#como-funciona,#duvidas{scroll-margin-top:90px}
+/* Indique e ganhe: o link comprido não pode alargar a página no celular */
+.gr-page,.gr-card{grid-template-columns:minmax(0,1fr);min-width:0}
+.gr-page{width:100%;max-width:min(620px,100%);overflow-x:hidden}
+.gr-link{min-width:0;max-width:100%}.gr-link span{display:block}
+.gr-hero p,.gr-hero h1{max-width:100%;overflow-wrap:anywhere}
+@media(max-width:420px){.gr-code{font-size:32px}.gr-stats{gap:8px}.gr-stats b{font-size:21px}.gr-stats span{font-size:11px}.gr-hero{padding:22px 16px}.gr-hero h1{font-size:25px}}
