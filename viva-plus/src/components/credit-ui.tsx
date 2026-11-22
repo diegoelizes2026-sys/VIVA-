@@ -14,19 +14,20 @@ type ProPlan = { id: string; name: string; monthly_price_brl: number; monthly_cr
 export const money = (v: number) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 export const shortDate = (v?: string | null) => v ? new Date(v).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "America/Sao_Paulo" }).replace(".", "") : "";
 
-// Lê o plano Pro configurado no admin (preço e créditos nunca ficam fixos no código).
-export function useProPlan() {
-  const [plan, setPlan] = useState<ProPlan | null>(null);
+// Lê os planos configurados no admin (preço e créditos nunca ficam fixos no código).
+export function usePaidPlans() {
+  const [plans, setPlans] = useState<{ pro: ProPlan | null; essential: ProPlan | null }>({ pro: null, essential: null });
   useEffect(() => {
     let alive = true;
     fetch("/api/credits?limit=1").then(r => r.ok ? r.json() : null).then(d => {
-      const pro = (d?.plans || []).find((p: ProPlan) => p.id === "pro");
-      if (alive && pro) setPlan(pro);
+      const list: ProPlan[] = d?.plans || [];
+      if (alive) setPlans({ pro: list.find(p => p.id === "pro") ?? null, essential: list.find(p => p.id === "essential") ?? null });
     }).catch(() => {});
     return () => { alive = false; };
   }, []);
-  return plan;
+  return plans;
 }
+export function useProPlan() { return usePaidPlans().pro; }
 
 export function CreditMeter({ wallet, compact = false }: { wallet: Wallet; compact?: boolean }) {
   const pct = Math.max(0, Math.min(100, wallet.percent_used));
@@ -60,8 +61,8 @@ export function ProBenefits() {
   </ul>;
 }
 
-export function ProOffer({ title, text, onClose }: { title?: string; text?: string; onClose?: () => void }) {
-  const pro = useProPlan();
+export function ProOffer({ title, text, onClose, essential = true }: { title?: string; text?: string; onClose?: () => void; essential?: boolean }) {
+  const { pro, essential: ess } = usePaidPlans();
   return <div className="vc-pro">
     <span className="vc-pro-tag">VIVA+ PRO</span>
     <h3>{title || "Continue com o VIVA+ Pro"}</h3>
@@ -69,6 +70,10 @@ export function ProOffer({ title, text, onClose }: { title?: string; text?: stri
     <p className="vc-pro-price">{pro ? <><b>{money(pro.monthly_price_brl)}</b>/mês · {pro.monthly_credits} créditos por mês</> : "Carregando valores…"}</p>
     <ProBenefits />
     <TrialOffer compact />
+    {essential && ess && <div className="vc-alt">
+      <div><b>Prefere começar pelo Essencial?</b><span>{money(ess.monthly_price_brl)}/mês · {ess.monthly_credits} créditos por mês · inclui Radar de preços</span></div>
+      <Link className="vc-btn ghost" href="/planos">Ver Essencial</Link>
+    </div>}
     <div className="vc-pro-actions">
       <Link className="vc-btn" href="/planos">Assinar o Pro</Link>
       {onClose && <button type="button" className="vc-btn ghost" onClick={onClose}>Agora não</button>}
@@ -77,7 +82,7 @@ export function ProOffer({ title, text, onClose }: { title?: string; text?: stri
   </div>;
 }
 
-export function UpgradeSheet({ open, title, text, onClose }: { open: boolean; title?: string; text?: string; onClose: () => void }) {
+export function UpgradeSheet({ open, title, text, onClose, essential = false }: { open: boolean; title?: string; text?: string; onClose: () => void; essential?: boolean }) {
   useEffect(() => {
     if (!open) return;
     const k = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -86,7 +91,7 @@ export function UpgradeSheet({ open, title, text, onClose }: { open: boolean; ti
   if (!open) return null;
   return <div className="vc-sheet-layer" role="dialog" aria-modal="true" aria-label="Conheça o VIVA+ Pro">
     <button type="button" className="vc-sheet-backdrop" aria-label="Fechar" onClick={onClose} />
-    <div className="vc-sheet"><ProOffer title={title} text={text} onClose={onClose} /></div>
+    <div className="vc-sheet"><ProOffer title={title} text={text} onClose={onClose} essential={essential} /></div>
   </div>;
 }
 
