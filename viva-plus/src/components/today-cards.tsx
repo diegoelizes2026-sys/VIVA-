@@ -1,7 +1,9 @@
 "use client";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, PartyPopper, ShoppingBag, ArrowRight } from "lucide-react";
+import { AlertTriangle, PartyPopper, ShoppingBag, ArrowRight, Zap, Plus } from "lucide-react";
+import QuickExpense from "@/components/quick-expense";
+import type { QuickPick } from "@/lib/quick-picks";
 import type { TodayBudget } from "@/lib/daily-budget";
 import { useHiddenValues, brl } from "@/components/money-hero";
 
@@ -58,5 +60,87 @@ export function CanIBuyCard() {
       <button type="submit">Perguntar</button>
     </form>
     {error && <p role="alert" className="vx-buy-err">{error}</p>}
+  </section>;
+}
+
+/** Cartão de vitória: gera a imagem e abre o compartilhar do celular (WhatsApp, Instagram…). */
+export function VictoryCard({ today, streak }: { today: TodayBudget; streak: number }) {
+  const { hidden } = useHiddenValues();
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const leftover = today.mode === "dynamic" && today.forecast?.kind === "leftover" ? today.forecast.amount : 0;
+  if (streak < 3 && leftover <= 0) return null;
+  const title = streak >= 3 ? `🔥 ${streak} dias seguidos no seu valor do dia!` : `🎉 No ritmo atual, vai sobrar ${hidden ? "dinheiro" : brl(leftover)}!`;
+  async function share() {
+    setBusy(true); setMsg("");
+    try {
+      const [img, ref] = await Promise.all([
+        fetch(`/api/share/vitoria?valores=${hidden ? 0 : 1}`).then(r => { if (!r.ok) throw new Error(); return r.blob(); }),
+        fetch("/api/referral").then(r => (r.ok ? r.json() : null)).catch(() => null) as Promise<{ code?: string } | null>,
+      ]);
+      const link = ref?.code ? `${location.origin}/cadastro?convite=${ref.code}` : location.origin;
+      const text = `A VIVA+ me diz quanto posso gastar por dia 💜 Testa aí: ${link}`;
+      const file = new File([img], "minha-vitoria-viva.png", { type: "image/png" });
+      if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text });
+      } else {
+        const url = URL.createObjectURL(img);
+        const a = document.createElement("a"); a.href = url; a.download = file.name; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        try { await navigator.clipboard.writeText(text); setMsg("Imagem baixada e convite copiado. É só postar!"); } catch { setMsg("Imagem baixada. É só postar!"); }
+      }
+    } catch (e) {
+      if ((e as Error)?.name !== "AbortError") setMsg("Não consegui gerar a imagem agora. Tente de novo.");
+    } finally { setBusy(false); }
+  }
+  return <section className="vx-victory">
+    <div>
+      <b>{title}</b>
+      <p>Mostre pros amigos. Quem entrar com seu convite e assinar o Pro te rende R$ 10 no Pix.</p>
+    </div>
+    <button type="button" onClick={share} disabled={busy}>{busy ? "Gerando…" : "Compartilhar"}</button>
+    {msg && <small role="status">{msg}</small>}
+  </section>;
+}
+
+/** Gastos de 1 toque: os gastos que a pessoa mais repete viram botões. Com "Desfazer". */
+export function OneTapExpenses({ picks }: { picks: QuickPick[] }) {
+  const router = useRouter();
+  const { hidden } = useHiddenValues();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ text: string; undoId?: string } | null>(null);
+  const show = (n: number) => (hidden ? "R$ ••" : brl(n));
+  async function tap(p: QuickPick) {
+    if (busy) return;
+    setBusy(p.description); setToast(null);
+    try {
+      const res = await fetch("/api/transactions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "expense", amount: p.amount, description: p.description, occurred_on: todayIso(), category: p.category, payment_method: p.payment_method, source: "manual" }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Não consegui lançar.");
+      setToast({ text: `${p.emoji} ${p.description} ${show(p.amount)} lançado!`, undoId: data.transaction?.id });
+      router.refresh();
+      setTimeout(() => setToast(t => (t?.undoId === data.transaction?.id ? null : t)), 9000);
+    } catch (e) { setToast({ text: e instanceof Error ? e.message : "Não consegui lançar." }); }
+    finally { setBusy(null); }
+  }
+  async function undo(id: string) {
+    setToast(null);
+    const res = await fetch("/api/transactions?id=" + encodeURIComponent(id), { method: "DELETE" });
+    const data = await res.json().catch(() => ({}));
+    setToast({ text: res.ok ? "Desfeito." : data.error || "Não consegui desfazer." });
+    if (res.ok) router.refresh();
+    setTimeout(() => setToast(null), 4000);
+  }
+  return <section className="vx-card vx-onetap">
+    <div className="vx-card-head"><h2><Zap size={19} aria-hidden /> Lançar em 1 toque</h2></div>
+    {!picks.length && <p className="vx-buy-sub">Seus gastos repetidos (padaria, Uber, almoço…) vão virar botões aqui. Lance pelo menos duas vezes.</p>}
+    <div className="vx-chips">
+      {picks.map(p => <button key={p.description} type="button" className="vx-chip" disabled={!!busy} onClick={() => tap(p)} aria-label={`Lançar ${p.description} de ${brl(p.amount)}`}>
+        <span aria-hidden>{p.emoji}</span><b>{p.description}</b><small>{show(p.amount)}</small>
+      </button>)}
+      <button type="button" className="vx-chip add" onClick={() => window.dispatchEvent(new Event("viva:open-expense"))}><Plus size={17} aria-hidden /><b>Outro gasto</b></button>
+    </div>
+    {toast && <p className="vx-toast" role="status">{toast.text}{toast.undoId && <button type="button" onClick={() => undo(toast.undoId!)}>Desfazer</button>}</p>}
+    <QuickExpense onSaved={() => router.refresh()} />
   </section>;
 }

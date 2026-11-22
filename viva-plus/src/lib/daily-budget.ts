@@ -98,3 +98,24 @@ export function computeTodayBudget(input: {
 
   return { mode: "dynamic", allowance, remaining, status, estimatedIncome, forecast, ...base };
 }
+
+type BudgetInput = Parameters<typeof computeTodayBudget>[0];
+
+/**
+ * Sequência (🔥): dias seguidos dentro do valor do dia, contando para trás a partir de ontem,
+ * dentro do ciclo atual e só depois do primeiro gasto lançado (para não premiar quem não usa).
+ * Hoje entra na conta se, até agora, ainda está dentro do valor.
+ */
+export function computeStreak(input: BudgetInput, todayBudget: TodayBudget): number {
+  if (todayBudget.mode === "setup") return 0;
+  const firstExpense = input.tx.filter(x => x.kind === "expense" && x.occurred_on >= input.cycle.start).map(x => x.occurred_on).sort()[0];
+  if (!firstExpense) return 0;
+  let streak = 0;
+  for (let d = addDays(input.today, -1); d >= firstExpense && d >= input.cycle.start; d = addDays(d, -1)) {
+    const day = computeTodayBudget({ ...input, today: d });
+    if (day.mode === "setup" || day.allowance <= 0 || day.remaining < 0) break;
+    streak++;
+    if (streak >= 60) break;
+  }
+  return streak + (todayBudget.remaining >= 0 && todayBudget.allowance > 0 ? 1 : 0);
+}
