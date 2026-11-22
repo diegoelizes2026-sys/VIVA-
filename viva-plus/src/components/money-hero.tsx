@@ -57,8 +57,8 @@ function QuickSetup() {
     <span className="vx-hero-label">Quanto você pode gastar hoje?</span>
     <p className="vx-today-setup">Responda 2 perguntas e a VIVA calcula seu valor do dia. Leva 1 minuto.</p>
     <div className="vx-setup-row">
-      <label>Quanto você recebe por mês?<input inputMode="decimal" placeholder="R$ 2.500" value={income} onChange={e => setIncome(e.target.value)} maxLength={14} /></label>
-      {!noFixedDay && <label>Que dia cai?<input inputMode="numeric" placeholder="Dia 5" value={day} onChange={e => setDay(e.target.value.replace(/\D/g, "").slice(0, 2))} /></label>}
+      <label>Quanto recebe por mês<input inputMode="decimal" placeholder="R$ 2.500" value={income} onChange={e => setIncome(e.target.value)} maxLength={14} /></label>
+      {!noFixedDay && <label>Dia que cai<input inputMode="numeric" placeholder="Dia 5" value={day} onChange={e => setDay(e.target.value.replace(/\D/g, "").slice(0, 2))} /></label>}
     </div>
     <label className="vx-setup-check"><input type="checkbox" checked={noFixedDay} onChange={e => setNoFixedDay(e.target.checked)} /> Não tenho dia fixo (renda varia)</label>
     {error && <p role="alert" className="vx-setup-err">{error}</p>}
