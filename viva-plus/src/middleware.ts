@@ -43,7 +43,7 @@ export async function middleware(request: NextRequest) {
     const target = request.nextUrl.clone(); target.pathname = "/login"; target.searchParams.set("next", pathname);
     return NextResponse.redirect(target);
   }
-  if (user && ["/login", "/cadastro"].includes(pathname)) return NextResponse.redirect(new URL("/assistente", request.url));
+  if (user && ["/login", "/cadastro"].includes(pathname)) return NextResponse.redirect(new URL("/meu-dia", request.url));
   return response;
 }
 export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest).*)" ] };

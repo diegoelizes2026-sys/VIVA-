@@ -37,7 +37,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
             terms_of_use_version: "2026-11-15-v1",
             privacy_policy_version: "2026-11-15-v1",
             terms_accepted_at: acceptedAt
-          }, emailRedirectTo: location.origin + "/auth/callback?next=/assistente" }
+          }, emailRedirectTo: location.origin + "/auth/callback?next=/meu-dia" }
         });
         if (error) {
           const normalized = error.message.toLowerCase();
@@ -52,13 +52,13 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
           return;
         }
         if (data.session) {
-          router.replace("/assistente");
+          router.replace("/meu-dia");
           router.refresh();
           return;
         }
         const { error: loginError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (!loginError) {
-          router.replace("/assistente");
+          router.replace("/meu-dia");
           router.refresh();
           return;
         }
@@ -89,8 +89,8 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
             return;
           }
         }
-        const requestedNext = params.get("next") || "/assistente";
-        const safeNext = requestedNext.startsWith("/") && !requestedNext.startsWith("//") && !requestedNext.includes("\\") ? requestedNext : "/assistente";
+        const requestedNext = params.get("next") || "/meu-dia";
+        const safeNext = requestedNext.startsWith("/") && !requestedNext.startsWith("//") && !requestedNext.includes("\\") ? requestedNext : "/meu-dia";
         router.replace(safeNext); router.refresh();
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/auth/callback?next=/alterar-senha` });
