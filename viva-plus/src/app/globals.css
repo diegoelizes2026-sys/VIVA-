@@ -1770,3 +1770,6 @@ html:has(.lp),body:has(.lp){background:#fff}
 .vx-chip.add{background:#fff;border-style:dashed;color:var(--vx-p)}
 .vx-toast{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 0;padding:10px 14px;border-radius:14px;background:#1d1426;color:#fff;font-size:14px;font-weight:700}
 .vx-toast button{border:0;background:none;color:#c9a8ff;font-weight:900;font-size:14px;cursor:pointer;padding:4px}
+.viva-feature-today{grid-column:1/-1;background:linear-gradient(120deg,#ff8a00,#ff4d6d)}
+.viva-feature-today .viva-feature-icon{font-size:20px}
+.viva-drawer nav a.viva-feature.viva-feature-today{min-height:86px}
