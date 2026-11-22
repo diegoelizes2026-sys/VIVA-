@@ -40,6 +40,7 @@ export default async function Home() {
     { q: "É seguro?", a: "Seus dados ficam protegidos e só você acessa. Você pode ver, corrigir ou apagar tudo em Meus dados." },
     { q: "Quanto custa?", a: "Começar é grátis, sem cartão. Se quiser mais conversas com a VIVA, existem planos pagos, e o Pro pode ser testado grátis por 7 dias." },
     { q: "O que são créditos?", a: "Cada conversa com a inteligência da VIVA usa créditos. Anotar gastos pelo atalho, ver contas, lista de compras e lembretes não gastam créditos." },
+    { q: "Ganho dinheiro indicando?", a: "Sim. Você ganha R$ 10 por amigo indicado que assinar e pagar o plano Pro (o teste grátis não conta). O valor é liberado 30 dias depois do pagamento e você saca por Pix a partir de R$ 30, até R$ 200 por mês." },
     { q: "Funciona no celular?", a: "Sim. Abra no navegador do celular e adicione à tela de início para usar como um aplicativo." },
   ];
 
@@ -126,7 +127,7 @@ export default async function Home() {
     <section className="lp-sec lp-first">
       <Gift size={30} aria-hidden />
       <h2>Seja um dos primeiros</h2>
-      <p>A VIVA acabou de chegar. Quem entra agora ajuda a decidir as próximas funções e ainda pode <b>ganhar créditos indicando amigos</b>.</p>
+      <p>A VIVA acabou de chegar. Quem entra agora ajuda a decidir as próximas funções e ainda pode <b>ganhar créditos indicando amigos</b> e <b>R$ 10 no Pix por amigo que assinar o Pro</b>.</p>
       <Link href="/cadastro" className="lp-btn light">Criar minha conta grátis</Link>
     </section>
 

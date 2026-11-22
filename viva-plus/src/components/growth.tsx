@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Gift, Copy, Share2, Check, Sparkles } from "lucide-react";
+import { Gift, Copy, Share2, Check, Sparkles, Banknote, Clock3, Wallet } from "lucide-react";
 
 // ---------------------------------------------------------------- Teste grátis do Pro
 type Trial = { eligible: boolean; active: boolean; ends_at: string | null; days: number; credits: number };
@@ -83,9 +84,10 @@ export function ReferralPage() {
     <section className="gr-hero">
       <span className="gr-gift" aria-hidden><Gift size={30} /></span>
       <h1>Indique e ganhe</h1>
-      <p>Convide quem também quer sair do aperto. Quando seu amigo terminar a primeira conversa com a VIVA, <b>você ganha {r?.reward_referrer ?? 20} créditos</b> e <b>ele ganha {r?.reward_friend ?? 10}</b>.</p>
+      <p>Convide quem também quer sair do aperto. Quando seu amigo terminar a primeira conversa com a VIVA, <b>você ganha {r?.reward_referrer ?? 20} créditos</b> e <b>ele ganha {r?.reward_friend ?? 10}</b>. E se ele assinar o Pro, <b>você ganha R$ 10 no Pix</b>.</p>
     </section>
     {err && <p className="sl-error">{err}</p>}
+    <ReferralCash />
     {r && <>
       <section className="gr-card">
         <span className="gr-label">Seu código</span>
@@ -100,9 +102,66 @@ export function ReferralPage() {
       </section>
       <section className="gr-card gr-how">
         <h2>Como funciona</h2>
-        <ol><li>Envie seu link para um amigo.</li><li>Ele cria a conta grátis pelo link.</li><li>Quando ele terminar a primeira conversa com a VIVA, os créditos caem para os dois.</li></ol>
-        <small>Vale para contas novas. Até {r.monthly_limit} recompensas por mês. Os créditos seguem as regras do seu plano.</small>
+        <ol><li>Envie seu link para um amigo.</li><li>Ele cria a conta grátis pelo link.</li><li>Quando ele terminar a primeira conversa com a VIVA, os créditos caem para os dois.</li><li>Se ele assinar o Pro, você ganha R$ 10. O valor é liberado 30 dias depois do pagamento dele e você saca por Pix.</li></ol>
+        <small>Vale para contas novas. Até {r.monthly_limit} recompensas em créditos por mês. Os créditos seguem as regras do seu plano. Dinheiro: R$ 10 por amigo que pagar o plano Pro (o teste grátis não conta), uma vez por amigo, até R$ 200 por mês; se o pagamento for estornado, o valor é cancelado. Saque a partir de R$ 30, conferido e pago pela equipe da VIVA em até 5 dias úteis. Veja os <a href="/termos#indicacao">Termos</a>.</small>
       </section>
     </>}
   </div>;
+}
+
+// ---------------------------------------------------------------- Indicação paga (R$ 10 por amigo que assina o Pro)
+type Cash = { pending_cents: number; available_cents: number; requested_cents: number; paid_cents: number; paying_friends: number; next_release: string | null;
+  open_payout: { amount_cents: number; created_at: string } | null; last_payout: { status: string; amount_cents: number; decided_at: string | null; note: string | null } | null;
+  reward_cents: number; min_payout_cents: number; monthly_limit_cents: number; hold_days: number };
+const reais = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const PIX: { id: "cpf" | "email" | "phone" | "random"; label: string; ph: string; mode: "numeric" | "email" | "tel" | "text" }[] = [
+  { id: "cpf", label: "CPF", ph: "000.000.000-00", mode: "numeric" }, { id: "phone", label: "Celular", ph: "(11) 98888-7777", mode: "tel" },
+  { id: "email", label: "E-mail", ph: "voce@email.com", mode: "email" }, { id: "random", label: "Aleatória", ph: "Chave aleatória", mode: "text" },
+];
+
+export function ReferralCash() {
+  const [c, setC] = useState<Cash | null>(null); const [open, setOpen] = useState(false);
+  const [type, setType] = useState(PIX[0]); const [key, setKey] = useState(""); const [busy, setBusy] = useState(false); const [err, setErr] = useState(""); const [ok, setOk] = useState("");
+  const load = () => fetch("/api/referral/cash").then(r => (r.ok ? r.json() : null)).then(setC).catch(() => setC(null));
+  useEffect(() => { load(); }, []);
+  if (!c) return null;
+  const canWithdraw = c.available_cents >= c.min_payout_cents && !c.open_payout;
+  const missing = Math.max(0, c.min_payout_cents - c.available_cents);
+  const submit = async () => {
+    if (key.trim().length < 5) { setErr("Informe sua chave Pix."); return; }
+    setBusy(true); setErr("");
+    const r = await fetch("/api/referral/cash", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pix_key_type: type.id, pix_key: key }) });
+    const j = await r.json().catch(() => ({})); setBusy(false);
+    if (!r.ok) { setErr(j.error || "Não consegui pedir o saque."); return; }
+    setOpen(false); setKey(""); setOk(`Pedido de saque de ${reais(j.amount_cents)} enviado! A equipe confere e paga no seu Pix em até 5 dias úteis.`);
+    load();
+  };
+  return <section className="gr-card gr-cash">
+    <div className="gr-cash-head"><span className="gr-cash-ic" aria-hidden><Banknote size={20} /></span><div><b>Ganhe R$ 10 por amigo no Pro</b><small>Seu amigo assinou o Pro? R$ 10 para você, no Pix.</small></div></div>
+    <div className="gr-cash-grid">
+      <div><Clock3 size={16} aria-hidden /><span>A liberar</span><b>{reais(c.pending_cents)}</b></div>
+      <div className="hot"><Wallet size={16} aria-hidden /><span>Disponível</span><b>{reais(c.available_cents)}</b></div>
+      <div><Check size={16} aria-hidden /><span>Já recebido</span><b>{reais(c.paid_cents)}</b></div>
+    </div>
+    {c.next_release && <p className="gr-cash-note">Próxima liberação em {new Date(c.next_release).toLocaleDateString("pt-BR")}.</p>}
+    {c.open_payout ? <p className="gr-cash-status">Saque de <b>{reais(c.open_payout.amount_cents)}</b> em análise, pedido em {new Date(c.open_payout.created_at).toLocaleDateString("pt-BR")}. Pagamento em até 5 dias úteis.</p>
+      : c.last_payout?.status === "rejected" ? <p className="gr-cash-status warn">Seu último saque não foi pago{c.last_payout.note ? `: ${c.last_payout.note}` : ""}. O valor voltou para o disponível; confira a chave e peça de novo.</p>
+      : c.last_payout?.status === "paid" ? <p className="gr-cash-status ok">Último saque de {reais(c.last_payout.amount_cents)} pago{c.last_payout.decided_at ? ` em ${new Date(c.last_payout.decided_at).toLocaleDateString("pt-BR")}` : ""}. 🎉</p> : null}
+    {ok && <p className="gr-ok">{ok}</p>}
+    <button className="gr-share" disabled={!canWithdraw} onClick={() => { setOpen(true); setErr(""); }}>{canWithdraw ? `Sacar ${reais(c.available_cents)} via Pix` : c.open_payout ? "Saque em análise" : `Saque a partir de ${reais(c.min_payout_cents)} · faltam ${reais(missing)}`}</button>
+    {open && createPortal(<div className="vc-sheet-layer" role="dialog" aria-modal="true" aria-label="Sacar via Pix">
+      <button className="vc-sheet-backdrop" aria-label="Fechar" onClick={() => setOpen(false)} />
+      <div className="vc-sheet sl-sheet">
+        <div className="md-head"><h2>Sacar {reais(c.available_cents)}</h2><button className="ob-link" onClick={() => setOpen(false)}>Fechar</button></div>
+        <div className="vh-form">
+          <p>Tipo da chave Pix</p>
+          <div className="vh-pick">{PIX.map(p => <button key={p.id} type="button" className={type.id === p.id ? "sel" : ""} onClick={() => { setType(p); setErr(""); }}>{p.label}</button>)}</div>
+          <label>Sua chave Pix<input value={key} inputMode={type.mode} maxLength={120} placeholder={type.ph} autoComplete="off" onChange={e => { setKey(e.target.value); setErr(""); }} onKeyDown={e => { if (e.key === "Enter") submit(); }} /></label>
+          {err && <p className="sl-error">{err}</p>}
+          <button className="vh-cta" disabled={busy} onClick={submit}>{busy ? "Enviando…" : "Pedir saque"}</button>
+          <small className="vc-muted">A chave precisa estar no seu nome. A equipe da VIVA confere as indicações e faz o Pix em até 5 dias úteis.</small>
+        </div>
+      </div>
+    </div>, document.body)}
+  </section>;
 }
