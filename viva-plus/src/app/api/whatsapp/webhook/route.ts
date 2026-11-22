@@ -1,5 +1,5 @@
 import { after, NextResponse } from "next/server";
-import { verifySignature } from "@/lib/whatsapp/api";
+import { verifyWebhook } from "@/lib/whatsapp/api";
 import { handleIncoming, type IncomingMessage } from "@/lib/whatsapp/handler";
 
 export const runtime = "nodejs";
@@ -25,7 +25,7 @@ type WebhookBody = {
 
 export async function POST(request: Request) {
   const raw = await request.text();
-  if (!verifySignature(raw, request.headers.get("x-hub-signature-256"))) {
+  if (!verifyWebhook(raw, request.headers)) {
     return NextResponse.json({ error: "Assinatura inválida." }, { status: 401 });
   }
   let body: WebhookBody;
