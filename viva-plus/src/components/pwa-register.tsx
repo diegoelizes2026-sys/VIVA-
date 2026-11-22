@@ -63,7 +63,7 @@ export default function PwaRegister(){
  function update(){navigator.serviceWorker?.getRegistration("/").then(reg=>{if(reg?.waiting){reloading.current=true;reg.waiting.postMessage({type:"SKIP_WAITING"});}else{reg?.update().catch(()=>undefined);setUpdateReady(false);}});}
 
  return <>
-  {updateReady&&<div role="status" className="fixed left-3 right-3 top-3 z-[10000] flex items-center justify-between gap-3 rounded-2xl bg-[#24103f] px-4 py-3 text-sm font-semibold text-white shadow-xl"><span>Nova versão disponível. Atualizar</span><button className="rounded-xl bg-white px-3 py-2 font-bold text-[#6410C9]" onClick={update}>Atualizar</button></div>}
+  {updateReady&&<div role="status" className="fixed left-3 right-3 z-[10000] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl bg-[#24103f] px-4 py-3 text-sm font-semibold text-white shadow-xl" style={{bottom:"calc(env(safe-area-inset-bottom, 0px) + 12px)"}}><span>✨ Nova versão do VIVA+ disponível</span><button className="rounded-xl bg-white px-3 py-2 font-bold text-[#6410C9]" onClick={update}>Atualizar</button></div>}
   {guide&&<div className="viva-install-layer" role="dialog" aria-modal="true" aria-labelledby="viva-install-title">
    <button className="viva-install-backdrop" onClick={closeGuide} aria-label="Fechar"/>
    <section className="viva-install-sheet">
