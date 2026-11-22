@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, PartyPopper, ShoppingBag, ArrowRight, Zap, Plus } from "lucide-react";
 import QuickExpense from "@/components/quick-expense";
 import type { QuickPick } from "@/lib/quick-picks";
+import { trackAction } from "@/lib/track";
 import type { TodayBudget } from "@/lib/daily-budget";
 import { useHiddenValues, brl } from "@/components/money-hero";
 
@@ -49,6 +50,7 @@ export function CanIBuyCard() {
     const label = what.trim().slice(0, 80);
     const valueText = value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const q = `Posso comprar ${label ? label + " " : "isso "}de R$ ${valueText}?`;
+    trackAction("posso-comprar");
     router.push("/assistente?pergunta=" + encodeURIComponent(q));
   }
   return <section className="vx-card vx-buy">
@@ -72,7 +74,7 @@ export function VictoryCard({ today, streak }: { today: TodayBudget; streak: num
   if (streak < 3 && leftover <= 0) return null;
   const title = streak >= 3 ? `🔥 ${streak} dias seguidos no seu valor do dia!` : `🎉 No ritmo atual, vai sobrar ${hidden ? "dinheiro" : brl(leftover)}!`;
   async function share() {
-    setBusy(true); setMsg("");
+    setBusy(true); setMsg(""); trackAction("vitoria");
     try {
       const [img, ref] = await Promise.all([
         fetch(`/api/share/vitoria?valores=${hidden ? 0 : 1}`).then(r => { if (!r.ok) throw new Error(); return r.blob(); }),
@@ -112,7 +114,7 @@ export function OneTapExpenses({ picks }: { picks: QuickPick[] }) {
   const show = (n: number) => (hidden ? "R$ ••" : brl(n));
   async function tap(p: QuickPick) {
     if (busy) return;
-    setBusy(p.description); setToast(null);
+    setBusy(p.description); setToast(null); trackAction("1-toque");
     try {
       const res = await fetch("/api/transactions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "expense", amount: p.amount, description: p.description, occurred_on: todayIso(), category: p.category, payment_method: p.payment_method, source: "manual" }) });
       const data = await res.json().catch(() => ({}));
@@ -142,5 +144,40 @@ export function OneTapExpenses({ picks }: { picks: QuickPick[] }) {
     </div>
     {toast && <p className="vx-toast" role="status">{toast.text}{toast.undoId && <button type="button" onClick={() => undo(toast.undoId!)}>Desfazer</button>}</p>}
     <QuickExpense onSaved={() => router.refresh()} />
+  </section>;
+}
+
+export type DueBill = { id: string; name: string; amount: number; due_date: string };
+
+/** Contas atrasadas, de hoje e de amanhã, com "Já paguei" (registra a despesa e ajusta o número do dia). */
+export function BillsDueCard({ bills, today }: { bills: DueBill[]; today: string }) {
+  const router = useRouter();
+  const { hidden } = useHiddenValues();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [done, setDone] = useState<string[]>([]);
+  const [msg, setMsg] = useState("");
+  const list = bills.filter(b => !done.includes(b.id));
+  if (!list.length && !msg) return null;
+  const when = (d: string) => (d < today ? `atrasada desde ${dm(d)}` : d === today ? "vence hoje" : "vence amanhã");
+  async function pay(b: DueBill) {
+    setBusy(b.id); setMsg(""); trackAction("conta-paga");
+    try {
+      const res = await fetch("/api/bills", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "paid", id: b.id }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Não consegui marcar como paga.");
+      setDone(d => [...d, b.id]); setMsg(`✓ ${b.name} paga. Seu valor do dia continua certo.`);
+      router.refresh();
+    } catch (e) { setMsg(e instanceof Error ? e.message : "Não consegui marcar como paga."); }
+    finally { setBusy(null); }
+  }
+  return <section className="vx-card vx-bills">
+    <a href="/contas" className="vx-card-head"><h2>🧾 Contas para pagar</h2><ArrowRight size={18} aria-hidden /></a>
+    <ul>
+      {list.map(b => <li key={b.id} className={b.due_date < today ? "late" : ""}>
+        <div><b>{b.name}</b><small>{when(b.due_date)} · {hidden ? "R$ ••••" : brl(b.amount)}</small></div>
+        <button type="button" onClick={() => pay(b)} disabled={!!busy}>{busy === b.id ? "…" : "Já paguei"}</button>
+      </li>)}
+    </ul>
+    {msg && <p className="vx-bills-msg" role="status">{msg}</p>}
   </section>;
 }

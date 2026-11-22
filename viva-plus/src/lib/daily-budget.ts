@@ -6,7 +6,7 @@ import { addDays, daysBetween } from "@/lib/payday";
 // Ciclo: do último pagamento até a véspera do próximo (se a pessoa informou quando recebe);
 // senão, o mês do calendário.
 
-export type DayTx = { kind: string; amount: number | string; occurred_on: string };
+export type DayTx = { kind: string; amount: number | string; occurred_on: string; bill?: boolean }; // bill = pagamento de conta cadastrada
 export type DayBill = { amount: number | string; due_date: string };
 export type BudgetStatus = "green" | "amber" | "red";
 export type Forecast = { kind: "runs_out"; date: string; daysEarly: number } | { kind: "leftover"; amount: number } | null;
@@ -50,7 +50,9 @@ export function computeTodayBudget(input: {
   const tx = input.tx.filter(x => x.occurred_on >= cycle.start && x.occurred_on <= today);
   const sum = (rows: { amount: number | string }[]) => rows.reduce((a, x) => a + Number(x.amount || 0), 0);
   const incomeTx = sum(tx.filter(x => x.kind === "income"));
-  const expenses = tx.filter(x => x.kind === "expense");
+  // Pagamento de conta cadastrada não é "gasto do dia": já estava reservado como conta a vencer.
+  const expenses = tx.filter(x => x.kind === "expense" && !x.bill);
+  const billsPaid = sum(tx.filter(x => x.kind === "expense" && x.bill));
   const spentToday = round(sum(expenses.filter(x => x.occurred_on === today)));
   const spentBefore = sum(expenses.filter(x => x.occurred_on < today));
   const spentCycle = spentBefore + spentToday;
@@ -69,7 +71,7 @@ export function computeTodayBudget(input: {
   }
 
   // Calculado com o que havia no começo do dia, para o número não "fugir" a cada gasto de hoje.
-  const availableAtStart = income - spentBefore - billsDue;
+  const availableAtStart = income - spentBefore - billsPaid - billsDue;
   let allowance = Math.max(0, availableAtStart / daysLeft);
   if (dailyLimit && dailyLimit > 0) allowance = Math.min(allowance, dailyLimit);
   allowance = Math.floor(allowance * 100) / 100;
@@ -78,7 +80,7 @@ export function computeTodayBudget(input: {
   // Previsão: no ritmo de gasto do ciclo, até quando o dinheiro dura?
   const daysElapsed = daysBetween(cycle.start, today) + 1;
   const pace = daysElapsed >= 3 ? spentCycle / daysElapsed : 0;
-  const leftNow = income - spentCycle - billsDue;
+  const leftNow = income - spentCycle - billsPaid - billsDue;
   let forecast: Forecast = null;
   if (pace > 0) {
     if (leftNow <= 0) forecast = { kind: "runs_out", date: today, daysEarly: daysBetween(today, cycle.end) };
@@ -108,7 +110,7 @@ type BudgetInput = Parameters<typeof computeTodayBudget>[0];
  */
 export function computeStreak(input: BudgetInput, todayBudget: TodayBudget): number {
   if (todayBudget.mode === "setup") return 0;
-  const firstExpense = input.tx.filter(x => x.kind === "expense" && x.occurred_on >= input.cycle.start).map(x => x.occurred_on).sort()[0];
+  const firstExpense = input.tx.filter(x => x.kind === "expense" && !x.bill && x.occurred_on >= input.cycle.start).map(x => x.occurred_on).sort()[0];
   if (!firstExpense) return 0;
   let streak = 0;
   for (let d = addDays(input.today, -1); d >= firstExpense && d >= input.cycle.start; d = addDays(d, -1)) {

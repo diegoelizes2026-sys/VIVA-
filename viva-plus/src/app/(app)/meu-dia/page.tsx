@@ -6,7 +6,7 @@ import MoneyHero from "@/components/money-hero";
 import QuickActions from "@/components/quick-actions";
 import TxList, { type Tx } from "@/components/tx-list";
 import { loadTodayBudget } from "@/lib/daily-budget-load";
-import { CanIBuyCard, ForecastCard, OneTapExpenses, VictoryCard } from "@/components/today-cards";
+import { BillsDueCard, CanIBuyCard, ForecastCard, OneTapExpenses, VictoryCard, type DueBill } from "@/components/today-cards";
 import { topQuickPicks } from "@/lib/quick-picks";
 import { addDays, todayBR } from "@/lib/payday";
 
@@ -25,13 +25,17 @@ export default async function Page() {
   const hello = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
   const uid = user?.id || "";
   const { budget: todayBudget, streak, cycleTx } = await loadTodayBudget(supabase, uid, today);
-  const [{ data: recent }, { data: events }, { data: tasks }, { data: history }] = await Promise.all([
+  const [{ data: recent }, { data: events }, { data: tasks }, { data: history }, { data: dueBills }, { data: paidBillTx }] = await Promise.all([
     supabase.from("viva_transactions").select("id,kind,amount,description,category,occurred_on,payment_method,source").eq("user_id", uid).order("occurred_on", { ascending: false }).order("created_at", { ascending: false }).limit(5),
     supabase.from("viva_events").select("id,title,start_at").eq("user_id", uid).gte("start_at", `${today}T00:00:00-03:00`).lte("start_at", `${today}T23:59:59-03:00`).order("start_at").limit(4),
     supabase.from("viva_tasks").select("id,title,due_at").eq("user_id", uid).eq("is_done", false).order("due_at", { ascending: true, nullsFirst: false }).limit(5),
-    supabase.from("viva_transactions").select("description,category,payment_method,amount,occurred_on").eq("user_id", uid).eq("kind", "expense").gte("occurred_on", addDays(today, -60)).order("occurred_on", { ascending: false }).limit(600),
+    supabase.from("viva_transactions").select("id,description,category,payment_method,amount,occurred_on").eq("user_id", uid).eq("kind", "expense").gte("occurred_on", addDays(today, -60)).order("occurred_on", { ascending: false }).limit(600),
+    supabase.from("viva_bills").select("id,name,amount,due_date").eq("user_id", uid).neq("status", "paid").gte("due_date", addDays(today, -30)).lte("due_date", addDays(today, 1)).order("due_date").limit(4),
+    supabase.from("viva_bills").select("paid_transaction_id").eq("user_id", uid).eq("status", "paid").not("paid_transaction_id", "is", null).gte("updated_at", addDays(today, -62)).limit(500),
   ]);
-  const picks = topQuickPicks(history || []);
+  // Pagamentos de contas cadastradas não viram atalho de 1 toque.
+  const billTxIds = new Set((paidBillTx || []).map(b => String(b.paid_transaction_id)));
+  const picks = topQuickPicks((history || []).filter(h => !billTxIds.has(String(h.id))));
   const monthTx = cycleTx.filter(x => x.occurred_on >= monthStart);
   const income = (monthTx || []).filter(x => x.kind === "income").reduce((a, x) => a + Number(x.amount), 0);
   const expense = (monthTx || []).filter(x => x.kind === "expense").reduce((a, x) => a + Number(x.amount), 0);
@@ -39,6 +43,7 @@ export default async function Page() {
   return <div className="vx-page">
     <MoneyHero greeting={`${hello}, ${first}`} subtitle={dateLabel} initials={initials} label="Saldo do mês" balance={income - expense} income={income} expense={expense} href="/financas" today={todayBudget} streak={streak} />
     <ForecastCard today={todayBudget} />
+    <BillsDueCard today={today} bills={(dueBills || []).map(b => ({ ...b, amount: Number(b.amount) })) as DueBill[]} />
     <VictoryCard today={todayBudget} streak={streak} />
     <OneTapExpenses picks={picks} />
     <CanIBuyCard />

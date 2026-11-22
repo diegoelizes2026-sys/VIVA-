@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, ChevronRight } from "lucide-react";
 import type { TodayBudget } from "@/lib/daily-budget";
+import { trackAction } from "@/lib/track";
 
 // Faixa roxa do topo: saudação, o "número do dia" (quanto dá para gastar hoje),
 // o saldo do mês e o botão de esconder os valores (lembrado no aparelho).
@@ -50,6 +51,7 @@ function QuickSetup() {
       const res = await fetch("/api/today/setup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ monthly_income: value, pay_day: payDay }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Não foi possível salvar.");
+      trackAction("setup-1-minuto");
       router.refresh();
     } catch (err) { setError(err instanceof Error ? err.message : "Não foi possível salvar."); setBusy(false); }
   }
