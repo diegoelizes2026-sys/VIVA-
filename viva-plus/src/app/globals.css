@@ -1773,3 +1773,8 @@ html:has(.lp),body:has(.lp){background:#fff}
 .viva-feature-today{grid-column:1/-1;background:linear-gradient(120deg,#ff8a00,#ff4d6d)}
 .viva-feature-today .viva-feature-icon{font-size:20px}
 .viva-drawer nav a.viva-feature.viva-feature-today{min-height:86px}
+/* Cartões em destaque do menu mantêm a cor mesmo sendo a página atual (.active) ou após o toque (:hover preso no iPhone). */
+.viva-drawer nav a.viva-feature-today,.viva-drawer nav a.viva-feature-today:hover,.viva-drawer nav a.viva-feature-today.active{background:linear-gradient(120deg,#ff8a00,#ff4d6d)!important;color:#fff!important}
+.viva-drawer nav a.viva-feature-chat,.viva-drawer nav a.viva-feature-chat:hover,.viva-drawer nav a.viva-feature-chat.active{background:linear-gradient(140deg,#6410C9,#8b3de8)!important;color:#fff!important}
+.viva-drawer nav a.viva-feature-health,.viva-drawer nav a.viva-feature-health:hover,.viva-drawer nav a.viva-feature-health.active{background:linear-gradient(140deg,#c2185b,#8b3de8)!important;color:#fff!important}
+.viva-drawer nav a.viva-feature.active{outline:3px solid #d9c2fb;outline-offset:2px}
