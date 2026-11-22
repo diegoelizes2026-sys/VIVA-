@@ -1,4 +1,4 @@
-const VERSION = "viva-pwa-v6";
+const VERSION = "viva-pwa-v7";
 const SHELL = ["/offline.html", "/favicon.svg", "/icons/viva-192.svg", "/icons/viva-512.svg"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(VERSION).then(cache => cache.addAll(SHELL)));
@@ -33,7 +33,7 @@ self.addEventListener("notificationclick", event => {
       await fetch("/api/notifications/ack",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({delivery_id:data.deliveryId,action})}).catch(()=>{});
     }
     if (event.action === "ack" || event.action === "snooze") return;
-    const raw = data.targetUrl || (data.notificationType === "agenda" ? "/agenda" : data.notificationType === "bill" ? "/contas" : "/assistente");
+    const raw = data.targetUrl || (data.notificationType === "agenda" ? "/agenda" : data.notificationType === "bill" ? "/contas" : "/meu-dia");
     const target = new URL(raw,self.location.origin);
     if (target.origin !== self.location.origin) return;
     const windows = await self.clients.matchAll({type:"window",includeUncontrolled:true});
