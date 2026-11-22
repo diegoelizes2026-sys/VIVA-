@@ -51,7 +51,7 @@ function renewalText(wallet?: WalletSnapshot | null) {
 }
 
 // Resposta padrão quando o motor de créditos não libera a operação.
-export function blockedResponse(guard: Guard, who: "VIVA" | "Personal" = "VIVA") {
+export function blockedResponse(guard: Guard, who: "VIVA" | "Personal" = "VIVA", feature?: string) {
   const reason = guard?.reason || "blocked";
   const wallet = guard?.wallet ?? null;
   const isFree = guard?.is_free ?? wallet?.is_free ?? true;
@@ -62,7 +62,9 @@ export function blockedResponse(guard: Guard, who: "VIVA" | "Personal" = "VIVA")
     no_credits: isFree
       ? `Seus créditos acabaram.${renewalText(wallet)} Com o VIVA+ Pro você recebe 150 créditos por mês.`
       : `Seus créditos deste ciclo acabaram.${renewalText(wallet)}`,
-    feature_not_in_plan: `${guard?.operation_label ? guard.operation_label + " é" : "Este recurso é"} exclusivo do VIVA+ Pro.`,
+    feature_not_in_plan: feature === "radar"
+      ? "O Radar de preços está disponível nos planos Essencial e Pro."
+      : `${guard?.operation_label ? guard.operation_label + " é" : "Este recurso é"} exclusivo do VIVA+ Pro.`,
     rate_limit: "Muitas mensagens seguidas. Aguarde alguns segundos e tente de novo.",
     concurrent: `${who === "VIVA" ? "A VIVA" : "O Personal"} ainda está respondendo a sua mensagem anterior. Aguarde um instante.`,
     in_progress: "Sua mensagem já está sendo respondida. Aguarde um instante.",
@@ -75,11 +77,13 @@ export function blockedResponse(guard: Guard, who: "VIVA" | "Personal" = "VIVA")
   };
   const status = reason === "unauthenticated" ? 401 : reason === "rate_limit" || reason === "concurrent" || reason === "in_progress" ? 429 : reason === "model_pricing_not_configured" ? 503 : 200;
   const upgrade = (reason === "no_credits" && isFree) || reason === "feature_not_in_plan";
+  // O Essencial também resolve: créditos acabaram no Free, ou o recurso pedido (Radar) já vem no Essencial.
+  const offerEssential = (reason === "no_credits" && isFree) || (reason === "feature_not_in_plan" && feature === "radar");
   return {
     status,
     body: {
       state: reason === "no_credits" ? "limit_reached" : "blocked",
-      reason, upgrade, wallet,
+      reason, upgrade, wallet, offer_essential: offerEssential,
       message: messages[reason] || "Não foi possível liberar esta solicitação.",
       error: messages[reason] || "Não foi possível liberar esta solicitação.",
     },

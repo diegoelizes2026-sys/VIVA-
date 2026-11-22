@@ -34,6 +34,36 @@ export function TrialOffer({ compact = false }: { compact?: boolean }) {
   </div>;
 }
 
+// ---------------------------------------------------------------- Fim do teste grátis
+type Followup = { started_at: string; ends_at: string; expenses: number; conversations: number };
+/** Aviso dentro do app nos 2 últimos dias do teste do Pro e nos 5 dias depois que ele acaba (uma vez por dia). */
+export function TrialFollowup() {
+  const [f, setF] = useState<Followup | null>(null);
+  const [hidden, setHidden] = useState(true);
+  useEffect(() => { fetch("/api/trial").then(r => (r.ok ? r.json() : null)).then(d => setF(d?.followup ?? null)).catch(() => setF(null)); }, []);
+  const now = Date.now(); const ends = f ? new Date(f.ends_at).getTime() : 0;
+  const stage = !f ? null : ends > now ? (ends - now <= 2 * 86400000 ? "ending" : null) : (now - ends <= 5 * 86400000 ? "ended" : null);
+  const key = stage ? `viva-trial-followup:${stage}:${new Date().toISOString().slice(0, 10)}` : "";
+  useEffect(() => { if (!key) return; try { setHidden(localStorage.getItem(key) === "1"); } catch { setHidden(false); } }, [key]);
+  if (!f || !stage || hidden) return null;
+  const close = () => { try { localStorage.setItem(key, "1"); } catch { /* sem armazenamento */ } setHidden(true); };
+  const hours = Math.max(1, Math.ceil((ends - now) / 3600000));
+  const when = hours <= 24 ? "em menos de 24 horas" : `em ${Math.ceil(hours / 24)} dias`;
+  const did = [f.expenses > 0 ? `${f.expenses} ${f.expenses === 1 ? "gasto anotado" : "gastos anotados"}` : "", f.conversations > 0 ? `${f.conversations} ${f.conversations === 1 ? "conversa" : "conversas"} com a VIVA` : ""].filter(Boolean).join(" e ");
+  return <section className="gr-follow" role="status">
+    <div>
+      <b>{stage === "ending" ? `Seu teste do Pro acaba ${when} (${dm(f.ends_at)})` : "Seu teste do Pro terminou"}</b>
+      <span>{stage === "ending"
+        ? (did ? `Desde que começou: ${did}. ` : "Ainda dá tempo de aproveitar: anote um gasto ou pergunte quanto pode gastar hoje. ") + "Depois ele volta ao Free sozinho, sem cobrança."
+        : (did ? `No teste foram ${did}. ` : "") + "Você voltou ao plano Free. Para continuar com mais créditos, voz e foto de comprovante, escolha o Essencial ou o Pro."}</span>
+    </div>
+    <div className="gr-follow-actions">
+      <a className="gr-trial-btn" href="/planos">{stage === "ending" ? "Continuar com o Pro" : "Ver planos"}</a>
+      <button type="button" className="gr-follow-close" onClick={close}>Agora não</button>
+    </div>
+  </section>;
+}
+
 // ---------------------------------------------------------------- Convite (Indique e ganhe)
 const KEY = "viva-invite-code";
 /** Na página de cadastro/login: guarda o código do link ?convite=XXXXXX para usar depois do cadastro. */
