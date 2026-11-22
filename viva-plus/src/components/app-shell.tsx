@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import AlarmOverlay from "@/components/alarm-overlay";
 import PermissionOnboarding from "@/components/permission-onboarding";
 import SubscriptionEntryOffer from "@/components/subscription-entry-offer";
+import { track } from "@/lib/track";
 function Mark(){return <span className="viva-wordmark">VIVA<span>+</span></span>}
 // Ícone próprio para cada ferramenta (nenhum repetido).
 const ICONS:Record<string,React.ReactNode>={
@@ -34,6 +35,8 @@ export default function AppShell({children,email,isAdmin=false,entryOfferPlans=[
  // Marca que o app já abriu nesta sessão (o chat usa isso para não redirecionar de novo).
  useEffect(()=>{try{sessionStorage.setItem("viva-launched","1")}catch{}},[]);
  const path=usePathname();const router=useRouter();const [open,setOpen]=useState(false);const [loggingOut,setLoggingOut]=useState(false);const touchStart=useRef<{x:number;y:number}|null>(null);
+ // Painel de uso: registra a tela (primeiro trecho do endereço), uma vez por dia.
+ useEffect(()=>{const seg="/"+(path.split("/")[1]||"");track(seg);const onShow=()=>{if(document.visibilityState==="visible")track(seg)};document.addEventListener("visibilitychange",onShow);return()=>document.removeEventListener("visibilitychange",onShow)},[path]);
  async function logout(){if(loggingOut)return;setLoggingOut(true);try{const supabase=createClient();await supabase.auth.signOut();router.replace("/login");router.refresh()}finally{setLoggingOut(false)}}
  // Menu organizado: destaques (VIVA e Saúde) e ferramentas agrupadas por assunto.
  const groups:{title:string;items:{href:string;label:string;kind:string}[]}[]=[
