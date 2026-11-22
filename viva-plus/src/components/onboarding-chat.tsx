@@ -138,9 +138,9 @@ export default function OnboardingChat({ kind, embedded = false, onDone, onClose
     <div className="ob-intro">
       <span className="ob-orb" aria-hidden="true" />
       {kind === "finance" ? <>
-        <h1>Olá! Eu sou o Viva Mais.</h1>
-        <p>Estou aqui para ajudar você a organizar sua vida, cuidar melhor do seu dinheiro e alcançar seus objetivos.</p>
-        <p>Antes de começarmos, quero conhecer um pouco sobre você para preparar uma experiência feita especialmente para sua realidade.</p>
+        <h1>Olá! Eu sou a VIVA.</h1>
+        <p>Em 3 minutos eu descubro <b>quanto você pode gastar por dia</b> sem faltar dinheiro até o próximo pagamento, e monto um plano para o seu dinheiro começar a sobrar.</p>
+        <p>É só responder algumas perguntas rápidas sobre a sua realidade.</p>
       </> : <>
         <h1>Vamos montar o seu Personal</h1>
         <p>São 7 perguntas rápidas sobre seu objetivo, rotina e cuidados, para eu sugerir treinos do seu jeito.</p>
@@ -151,7 +151,7 @@ export default function OnboardingChat({ kind, embedded = false, onDone, onClose
         <li>{kind === "finance" ? "Suas respostas ficam salvas e só você tem acesso. Você pode editar ou excluir em Meus dados." : "Dados de saúde ficam separados dos financeiros e só você tem acesso."}</li>
       </ul>
       <button className="ob-cta" onClick={start}>{savedAnswers ? "Continuar de onde parei" : "Vamos começar"}</button>
-      {kind === "finance" && !embedded && <button className="ob-link" onClick={skipAll}>Agora não, quero explorar primeiro</button>}
+      {kind === "finance" && !embedded && <button className="ob-link" onClick={skipAll}>Pular por enquanto</button>}
       <small className="ob-muted">Ao continuar, você permite que o Viva Mais use essas respostas para personalizar sua experiência, conforme a <Link href="/privacidade">Política de Privacidade</Link>.</small>
       {error && <p className="ob-error" role="alert">{error}</p>}
     </div>
