@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import OnboardingChat from "@/components/onboarding-chat";
+import { InviteClaim } from "@/components/growth";
 import { createClient } from "@/lib/supabase/server";
 export const metadata = { title: "Boas-vindas · VIVA+" };
 
@@ -12,6 +13,7 @@ export default async function WelcomePage() {
   if (!profile?.terms_accepted_at) redirect("/aceite-termos");
   return <main className="ob-page">
     <header className="ob-page-head"><span className="viva-wordmark">VIVA<span>+</span></span></header>
+    <InviteClaim />
     <OnboardingChat kind="finance" />
   </main>;
 }

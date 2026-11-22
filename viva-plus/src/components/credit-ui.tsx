@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { TrialOffer } from "@/components/growth";
 import { useEffect, useState } from "react";
 
 // Componentes visuais do sistema de créditos (usados no chat da VIVA, no Personal e em Meus créditos).
@@ -67,6 +68,7 @@ export function ProOffer({ title, text, onClose }: { title?: string; text?: stri
     {text && <p className="vc-pro-text">{text}</p>}
     <p className="vc-pro-price">{pro ? <><b>{money(pro.monthly_price_brl)}</b>/mês · {pro.monthly_credits} créditos por mês</> : "Carregando valores…"}</p>
     <ProBenefits />
+    <TrialOffer compact />
     <div className="vc-pro-actions">
       <Link className="vc-btn" href="/planos">Assinar o Pro</Link>
       {onClose && <button type="button" className="vc-btn ghost" onClick={onClose}>Agora não</button>}

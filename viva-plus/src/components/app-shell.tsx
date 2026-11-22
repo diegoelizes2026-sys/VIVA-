@@ -17,6 +17,7 @@ const ICONS:Record<string,React.ReactNode>={
  cart:<><path d="M3.5 5h3l2.6 12.2a1.5 1.5 0 0 0 1.5 1.2h9.6a1.5 1.5 0 0 0 1.5-1.1L24 9H8"/><circle cx="11.5" cy="22.5" r="1.4"/><circle cx="20" cy="22.5" r="1.4"/></>,
  price:<><path d="M4 14.6V5.5A1.5 1.5 0 0 1 5.5 4h9.1a2 2 0 0 1 1.4.6l8 8a2 2 0 0 1 0 2.8l-8.5 8.5a2 2 0 0 1-2.8 0l-8-8A2 2 0 0 1 4 14.6Z"/><circle cx="9.5" cy="9.5" r="1.8"/></>,
  nearby:<><path d="M14 24.5s7.5-6.6 7.5-13a7.5 7.5 0 0 0-15 0c0 6.4 7.5 13 7.5 13Z"/><circle cx="14" cy="11.5" r="2.8"/></>,
+ gift:<><rect x="4.5" y="10.5" width="19" height="13" rx="2"/><path d="M3.5 10.5h21v-3.5h-21zM14 7v16.5"/><path d="M14 7c-2-4-7-4-6.5-1 .4 2 4 1.5 6.5 1ZM14 7c2-4 7-4 6.5-1-.4 2-4 1.5-6.5 1Z"/></>,
  agenda:<><rect x="4.5" y="6" width="19" height="17" rx="3"/><path d="M9 3.5v5M19 3.5v5M4.5 11.5h19M9.5 16h3"/></>,
  notifications:<><path d="M19 10a5 5 0 0 0-10 0c0 7-3 8-3 9.5h16c0-1.5-3-2.5-3-9.5"/><path d="M11.5 23a2.6 2.6 0 0 0 5 0"/></>,
  credits:<><circle cx="11" cy="14" r="7.5"/><path d="M11 10v8M8.5 12.5c.5-1.6 4.5-1.6 4.5.6 0 2.3-4.8 1.3-4.8 3.6 0 1.8 4.3 1.8 5-.2"/><path d="M19 7.5a7.5 7.5 0 0 1 0 13"/></>,
@@ -36,7 +37,7 @@ export default function AppShell({children,email,isAdmin=false,entryOfferPlans=[
  const groups:{title:string;items:{href:string;label:string;kind:string}[]}[]=[
   {title:"Dinheiro",items:[{href:"/financas",label:"Meu dinheiro",kind:"wallet"},{href:"/planejamento",label:"Planejamento financeiro",kind:"planning"},{href:"/contas",label:"Contas a pagar",kind:"bills"},{href:"/lista-de-compras",label:"Lista de compras",kind:"cart"},{href:"/perto",label:"Perto de mim",kind:"nearby"},{href:"/economizar",label:"Radar de preços",kind:"price"}]},
   {title:"Organização",items:[{href:"/agenda",label:"Minha agenda",kind:"agenda"},{href:"/configuracoes/notificacoes",label:"Notificações",kind:"notifications"}]},
-  {title:"Conta",items:[{href:"/creditos",label:"Meus créditos",kind:"credits"},{href:"/planos",label:"Planos",kind:"plans"},{href:"/meus-dados",label:"Meus dados",kind:"mydata"},{href:"/perfil",label:"Minha conta",kind:"account"},...(isAdmin?[{href:"/admin",label:"Painel administrativo",kind:"admin"}]:[])]},
+  {title:"Conta",items:[{href:"/creditos",label:"Meus créditos",kind:"credits"},{href:"/indique",label:"Indique e ganhe",kind:"gift"},{href:"/planos",label:"Planos",kind:"plans"},{href:"/meus-dados",label:"Meus dados",kind:"mydata"},{href:"/perfil",label:"Minha conta",kind:"account"},...(isAdmin?[{href:"/admin",label:"Painel administrativo",kind:"admin"}]:[])]},
  ];
  function startTouch(e:React.TouchEvent){const t=e.touches[0];touchStart.current={x:t.clientX,y:t.clientY}}
  function endTouch(e:React.TouchEvent){if(!touchStart.current)return;const t=e.changedTouches[0];const dx=t.clientX-touchStart.current.x;const dy=Math.abs(t.clientY-touchStart.current.y);if(dy<90&&touchStart.current.x<24&&dx>75)setOpen(true);if(dy<90&&open&&dx< -75)setOpen(false);touchStart.current=null}
