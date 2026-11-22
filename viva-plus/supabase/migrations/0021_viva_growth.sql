@@ -52,6 +52,10 @@ begin
   select count(*) into v_month from public.viva_referrals
    where referrer_id = r.referrer_id and status = 'rewarded' and rewarded_at >= date_trunc('month', now());
   if v_month >= 10 then
+    -- Limite de quem indicou atingido: o amigo ainda recebe o bônus dele.
+    perform public.viva_ensure_wallet(r.referred_id);
+    perform public.viva_wallet_post(r.referred_id, 'adjustment', 10, 'referral:'||r.id||':referred', 'Bônus por entrar com convite',
+      null, null, 0, 0, 0, null, jsonb_build_object('referral', r.id));
     update public.viva_referrals set status = 'limit' where id = r.id;
     return;
   end if;

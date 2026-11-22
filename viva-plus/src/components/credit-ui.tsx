@@ -73,7 +73,7 @@ export function ProOffer({ title, text, onClose }: { title?: string; text?: stri
       <Link className="vc-btn" href="/planos">Assinar o Pro</Link>
       {onClose && <button type="button" className="vc-btn ghost" onClick={onClose}>Agora não</button>}
     </div>
-    <small>O Pro é ativado somente depois da confirmação do pagamento.</small>
+    <small>A assinatura paga do Pro é ativada somente depois da confirmação do pagamento.</small>
   </div>;
 }
 

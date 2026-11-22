@@ -1690,3 +1690,4 @@ html:has(.lp),body:has(.lp){background:#fff}
 }
 @media(max-width:560px){.lp-sticky{transform:translateY(140%);transition:transform .25s ease}.lp-sticky.on{transform:none}}
 .lp-hero h1{font-size:clamp(38px,5vw,58px)}
+.lp-sec,#planos,#como-funciona,#duvidas{scroll-margin-top:90px}
