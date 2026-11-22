@@ -19,3 +19,17 @@ export async function POST(req:Request){
   return NextResponse.json({transaction:row,message:receiptPath?"Lançamento salvo com sucesso. Comprovante guardado.":"Lançamento salvo com sucesso."});
  }catch(e){console.error("VIVA transaction create failed",e);return NextResponse.json({error:e instanceof Error?e.message:"Não foi possível salvar."},{status:400})}
 }
+
+// "Desfazer" logo depois de lançar (ex.: toque sem querer no gasto de 1 toque).
+// Só apaga lançamento da própria pessoa, criado há no máximo 15 minutos e sem comprovante.
+export async function DELETE(req:Request){
+ try{
+  const s=await createClient();const {data:{user}}=await s.auth.getUser();if(!user)return NextResponse.json({error:"Faça login."},{status:401});
+  const id=z.string().uuid().safeParse(new URL(req.url).searchParams.get("id"));if(!id.success)return NextResponse.json({error:"Lançamento inválido."},{status:400});
+  const admin=createAdminClient();const since=new Date(Date.now()-15*60000).toISOString();
+  const {data,error}=await admin.from("viva_transactions").delete().eq("id",id.data).eq("user_id",user.id).gte("created_at",since).is("receipt_path",null).select("id");
+  if(error)throw error;if(!data?.length)return NextResponse.json({error:"Esse lançamento não pode mais ser desfeito aqui. Apague pela tela de Finanças."},{status:409});
+  await admin.from("viva_finance_ai_context_cache").delete().eq("user_id",user.id);
+  return NextResponse.json({ok:true,message:"Lançamento desfeito."});
+ }catch(error){console.error("VIVA transaction undo failed",error);return NextResponse.json({error:"Não consegui desfazer agora."},{status:500})}
+}

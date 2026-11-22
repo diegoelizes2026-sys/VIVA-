@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import {createAdminClient} from "@/lib/supabase/admin";
 import {createDelivery,sendDelivery,logDeliveryFailure} from "@/lib/notifications";
+import {loadTodayBudget} from "@/lib/daily-budget-load";
 export const runtime="nodejs";
 type Settings={user_id:string;timezone:string;morning_enabled:boolean;morning_time:string;agenda_enabled:boolean;bills_enabled:boolean;silent_start:string|null;silent_end:string|null};
 function parts(date:Date,timeZone:string){const p=new Intl.DateTimeFormat("en-CA",{timeZone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(date);return Object.fromEntries(p.filter(x=>x.type!=="literal").map(x=>[x.type,x.value])) as Record<string,string>}
@@ -13,26 +14,28 @@ function isSilent(now:Date,s:Settings){if(!s.silent_start||!s.silent_end)return 
 function nextAllowed(now:Date,s:Settings){const end=s.silent_end!.slice(0,5);const today=localDate(now,s.timezone);const current=hhmm(now,s.timezone);const start=s.silent_start!.slice(0,5);const nextDate=start>end&&current>=start?addDays(today,1):today;return zonedUtc(nextDate,end,s.timezone).toISOString()}
 async function buildMorning(admin:ReturnType<typeof createAdminClient>,s:Settings,now:Date){
  const tz=s.timezone||"America/Sao_Paulo";const today=localDate(now,tz);const tomorrow=addDays(today,1);const start=zonedUtc(today,"00:00",tz).toISOString();const end=zonedUtc(addDays(today,1),"00:00",tz).toISOString();
- const [profile,events,bills,limit,transactions]=await Promise.all([
+ const [profile,events,bills,day]=await Promise.all([
   admin.from("viva_profiles").select("full_name").eq("id",s.user_id).maybeSingle(),
   admin.from("viva_events").select("title,start_at").eq("user_id",s.user_id).gte("start_at",start).lt("start_at",end).order("start_at").limit(20),
   s.bills_enabled?admin.from("viva_bills").select("name,amount").eq("user_id",s.user_id).eq("due_date",tomorrow).eq("status","pending").limit(20):Promise.resolve({data:[],error:null}),
-  admin.from("viva_daily_limits").select("limit_amount,is_active").eq("user_id",s.user_id).maybeSingle(),
-  admin.from("viva_transactions").select("amount").eq("user_id",s.user_id).eq("kind","expense").eq("occurred_on",today)
+  loadTodayBudget(admin,s.user_id,today).catch(()=>null)
  ]);
- for(const r of [profile,events,bills,limit,transactions])if(r.error)throw r.error;
+ for(const r of [profile,events,bills])if(r.error)throw r.error;
  const fullName=String(profile.data?.full_name||"").trim();const name=fullName.split(/\s+/)[0]||"tudo bem";
  const appointments=(events.data||[]).map(e=>new Intl.DateTimeFormat("pt-BR",{timeZone:tz,hour:"2-digit",minute:"2-digit"}).format(new Date(e.start_at))+" "+e.title);
- const spent=(transactions.data||[]).reduce((sum,t)=>sum+Number(t.amount),0);const available=limit.data?.is_active?Math.max(0,Number(limit.data.limit_amount)-spent):null;
- const sections=[appointments.length?"Hoje: "+appointments.join(" · "):"Dia livre hoje."];
+ // Número do dia: a mesma conta da tela inicial (ciclo de pagamento, contas a vencer e limite diário).
+ const b=day?.budget;const dot=b&&b.mode!=="setup"?{green:"🟢",amber:"🟡",red:"🔴"}[b.status]:"";
+ const headline=b&&b.mode!=="setup"?"Hoje você pode gastar "+money(Math.max(0,b.remaining))+" "+dot+(day!.streak>=2?" · 🔥 "+day!.streak+" dias seguidos":"")+".":null;
+ const sections:string[]=[];if(headline)sections.push(headline);
+ if(b&&b.mode==="dynamic"&&b.forecast?.kind==="runs_out"&&b.forecast.daysEarly>0)sections.push("Atenção: no ritmo atual, o dinheiro acaba "+b.forecast.daysEarly+" dias antes de "+b.horizonLabel+".");
+ sections.push(appointments.length?"Agenda: "+appointments.join(" · "):"Dia livre na agenda.");
  if((bills.data||[]).length)sections.push("Vence amanhã: "+(bills.data||[]).map(b=>b.name+" "+money(Number(b.amount))).join(" · "));
- if(available!==null)sections.push("Você pode gastar "+money(available)+" hoje.");
- return {body:"Bom dia, "+name+"! "+sections.join(" "),fullName,today};
+ return {body:sections.join(" "),fullName,today,name};
 }
 async function enqueueMorning(admin:ReturnType<typeof createAdminClient>,now:Date){
  const {data:profiles}=await admin.from("viva_profiles").select("id").limit(5000);if(profiles?.length)await admin.from("viva_notification_settings").upsert(profiles.map(p=>({user_id:p.id})),{onConflict:"user_id",ignoreDuplicates:true});
  const {data:settings,error}=await admin.from("viva_notification_settings").select("*").eq("morning_enabled",true);if(error)throw error;const {data:subs}=await admin.from("viva_push_subscriptions").select("user_id");const subscribed=new Set((subs||[]).map(x=>x.user_id));let count=0;
- for(const raw of settings||[]){const s=raw as Settings;if(!subscribed.has(s.user_id))continue;const tz=s.timezone||"America/Sao_Paulo";const today=localDate(now,tz);const scheduled=zonedUtc(today,s.morning_time,tz);if(now.getTime()<scheduled.getTime()||now.getTime()>scheduled.getTime()+60*60000)continue;const summary=await buildMorning(admin,s,now);const delivery=await createDelivery({user_id:s.user_id,notification_type:"morning",dedupe_key:"morning:"+s.user_id+":"+today,scheduled_for:scheduled.toISOString(),title:"Bom dia, "+(summary.fullName.split(/\s+/)[0]||"VIVA")+"!",body:summary.body,target_url:"/assistente",payload:{type:"morning",date:today}});if(delivery){const {error:updateError}=await admin.from("viva_notification_deliveries").update({target_url:"/assistente?resumo="+delivery.id}).eq("id",delivery.id);if(updateError)throw updateError;count++}}
+ for(const raw of settings||[]){const s=raw as Settings;if(!subscribed.has(s.user_id))continue;const tz=s.timezone||"America/Sao_Paulo";const today=localDate(now,tz);const scheduled=zonedUtc(today,s.morning_time,tz);if(now.getTime()<scheduled.getTime()||now.getTime()>scheduled.getTime()+60*60000)continue;const summary=await buildMorning(admin,s,now);const delivery=await createDelivery({user_id:s.user_id,notification_type:"morning",dedupe_key:"morning:"+s.user_id+":"+today,scheduled_for:scheduled.toISOString(),title:"Bom dia"+(summary.fullName?", "+summary.name:"")+"! ☀️",body:summary.body,target_url:"/meu-dia",payload:{type:"morning",date:today}});if(delivery)count++}
  return count;
 }
 async function enqueueAgenda(admin:ReturnType<typeof createAdminClient>,now:Date){
