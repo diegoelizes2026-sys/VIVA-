@@ -5,9 +5,12 @@ import PaydayCard from "@/components/payday-card";
 import MoneyHero from "@/components/money-hero";
 import QuickActions from "@/components/quick-actions";
 import TxList, { type Tx } from "@/components/tx-list";
-import { todayBR } from "@/lib/payday";
+import { addDays, expectedPayment, hasSchedule, lastPayday, nextPayday, scheduleFromProfile, todayBR } from "@/lib/payday";
+import { computeTodayBudget, currentCycle } from "@/lib/daily-budget";
+import { CanIBuyCard, ForecastCard } from "@/components/today-cards";
 
-// Tela inicial: resumo do mês na faixa roxa, atalhos, pagamento, últimos lançamentos, agenda e tarefas.
+// Tela inicial: o "número do dia" (quanto dá para gastar hoje) na faixa roxa, o aviso de até quando
+// o dinheiro dura, "Posso comprar?", atalhos, pagamento, últimos lançamentos, agenda e tarefas.
 export default async function Page() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -20,17 +23,34 @@ export default async function Page() {
   const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Sao_Paulo", hour: "numeric", hourCycle: "h23" }).format(new Date()));
   const hello = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
   const uid = user?.id || "";
-  const [{ data: monthTx }, { data: recent }, { data: events }, { data: tasks }] = await Promise.all([
-    supabase.from("viva_transactions").select("kind,amount").eq("user_id", uid).gte("occurred_on", monthStart).limit(2000),
+  const { data: fp } = await supabase.from("viva_finance_profiles").select("monthly_income,income_type,income_min,pay_frequency,pay_days,pay_weekday,pay_business_day").eq("user_id", uid).maybeSingle();
+  const schedule = scheduleFromProfile(fp);
+  const regular = hasSchedule(schedule) && schedule.frequency !== "irregular";
+  const cycle = currentCycle(today, regular ? lastPayday(schedule, today) : null, regular ? nextPayday(schedule, today) : null);
+  const since = cycle.start < monthStart ? cycle.start : monthStart;
+  const [{ data: cycleTx }, { data: recent }, { data: events }, { data: tasks }, { data: bills }, { data: limits }] = await Promise.all([
+    supabase.from("viva_transactions").select("kind,amount,occurred_on").eq("user_id", uid).gte("occurred_on", since).lte("occurred_on", today).limit(3000),
     supabase.from("viva_transactions").select("id,kind,amount,description,category,occurred_on,payment_method,source").eq("user_id", uid).order("occurred_on", { ascending: false }).order("created_at", { ascending: false }).limit(5),
     supabase.from("viva_events").select("id,title,start_at").eq("user_id", uid).gte("start_at", `${today}T00:00:00-03:00`).lte("start_at", `${today}T23:59:59-03:00`).order("start_at").limit(4),
     supabase.from("viva_tasks").select("id,title,due_at").eq("user_id", uid).eq("is_done", false).order("due_at", { ascending: true, nullsFirst: false }).limit(5),
+    supabase.from("viva_bills").select("amount,due_date,status").eq("user_id", uid).neq("status", "paid").gte("due_date", today).lte("due_date", addDays(today, 45)).limit(200),
+    supabase.from("viva_daily_limits").select("limit_amount").eq("user_id", uid).eq("is_active", true).order("updated_at", { ascending: false }).limit(1),
   ]);
+  const monthTx = (cycleTx || []).filter(x => x.occurred_on >= monthStart);
   const income = (monthTx || []).filter(x => x.kind === "income").reduce((a, x) => a + Number(x.amount), 0);
   const expense = (monthTx || []).filter(x => x.kind === "expense").reduce((a, x) => a + Number(x.amount), 0);
+  // Renda variável: usa o mês fraco. Sem dia de pagamento: a renda do mês inteiro.
+  const monthly = fp?.income_type === "variable" || fp?.income_type === "mixed" ? Number(fp?.income_min) || Number(fp?.monthly_income) || null : Number(fp?.monthly_income) || null;
+  const todayBudget = computeTodayBudget({
+    today, cycle, tx: cycleTx || [], bills: bills || [],
+    dailyLimit: limits?.[0] ? Number(limits[0].limit_amount) : null,
+    expectedCycleIncome: regular ? expectedPayment(monthly, schedule) : monthly,
+  });
 
   return <div className="vx-page">
-    <MoneyHero greeting={`${hello}, ${first}`} subtitle={dateLabel} initials={initials} label="Saldo do mês" balance={income - expense} income={income} expense={expense} href="/financas" />
+    <MoneyHero greeting={`${hello}, ${first}`} subtitle={dateLabel} initials={initials} label="Saldo do mês" balance={income - expense} income={income} expense={expense} href="/financas" today={todayBudget} />
+    <ForecastCard today={todayBudget} />
+    <CanIBuyCard />
     <QuickActions />
     <PaydayCard />
 

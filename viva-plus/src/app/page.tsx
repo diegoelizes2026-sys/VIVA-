@@ -16,7 +16,7 @@ const brl = (n: number) => Number(n).toLocaleString("pt-BR", { style: "currency"
 export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (user) redirect("/assistente");
+  if (user) redirect("/meu-dia");
   const { data } = await supabase.rpc("viva_public_pricing");
   const plans = ((data as Plan[] | null) || []).filter(p => p && p.id);
 

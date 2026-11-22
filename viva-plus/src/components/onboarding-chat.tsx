@@ -128,7 +128,7 @@ export default function OnboardingChat({ kind, embedded = false, onDone, onClose
   }
   async function skipAll() {
     try { await save(kind, { status: "skipped" }); } catch { /* segue para o app mesmo assim */ }
-    window.location.href = "/assistente";
+    window.location.href = "/meu-dia";
   }
 
   // ------------------------------------------------ telas
