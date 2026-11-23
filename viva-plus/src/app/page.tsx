@@ -141,6 +141,7 @@ export default async function Home() {
       <span className="lp-logo">VIVA<span>+</span></span>
       <p><ShieldCheck size={15} aria-hidden /> Não pedimos senha de banco. Seus dados são seus.</p>
       <nav><Link href="/termos">Termos de Uso</Link><Link href="/privacidade">Privacidade</Link><Link href="/login">Entrar</Link></nav>
+      <small className="lp-legal">VIVA+ é um produto de ISAQUE BATISTA SOARES · CNPJ 68.226.787/0001-48 · Aquiraz, CE · Suporte: <a href="mailto:vivamais597@gmail.com">vivamais597@gmail.com</a></small>
     </footer>
     <LandingSticky />
   </main>;
