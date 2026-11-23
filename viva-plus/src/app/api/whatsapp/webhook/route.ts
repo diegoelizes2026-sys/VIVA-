@@ -1,7 +1,7 @@
 import { after } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { SITE_URL, brl, requestKeyFor, sendWhatsappText, validSignature } from "@/lib/whatsapp";
+import { LINKED_MESSAGE, SITE_URL, brl, connectUrlFor, linkWhatsapp, requestKeyFor, sendWhatsappText, validSignature } from "@/lib/whatsapp";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -75,18 +75,17 @@ async function handleMessage(m: WaMessage, origin: string) {
   if (code) {
     const { data: row } = await admin.from("viva_whatsapp_links").select("user_id,code_expires_at").eq("link_code", code).maybeSingle();
     if (!row || !row.code_expires_at || new Date(row.code_expires_at).getTime() < Date.now()) {
-      await sendWhatsappText(from, `Esse código expirou ou não existe. Gere um novo em *Meu perfil → Conectar WhatsApp*: ${SITE_URL}/perfil`);
+      await sendWhatsappText(from, `Esse código expirou. Toque aqui para conectar este WhatsApp à sua conta (vale 1 hora):\n${connectUrlFor(from)}`);
       return;
     }
-    await admin.from("viva_whatsapp_links").update({ wa_id: null, linked_at: null, history: [], updated_at: now }).eq("wa_id", from).neq("user_id", row.user_id);
-    await admin.from("viva_whatsapp_links").update({ wa_id: from, linked_at: now, link_code: null, code_expires_at: null, history: [], updated_at: now }).eq("user_id", row.user_id);
-    await sendWhatsappText(from, "Pronto! ✅ Seu WhatsApp está conectado à sua conta VIVA+.\n\nAgora é só falar comigo por aqui, do mesmo jeito que no app. Por exemplo:\n• gastei 35 na farmácia\n• quanto posso gastar hoje?\n• o que vence essa semana?\n\nPara desconectar, mande *desconectar*.");
+    await linkWhatsapp(admin, row.user_id, from);
+    await sendWhatsappText(from, LINKED_MESSAGE);
     return;
   }
 
   const { data: link } = await admin.from("viva_whatsapp_links").select("user_id,history,last_transaction_id,last_transaction_at").eq("wa_id", from).maybeSingle();
   if (!link) {
-    await sendWhatsappText(from, `Oi! 👋 Eu sou a VIVA+, sua assistente para organizar o dinheiro.\n\nPara conversar comigo por aqui, conecte este WhatsApp à sua conta:\n1. Entre em ${SITE_URL}/perfil\n2. Toque em *Conectar WhatsApp*\n\nAinda não tem conta? Crie grátis: ${SITE_URL}/cadastro`);
+    await sendWhatsappText(from, `Oi! 👋 Eu sou a VIVA+, sua assistente para organizar o dinheiro.\n\n*Já tem conta no VIVA+?* Toque no link para conectar este WhatsApp (vale 1 hora):\n${connectUrlFor(from)}\n\n*Ainda não tem conta?* Crie grátis em 1 minuto:\n${SITE_URL}/cadastro\nDepois é só me mandar um *oi* de novo. 😉`);
     return;
   }
   await admin.from("viva_whatsapp_links").update({ last_inbound_at: now, updated_at: now }).eq("user_id", link.user_id);
@@ -97,7 +96,7 @@ async function handleMessage(m: WaMessage, origin: string) {
   }
   if (/^\s*desconectar\s*$/i.test(text)) {
     await admin.from("viva_whatsapp_links").update({ wa_id: null, linked_at: null, history: [], updated_at: now }).eq("user_id", link.user_id);
-    await sendWhatsappText(from, `Pronto, desconectei este WhatsApp da sua conta. Para conectar de novo, use *Meu perfil → Conectar WhatsApp*: ${SITE_URL}/perfil`);
+    await sendWhatsappText(from, `Pronto, desconectei este WhatsApp da sua conta. Para conectar de novo, é só me mandar um *oi*.`);
     return;
   }
 

@@ -58,7 +58,7 @@ export default async function Home() {
         <p>Converse com a VIVA, anote gastos em segundos e saiba quanto pode gastar até o próximo pagamento. Ela lembra das contas por você.</p>
         <div className="lp-hero-cta">
           <Link href="/cadastro" className="lp-btn">Começar grátis</Link>
-          <a href="#como-funciona" className="lp-btn ghost">Ver como funciona</a>
+          <a href="https://wa.me/558588252048?text=Oi%20VIVA!%20Quero%20conhecer" target="_blank" rel="noopener noreferrer" className="lp-btn wa">💬 Falar com a VIVA no WhatsApp</a>
         </div>
         <ul className="lp-trust"><li><Check size={16} /> Grátis para começar</li><li><Check size={16} /> Sem cartão</li><li><Check size={16} /> Não pede senha de banco</li></ul>
       </div>

@@ -42,6 +42,36 @@ export async function sendWhatsappText(to: string, body: string) {
   return true;
 }
 
+// Link de conexão com um toque, enviado pela VIVA no próprio WhatsApp (assinado, vale 1 hora).
+const CONNECT_TTL_MS = 60 * 60 * 1000;
+function connectSignature(payload: string) {
+  return createHmac("sha256", process.env.WHATSAPP_APP_SECRET || "").update("connect:" + payload).digest("base64url").slice(0, 32);
+}
+export function connectUrlFor(waId: string) {
+  const payload = `${waId.replace(/\D/g, "")}.${Date.now() + CONNECT_TTL_MS}`;
+  return `${SITE_URL}/whatsapp/conectar?t=${payload}.${connectSignature(payload)}`;
+}
+export function readConnectToken(token: string | null | undefined) {
+  const match = /^(\d{8,15})\.(\d{13})\.([A-Za-z0-9_-]{32})$/.exec(token || "");
+  if (!match || !process.env.WHATSAPP_APP_SECRET) return null;
+  const expected = Buffer.from(connectSignature(`${match[1]}.${match[2]}`));
+  const received = Buffer.from(match[3]);
+  if (expected.length !== received.length || !timingSafeEqual(expected, received)) return null;
+  if (Number(match[2]) < Date.now()) return null;
+  return match[1];
+}
+
+export const LINKED_MESSAGE = "Pronto! ✅ Seu WhatsApp está conectado à sua conta VIVA+.\n\nAgora é só falar comigo por aqui, do mesmo jeito que no app. Por exemplo:\n• gastei 35 na farmácia\n• quanto posso gastar hoje?\n• o que vence essa semana?\n\nPara desconectar, mande *desconectar*.";
+
+type AdminClient = { from: (table: string) => any }; // eslint-disable-line @typescript-eslint/no-explicit-any
+/** Liga o número de WhatsApp à conta (um número só pode estar ligado a uma conta). */
+export async function linkWhatsapp(admin: AdminClient, userId: string, waId: string) {
+  const now = new Date().toISOString();
+  await admin.from("viva_whatsapp_links").update({ wa_id: null, linked_at: null, history: [], updated_at: now }).eq("wa_id", waId).neq("user_id", userId);
+  const { error } = await admin.from("viva_whatsapp_links").upsert({ user_id: userId, wa_id: waId, linked_at: now, link_code: null, code_expires_at: null, history: [], updated_at: now }, { onConflict: "user_id" });
+  if (error) throw error;
+}
+
 export function brl(value: number) {
   return Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
