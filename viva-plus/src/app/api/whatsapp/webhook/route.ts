@@ -19,20 +19,26 @@ export async function GET(request: Request) {
   const token = url.searchParams.get("hub.verify_token");
   const challenge = url.searchParams.get("hub.challenge") || "";
   const expected = process.env.WHATSAPP_VERIFY_TOKEN;
-  if (mode === "subscribe" && expected && token === expected) return new Response(challenge, { status: 200 });
+  if (mode === "subscribe" && expected && token === expected) { console.log("VIVA WhatsApp webhook: verificação OK"); return new Response(challenge, { status: 200 }); }
+  console.warn("VIVA WhatsApp webhook: verificação recusada", { mode, temToken: Boolean(token), configurado: Boolean(expected) });
   return new Response("forbidden", { status: 403 });
 }
 
 // Mensagens recebidas: responde 200 na hora para a Meta e processa logo em seguida.
 export async function POST(request: Request) {
   const raw = await request.text();
-  if (!validSignature(raw, request.headers.get("x-hub-signature-256"))) return new Response("invalid signature", { status: 401 });
+  const signature = request.headers.get("x-hub-signature-256");
+  if (!validSignature(raw, signature)) {
+    console.warn("VIVA WhatsApp webhook: assinatura inválida", { temAssinatura: Boolean(signature), segredoConfigurado: Boolean(process.env.WHATSAPP_APP_SECRET), bytes: raw.length });
+    return new Response("invalid signature", { status: 401 });
+  }
   let body: { entry?: Array<{ changes?: Array<{ field?: string; value?: { messages?: WaMessage[] } }> }> };
   try { body = JSON.parse(raw); } catch { return new Response("bad request", { status: 400 }); }
   const messages: WaMessage[] = [];
   for (const entry of body.entry || []) for (const change of entry.changes || []) {
     if (change.field === "messages") messages.push(...(change.value?.messages || []));
   }
+  console.log("VIVA WhatsApp webhook: recebido", { mensagens: messages.length, campos: (body.entry || []).flatMap(e => (e.changes || []).map(c => c.field)) });
   if (messages.length) {
     const origin = new URL(request.url).origin;
     after(async () => {
