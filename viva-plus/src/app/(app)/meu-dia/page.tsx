@@ -2,6 +2,7 @@ import { CalendarDays, CheckCircle2, Sparkles, ArrowRight, Clock3, ChevronRight 
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import PaydayCard from "@/components/payday-card";
+import WhatsappConnect from "@/components/whatsapp-connect";
 import MoneyHero from "@/components/money-hero";
 import QuickActions from "@/components/quick-actions";
 import TxList, { type Tx } from "@/components/tx-list";
@@ -42,6 +43,7 @@ export default async function Page() {
 
   return <div className="vx-page">
     <MoneyHero greeting={`${hello}, ${first}`} subtitle={dateLabel} initials={initials} label="Saldo do mês" balance={income - expense} income={income} expense={expense} href="/financas" today={todayBudget} streak={streak} />
+    <WhatsappConnect variant="home" />
     <ForecastCard today={todayBudget} />
     <BillsDueCard today={today} bills={(dueBills || []).map(b => ({ ...b, amount: Number(b.amount) })) as DueBill[]} />
     <VictoryCard today={todayBudget} streak={streak} />

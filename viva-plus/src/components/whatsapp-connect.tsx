@@ -3,12 +3,17 @@ import { useCallback, useEffect, useState } from "react";
 
 type Status = { linked: boolean; number: string | null; chatUrl: string };
 
-/** Cartão "VIVA no WhatsApp": liga o WhatsApp da pessoa à conta para conversar com a VIVA por lá. */
-export default function WhatsappConnect() {
+/**
+ * "VIVA no WhatsApp": liga o WhatsApp da pessoa à conta com um toque.
+ * variant="home": cartão em destaque no Meu dia (conectado vira um atalho para a conversa).
+ * variant="profile": cartão completo em Meu perfil (com opção de desconectar).
+ */
+export default function WhatsappConnect({ variant = "profile" }: { variant?: "home" | "profile" }) {
   const [status, setStatus] = useState<Status | null>(null);
   const [link, setLink] = useState<{ code: string; url: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState<"conectado" | "expirado" | "erro" | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -17,6 +22,13 @@ export default function WhatsappConnect() {
     } catch { /* sem conexão */ }
   }, []);
   useEffect(() => { load(); }, [load]);
+
+  // Aviso vindo do link de um toque (/whatsapp/conectar → /meu-dia?whatsapp=...).
+  useEffect(() => {
+    if (variant !== "home") return;
+    const value = new URLSearchParams(window.location.search).get("whatsapp");
+    if (value === "conectado" || value === "expirado" || value === "erro") setNotice(value);
+  }, [variant]);
 
   // Enquanto o código está aberto, confere de tempos em tempos se a pessoa já mandou a mensagem.
   useEffect(() => {
@@ -46,6 +58,42 @@ export default function WhatsappConnect() {
       setLink(null); await load();
     } catch (e) { setError(e instanceof Error ? e.message : "Não consegui desconectar agora."); }
     finally { setBusy(false); }
+  }
+
+  if (variant === "home") {
+    if (!status) return null;
+    if (status.linked) {
+      return (
+        <a className="wa-home linked" href={status.chatUrl} target="_blank" rel="noopener noreferrer">
+          <span className="wa-home-icon" aria-hidden>💬</span>
+          <span className="wa-home-text">
+            <b>{notice === "conectado" ? "WhatsApp conectado! ✅" : "VIVA no WhatsApp"}</b>
+            <small>{notice === "conectado" ? "Agora é só falar com a VIVA por lá." : "Anote gastos e tire dúvidas sem abrir o app."}</small>
+          </span>
+          <span className="wa-home-go">Abrir conversa</span>
+        </a>
+      );
+    }
+    return (
+      <section className="wa-home">
+        <span className="wa-home-icon" aria-hidden>💬</span>
+        <div className="wa-home-text">
+          <b>Fale com a VIVA no WhatsApp</b>
+          <small>
+            {notice === "expirado" ? "Aquele link expirou. Toque abaixo para conectar de novo." : notice === "erro" ? "Não deu certo agora. Tente de novo abaixo." : "Mande “gastei 35 na farmácia” e ela anota na hora, sem abrir o app."}
+          </small>
+          {link ? (
+            <small className="wa-home-hint">Abrimos o WhatsApp com a mensagem pronta: é só <b>enviar</b>. Se não abriu, mande <b>Conectar VIVA {link.code}</b>.</small>
+          ) : null}
+          {error ? <small className="wa-home-error">{error}</small> : null}
+        </div>
+        {link ? (
+          <a className="wa-home-btn" href={link.url} target="_blank" rel="noopener noreferrer">Abrir o WhatsApp</a>
+        ) : (
+          <button type="button" className="wa-home-btn" onClick={connect} disabled={busy}>{busy ? "Abrindo…" : "Conectar meu WhatsApp"}</button>
+        )}
+      </section>
+    );
   }
 
   return (

@@ -1809,3 +1809,13 @@ html:has(.lp),body:has(.lp){background:#fff}
 .gr-follow-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.gr-follow .gr-trial-btn{display:inline-flex;align-items:center;text-decoration:none}
 .gr-follow-close{min-height:46px;padding:0 16px;border:0;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;font-size:14px;font-weight:800}
 @media(prefers-color-scheme:dark){.vc-alt{background:#1e1727;border-color:#2e2539}}
+
+/* VIVA no WhatsApp: destaque no Meu dia e no site */
+.wa-home{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 18px;border-radius:24px;background:linear-gradient(135deg,#0b8a46,#25d366);color:#fff;text-decoration:none;box-shadow:0 12px 26px rgba(18,140,74,.22)}
+.wa-home-icon{display:grid;place-items:center;width:46px;height:46px;flex:none;border-radius:16px;background:rgba(255,255,255,.18);font-size:24px}
+.wa-home-text{display:grid;gap:3px;flex:1;min-width:180px}.wa-home-text b{font-size:16px;font-weight:950}.wa-home-text small{font-size:13.5px;line-height:1.4;opacity:.95}
+.wa-home-hint{margin-top:4px}.wa-home-error{color:#fff3c4}
+.wa-home-btn,.wa-home-go{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 18px;border:0;border-radius:999px;background:#fff;color:#0b7a3e;font-size:14.5px;font-weight:900;text-decoration:none;white-space:nowrap}
+.wa-home.linked{padding:12px 14px;box-shadow:none}.wa-home.linked .wa-home-icon{width:40px;height:40px;font-size:20px}
+@media(max-width:520px){.wa-home-btn{width:100%}}
+.lp-btn.wa{background:#25d366;color:#fff;box-shadow:0 12px 26px rgba(37,211,102,.28)}
