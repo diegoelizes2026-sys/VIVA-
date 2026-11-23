@@ -38,6 +38,7 @@ export async function sendWhatsappText(to: string, body: string) {
     body: JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", to, type: "text", text: { preview_url: true, body: toWhatsappText(body) } }),
   });
   if (!res.ok) { console.error("VIVA WhatsApp send failed", res.status, (await res.text()).slice(0, 500)); return false; }
+  console.log("VIVA WhatsApp: resposta enviada");
   return true;
 }
 
