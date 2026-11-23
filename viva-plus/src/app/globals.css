@@ -1673,7 +1673,6 @@ html:has(.lp),body:has(.lp){background:#fff}
 .lp-faq details[open] summary svg{transform:rotate(180deg)}.lp-faq p{margin:0 0 18px;color:var(--lp-muted);line-height:1.6}
 .lp-foot{display:grid;justify-items:center;gap:10px;max-width:1180px;margin:72px auto 0;padding:32px 16px 40px;border-top:1px solid #f0ebf6;text-align:center;color:var(--lp-muted);font-size:14px}
 .lp-foot p{display:flex;align-items:center;gap:6px;margin:0}.lp-foot nav{display:flex;gap:18px}.lp-foot a{color:var(--lp-muted)}
-.lp-legal{max-width:560px;font-size:12px;line-height:1.5;color:var(--lp-muted)}
 .lp-sticky{display:none}
 @media(max-width:900px){
   .lp-nav nav{display:none}.lp-nav-cta .lp-link{font-size:15px}
