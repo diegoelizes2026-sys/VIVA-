@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyWhatsappPlanActive } from "@/lib/whatsapp";
 
-// Teste grátis do Pro: 7 dias, uma vez por conta, sem cartão (regras no banco: viva_start_pro_trial).
+// Teste grátis do Pro: 5 minutos, uma vez por conta, sem cartão (regras no banco: viva_start_pro_trial).
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

@@ -38,7 +38,7 @@ export default async function Home() {
   const faq = [
     { q: "Preciso ligar minha conta do banco?", a: "Não. A VIVA não pede senha de banco nem acesso à sua conta. Você conta o que quiser e ela organiza." },
     { q: "É seguro?", a: "Seus dados ficam protegidos e só você acessa. Você pode ver, corrigir ou apagar tudo em Meus dados." },
-    { q: "Quanto custa?", a: "Começar é grátis, sem cartão. Se quiser mais conversas com a VIVA, existem planos pagos, e o Pro pode ser testado grátis por 7 dias." },
+    { q: "Quanto custa?", a: "Começar é grátis, sem cartão. Se quiser mais conversas com a VIVA, existem planos pagos, e o Pro pode ser testado grátis por 5 minutos." },
     { q: "O que são créditos?", a: "Cada conversa com a inteligência da VIVA usa créditos. Anotar gastos pelo atalho, ver contas, lista de compras e lembretes não gastam créditos." },
     { q: "Ganho dinheiro indicando?", a: "Sim. Você ganha R$ 10 por amigo indicado que assinar e pagar o plano Pro (o teste grátis não conta). O valor é liberado 30 dias depois do pagamento e você saca por Pix a partir de R$ 30, até R$ 200 por mês." },
     { q: "Funciona no celular?", a: "Sim. Abra no navegador do celular e adicione à tela de início para usar como um aplicativo." },
@@ -106,7 +106,7 @@ export default async function Home() {
       <div className="lp-plans">{plans.map(p => {
         const free = Number(p.monthly_price_brl) === 0; const pro = p.id === "pro";
         return <div key={p.id} className={"lp-plan" + (pro ? " hot" : "")}>
-          {pro && <span className="lp-plan-tag">Mais completo · 7 dias grátis</span>}
+          {pro && <span className="lp-plan-tag">Mais completo · teste grátis</span>}
           <h3>{p.name}</h3>
           <p className="lp-price">{free ? <b>Grátis</b> : <><b>{brl(p.monthly_price_brl)}</b><span>/mês</span></>}</p>
           {!free && Number(p.annual_price_brl) > 0 && <small className="lp-annual">ou {brl(p.annual_price_brl)} por ano</small>}
@@ -118,7 +118,7 @@ export default async function Home() {
             {p.voice_enabled && <li><Check size={16} /> Converse por voz</li>}
             {p.photo_enabled && <li><Check size={16} /> Foto de comprovante</li>}
           </ul>
-          <Link href="/cadastro" className={"lp-btn" + (pro ? "" : " ghost")}>{free ? "Criar conta grátis" : pro ? "Testar 7 dias grátis" : `Começar com o ${p.name}`}</Link>
+          <Link href="/cadastro" className={"lp-btn" + (pro ? "" : " ghost")}>{free ? "Criar conta grátis" : pro ? "Testar o Pro grátis" : `Começar com o ${p.name}`}</Link>
         </div>;
       })}</div>
       <p className="lp-small">O teste grátis do Pro é ativado dentro do app, uma vez por conta, sem cartão. Planos pagos são confirmados pelo Mercado Pago.</p>

@@ -5,30 +5,33 @@ import { useRouter } from "next/navigation";
 import { Gift, Copy, Share2, Check, Sparkles, Banknote, Clock3, Wallet } from "lucide-react";
 
 // ---------------------------------------------------------------- Teste grátis do Pro
-type Trial = { eligible: boolean; active: boolean; ends_at: string | null; days: number; credits: number };
+type Trial = { eligible: boolean; active: boolean; ends_at: string | null; minutes?: number; days?: number; credits: number };
+const hm = (iso: string) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+const trialLength = (t: Trial) => (t.minutes ? `${t.minutes} minutos` : `${t.days ?? 7} dias`);
 const dm = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 
-/** Botão/cartão "Testar o Pro grátis por 7 dias". Some se a conta já usou o teste ou já é paga. */
+/** Botão/cartão "Testar o Pro grátis por 5 minutos". Some se a conta já usou o teste ou já é paga. */
 export function TrialOffer({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [t, setT] = useState<Trial | null>(null);
   const [busy, setBusy] = useState(false); const [msg, setMsg] = useState(""); const [err, setErr] = useState("");
   useEffect(() => { fetch("/api/trial").then(r => (r.ok ? r.json() : null)).then(setT).catch(() => setT(null)); }, []);
   if (!t) return null;
-  if (t.active && t.ends_at) return <div className="gr-trial on"><Sparkles size={18} aria-hidden /><span><b>Você está testando o Pro</b> até {dm(t.ends_at)}. Depois volta ao Free sozinho, sem cobrança.</span></div>;
+  if (t.active && t.ends_at) return <div className="gr-trial on"><Sparkles size={18} aria-hidden /><span><b>Você está testando o Pro</b> até {hm(t.ends_at)}. Quando acabar, é só escolher seu plano para continuar.</span></div>;
   if (!t.eligible) return null;
   const start = async () => {
     setBusy(true); setErr("");
     const r = await fetch("/api/trial", { method: "POST" });
     const j = await r.json().catch(() => ({})); setBusy(false);
     if (!r.ok) { setErr(j.error || "Não consegui ativar agora."); return; }
-    setMsg(`Pronto! O Pro está ativo até ${dm(j.ends_at)} com ${j.credits} créditos.`);
+    setMsg(`Pronto! O Pro está ativo até ${hm(j.ends_at)} com ${j.credits} créditos. Aproveite!`);
     setT({ ...t, eligible: false, active: true, ends_at: j.ends_at });
     window.dispatchEvent(new Event("viva:credits-updated"));
+    window.dispatchEvent(new Event("viva:trial-started"));
     router.refresh();
   };
   return <div className={"gr-trial" + (compact ? " compact" : "")}>
-    <div><b>Teste o Pro grátis por {t.days} dias</b><span>{t.credits} créditos, respostas mais completas, voz e foto de comprovante. Sem cartão e sem cobrança: no fim, volta ao Free sozinho.</span></div>
+    <div><b>Teste o Pro grátis por {trialLength(t)}</b><span>{t.credits} créditos, respostas mais completas, voz, foto de comprovante e VIVA no WhatsApp. Sem cartão e sem cobrança: no fim, você escolhe seu plano.</span></div>
     <button className="gr-trial-btn" disabled={busy} onClick={start}>{busy ? "Ativando…" : "Testar grátis"}</button>
     {msg && <p className="gr-ok">{msg}</p>}{err && <p className="sl-error">{err}</p>}
   </div>;
@@ -42,7 +45,9 @@ export function TrialFollowup() {
   const [hidden, setHidden] = useState(true);
   useEffect(() => { fetch("/api/trial").then(r => (r.ok ? r.json() : null)).then(d => setF(d?.followup ?? null)).catch(() => setF(null)); }, []);
   const now = Date.now(); const ends = f ? new Date(f.ends_at).getTime() : 0;
-  const stage = !f ? null : ends > now ? (ends - now <= 2 * 86400000 ? "ending" : null) : (now - ends <= 5 * 86400000 ? "ended" : null);
+  // Teste curto (minutos): o aviso de "acabando" não faz sentido; o fim abre os planos (TrialEndOffer).
+  const shortTrial = f ? ends - new Date(f.started_at).getTime() < 86400000 : false;
+  const stage = !f ? null : ends > now ? (!shortTrial && ends - now <= 2 * 86400000 ? "ending" : null) : (now - ends <= 5 * 86400000 ? "ended" : null);
   const key = stage ? `viva-trial-followup:${stage}:${new Date().toISOString().slice(0, 10)}` : "";
   useEffect(() => { if (!key) return; try { setHidden(localStorage.getItem(key) === "1"); } catch { setHidden(false); } }, [key]);
   if (!f || !stage || hidden) return null;
