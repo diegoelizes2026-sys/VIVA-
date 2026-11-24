@@ -7,8 +7,8 @@ export const COMPANY = {
   legalName: "70.254.525 ISAQUE BATISTA SOARES",
   cnpj: "70.254.525/0001-39",
   city: "Aquiraz, CE",
-  // Endereço completo exigido pelo Decreto 7.962/2013 (comércio eletrônico). Preencha quando definido.
-  address: "",
+  // Endereço completo exigido pelo Decreto 7.962/2013 (comércio eletrônico).
+  address: "Rua Tibúrcio Targino, 389, Centro, Aquiraz – CE",
   site: "www.vivamaiss.app.br",
 } as const;
 
