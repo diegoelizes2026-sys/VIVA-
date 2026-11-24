@@ -3,7 +3,7 @@ import { ArrowDownRight, ArrowUpRight, CalendarCheck2, Flame, MessageCircle, Rec
 import { createClient } from "@/lib/supabase/server";
 import { REPORT_PERIODS, brl, buildReport, changeText, reportRange, type ReportPeriod } from "@/lib/report";
 
-export const metadata = { title: "Relatórios · VIVA+" };
+export const metadata = { title: "Relatórios" };
 export const dynamic = "force-dynamic";
 
 // Relatório semanal e mensal: quanto entrou, quanto saiu, onde o dinheiro foi e como foi frente ao período anterior.

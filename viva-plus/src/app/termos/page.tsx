@@ -3,7 +3,7 @@ import LegalPage, { Section } from "@/components/legal-page";
 import { COMPANY, TERMS_VERSION } from "@/lib/legal";
 import { SUPPORT_EMAIL, supportEmailUrl } from "@/lib/support";
 
-export const metadata = { title: "Termos de Uso · VIVA+" };
+export const metadata = { title: "Termos de Uso", description: "Termos de Uso do VIVA+ (Vivamais): planos, teste grátis, cancelamento, WhatsApp e indicação.", alternates: { canonical: "/termos" } };
 
 export default function TermsPage() {
   return <LegalPage title="Termos de Uso" version={TERMS_VERSION} current="/termos">

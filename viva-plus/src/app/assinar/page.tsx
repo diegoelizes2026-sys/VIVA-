@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ensureWelcomeTrial } from "@/lib/welcome-trial";
-export const metadata = { title: "Bem-vindo · VIVA+" };
+export const metadata = { title: "Bem-vindo", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 // Logo depois de criar a conta: a pessoa já ganha 7 dias do Pro (sem cartão) e vai direto

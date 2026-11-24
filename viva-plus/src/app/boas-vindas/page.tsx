@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import OnboardingChat from "@/components/onboarding-chat";
 import { InviteClaim } from "@/components/growth";
 import { createClient } from "@/lib/supabase/server";
-export const metadata = { title: "Boas-vindas · VIVA+" };
+export const metadata = { title: "Boas-vindas", robots: { index: false, follow: false } };
 
 // Primeiro acesso: conversa de diagnóstico (fora do layout do app, em tela cheia).
 export default async function WelcomePage({ searchParams }: { searchParams: Promise<{ presente?: string }> }) {

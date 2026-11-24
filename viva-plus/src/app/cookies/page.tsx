@@ -1,7 +1,7 @@
 import Link from "next/link";
 import LegalPage, { Section } from "@/components/legal-page";
 
-export const metadata = { title: "Política de Cookies · VIVA+" };
+export const metadata = { title: "Política de Cookies", description: "Cookies e armazenamento usados pelo VIVA+ (só os essenciais).", alternates: { canonical: "/cookies" } };
 
 export default function CookiesPage() {
   return <LegalPage title="Política de Cookies" current="/cookies">

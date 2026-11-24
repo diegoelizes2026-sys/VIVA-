@@ -3,6 +3,9 @@ import AppShell from "@/components/app-shell";
 import { createClient } from "@/lib/supabase/server";
 import { PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal";
 
+// Área logada: não aparece no Google.
+export const metadata = { robots: { index: false, follow: false } };
+
 type PublicPlan = {
   id: string;
   name: string;
