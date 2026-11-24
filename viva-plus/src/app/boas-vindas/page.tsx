@@ -11,7 +11,7 @@ export default async function WelcomePage() {
   if (!user) redirect("/login?next=%2Fboas-vindas");
   const { data: profile } = await supabase.from("viva_profiles").select("terms_accepted_at").eq("id", user.id).maybeSingle();
   if (!profile?.terms_accepted_at) redirect("/aceite-termos");
-  return <main className="ob-page">
+  return <main id="conteudo" className="ob-page">
     <header className="ob-page-head"><span className="viva-wordmark">VIVA<span>+</span></span></header>
     <InviteClaim />
     <OnboardingChat kind="finance" />

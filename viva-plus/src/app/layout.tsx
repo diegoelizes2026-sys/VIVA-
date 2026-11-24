@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import PwaRegister from "@/components/pwa-register";
+import CookieNotice from "@/components/cookie-notice";
 
 export const metadata: Metadata = {
   title: "VIVA+ | Sua vida mais inteligente",
@@ -21,7 +22,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#6410C9" },
@@ -32,7 +32,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR">
-      <body><PwaRegister />{children}</body>
+      <body><a href="#conteudo" className="skip-link">Pular para o conteúdo</a><PwaRegister />{children}<CookieNotice /></body>
     </html>
   );
 }

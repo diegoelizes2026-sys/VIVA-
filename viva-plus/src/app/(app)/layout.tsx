@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import AppShell from "@/components/app-shell";
 import { createClient } from "@/lib/supabase/server";
+import { PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal";
 
 type PublicPlan = {
   id: string;
@@ -24,7 +25,7 @@ export default async function ProtectedLayout({children}:{children:React.ReactNo
     .select("terms_of_use_version,privacy_policy_version,terms_accepted_at")
     .eq("id",user.id)
     .maybeSingle();
-  if(profileError || !profile?.terms_of_use_version || !profile?.privacy_policy_version || !profile?.terms_accepted_at) redirect("/aceite-termos");
+  if(profileError || profile?.terms_of_use_version!==TERMS_VERSION || profile?.privacy_policy_version!==PRIVACY_VERSION || !profile?.terms_accepted_at) redirect("/aceite-termos");
 
   // Primeiro acesso: quem ainda não tem conversa de boas-vindas começa por ela (nunca cai num painel vazio).
   // Quem pulou ou concluiu segue normalmente; contas antigas foram marcadas na migração e não são redirecionadas.
