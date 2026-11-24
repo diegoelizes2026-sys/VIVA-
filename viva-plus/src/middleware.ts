@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
         if (pathname.startsWith("/api/")) return NextResponse.json({ error: "Sua conta está suspensa. Fale com o suporte." }, { status: 403 });
         return NextResponse.redirect(new URL("/conta-suspensa", request.url));
       }
-      const termsExempt = ["/aceite-termos", "/termos", "/privacidade", "/cookies", "/reembolso", "/api/auth/terms", "/auth/callback"];
+      const termsExempt = ["/aceite-termos", "/termos", "/privacidade", "/cookies", "/reembolso", "/api/auth/terms", "/auth/callback", "/api/email/unsubscribe"];
       // Versão atual dos documentos: quando eles mudam, todos aceitam de novo.
       const accepted = Boolean(profile?.terms_accepted_at && profile?.terms_of_use_version === TERMS_VERSION && profile?.privacy_policy_version === PRIVACY_VERSION);
       if (!accepted && !termsExempt.some(path => pathname === path || pathname.startsWith(path + "/"))) {

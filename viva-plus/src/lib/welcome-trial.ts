@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyWhatsappPlanActive } from "@/lib/whatsapp";
+import { emailOnce } from "@/lib/email";
+import { welcomeEmail } from "@/lib/email-messages";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Db = { rpc: (fn: string, args?: Record<string, unknown>) => any };
@@ -16,7 +18,9 @@ export async function ensureWelcomeTrial(supabase: Db, userId: string) {
     const { error } = await supabase.rpc("viva_start_pro_trial");
     if (error) return false;
     await supabase.rpc("viva_get_ai_quota").then(() => null, () => null);
-    await notifyWhatsappPlanActive(createAdminClient(), userId);
+    const admin = createAdminClient();
+    await notifyWhatsappPlanActive(admin, userId);
+    await emailOnce(admin, userId, "welcome:" + userId, "activation", welcomeEmail);
     return true;
   } catch (e) {
     console.error("VIVA welcome trial", e);

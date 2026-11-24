@@ -4,6 +4,8 @@ import {createDelivery,sendDelivery,logDeliveryFailure} from "@/lib/notification
 import {loadTodayBudget} from "@/lib/daily-budget-load";
 import {SITE_URL,sendWhatsappText} from "@/lib/whatsapp";
 import {buildReport,monthName,reportMessage,reportRange,type ReportPeriod} from "@/lib/report";
+import {emailConfigured,emailOnce} from "@/lib/email";
+import {activationEmail,reportEmail,trialEndingEmail,winbackEmail} from "@/lib/email-messages";
 export const runtime="nodejs";
 type Settings={user_id:string;timezone:string;morning_enabled:boolean;morning_time:string;evening_enabled?:boolean;evening_time?:string;agenda_enabled:boolean;bills_enabled:boolean;silent_start:string|null;silent_end:string|null};
 function parts(date:Date,timeZone:string){const p=new Intl.DateTimeFormat("en-CA",{timeZone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(date);return Object.fromEntries(p.filter(x=>x.type!=="literal").map(x=>[x.type,x.value])) as Record<string,string>}
@@ -78,6 +80,7 @@ async function enqueueTrialReminder(admin:ReturnType<typeof createAdminClient>,n
    const body=(did?"Em 5 dias de teste: "+did+". ":"Ainda dá tempo: pergunte quanto pode gastar hoje. ")+"Seu Pro grátis acaba em 2 dias. Continue com a VIVA no WhatsApp sem limite.";
    const delivery=await createDelivery({user_id:t.user_id,notification_type:"trial",dedupe_key:"trial:day5:"+t.user_id+":"+String(t.current_period_end).slice(0,10),title:"Faltam 2 dias do seu Pro grátis 💜",body,target_url:"/planos",payload:{type:"trial"}});
    if(delivery)count++;
+   await emailOnce(admin,t.user_id,"trial:day5:"+t.user_id+":"+String(t.current_period_end).slice(0,10),"trial",first=>trialEndingEmail(did,first));
    const {data:link}=await admin.from("viva_whatsapp_links").select("wa_id,last_inbound_at,trial_reminder_sent_at").eq("user_id",t.user_id).maybeSingle();
    if(link?.wa_id&&!link.trial_reminder_sent_at&&link.last_inbound_at&&now.getTime()-new Date(link.last_inbound_at).getTime()<23*3600000){
     const ok=await sendWhatsappText(link.wa_id,"Faltam *2 dias* do seu Pro grátis. 💜\n\n"+(did?"Até agora: "+did+".\n\n":"")+"Para continuar comigo aqui sem limite, escolha seu plano (Pix ou cartão):\n"+SITE_URL+"/planos");
@@ -94,25 +97,29 @@ async function enqueueReports(admin:ReturnType<typeof createAdminClient>,now:Dat
   const tz="America/Sao_Paulo";const today=localDate(now,tz);const hour=Number(parts(now,tz).hour);const dow=new Date(today+"T12:00:00Z").getUTCDay();
   const jobs:ReportPeriod[]=[];if(dow===0&&hour===19)jobs.push("semana");if(today.slice(8,10)==="01"&&hour===9)jobs.push("mes-passado");
   if(!jobs.length)return 0;
-  const [{data:subs},{data:links},settingsRes]=await Promise.all([
+  const [{data:subs},{data:links},settingsRes,{data:allProfiles}]=await Promise.all([
    admin.from("viva_push_subscriptions").select("user_id"),
    admin.from("viva_whatsapp_links").select("user_id,wa_id,last_inbound_at,last_report_key").not("wa_id","is",null).gt("last_inbound_at",new Date(now.getTime()-23*3600000).toISOString()).limit(5000),
-   admin.from("viva_notification_settings").select("user_id,reports_enabled").eq("reports_enabled",false)
+   admin.from("viva_notification_settings").select("user_id,reports_enabled").eq("reports_enabled",false),
+   emailConfigured()?admin.from("viva_profiles").select("id").limit(10000):Promise.resolve({data:[] as {id:string}[]})
   ]);
+  const emailUsers=new Set((allProfiles||[]).map((p:{id:string})=>p.id));
   const off=new Set(settingsRes.error?[]:(settingsRes.data||[]).map((x:{user_id:string})=>x.user_id));
   const pushUsers=new Set((subs||[]).map(x=>x.user_id));const waByUser=new Map((links||[]).map(l=>[l.user_id,l] as const));
   let count=0;
   for(const job of jobs){
    const range=reportRange(job,today);const key="report:"+range.kind+":"+range.from;const target="/relatorio?p="+job;
-   const {data:done}=await admin.from("viva_notification_deliveries").select("user_id").like("dedupe_key",key+":%").limit(10000);
-   const pushed=new Set((done||[]).map(d=>d.user_id));
-   const users=[...new Set([...pushUsers,...waByUser.keys()])].filter(u=>!off.has(u)&&((pushUsers.has(u)&&!pushed.has(u))||(waByUser.has(u)&&waByUser.get(u)!.last_report_key!==key))).slice(0,150);
+   const {data:done}=await admin.from("viva_notification_deliveries").select("user_id,dedupe_key").like("dedupe_key",key+":%").limit(20000);
+   const pushed=new Set((done||[]).filter(d=>!String(d.dedupe_key).endsWith(":email")).map(d=>d.user_id));
+   const emailed=new Set((done||[]).filter(d=>String(d.dedupe_key).endsWith(":email")).map(d=>d.user_id));
+   const users=[...new Set([...pushUsers,...waByUser.keys(),...emailUsers])].filter(u=>!off.has(u)&&((pushUsers.has(u)&&!pushed.has(u))||(waByUser.has(u)&&waByUser.get(u)!.last_report_key!==key)||(emailUsers.has(u)&&!emailed.has(u)))).slice(0,150);
    for(const userId of users){
     const r=await buildReport(admin,userId,range,today).catch(()=>null);if(!r)continue;
     const empty=r.count===0&&r.income===0;
     const title=range.kind==="semana"?"Seu resumo da semana 📊":"Seu mês de "+monthName(range.from)+" 📊";
     const body=empty?"Nenhum gasto anotado "+(range.kind==="semana"?"nesta semana":"no mês")+". Anote seus gastos e a VIVA mostra para onde foi seu dinheiro.":reportMessage(r);
     if(pushUsers.has(userId)&&!pushed.has(userId)){const d=await createDelivery({user_id:userId,notification_type:"report",dedupe_key:key+":"+userId,title,body,target_url:target,payload:{type:"report",period:job}});if(d)count++}
+    if(emailUsers.has(userId)&&!emailed.has(userId))await emailOnce(admin,userId,key+":"+userId,"report",first=>reportEmail(r,first));
     const link=waByUser.get(userId);
     if(link?.wa_id&&link.last_report_key!==key){
      const text=title.replace(/^(.*?) 📊$/,"📊 *$1*")+"\n\n"+(empty?body:reportMessage(r,true))+"\n\nVeja o relatório completo: "+SITE_URL+target;
@@ -140,7 +147,7 @@ async function enqueueActivation(admin:ReturnType<typeof createAdminClient>,now:
   const push=new Set((subs||[]).map(x=>x.user_id));const wa=new Map((links||[]).map(l=>[l.user_id,l.wa_id as string] as const));
   const txCount=new Map<string,number>();const lastTx=new Map<string,string>();
   for(const t of recentTx||[]){txCount.set(t.user_id,(txCount.get(t.user_id)||0)+1);if(!lastTx.has(t.user_id))lastTx.set(t.user_id,t.created_at)}
-  const jobs:{user:string;key:string;title:string;body:string;wa:string}[]=[];
+  const jobs:{user:string;key:string;title:string;body:string;wa:string;mail:(first:string)=>ReturnType<typeof winbackEmail>}[]=[];
   const first=(n:unknown)=>String(n||"").trim().split(/\s+/)[0]||"";
   for(const p of profiles||[]){
    if(p.account_status&&p.account_status!=="active")continue;
@@ -150,15 +157,16 @@ async function enqueueActivation(admin:ReturnType<typeof createAdminClient>,now:
    const m=day===1?{title:"Seu número do dia está esperando ☀️",body:hi+"anote o primeiro gasto de hoje (ex.: café 8) e veja quanto ainda pode gastar sem faltar até o salário.",wa:"Oi"+(name?" "+name:"")+"! ☀️ Me manda um gasto de hoje, tipo *gastei 8 no café*, que eu te digo quanto ainda dá pra gastar."}
     :day===2?{title:"Leva 5 segundos 💜",body:hi+"o que você gastou ontem e hoje? Anote e a VIVA recalcula seu valor do dia na hora.",wa:"Bora manter o controle? 💜 Me conta o que você gastou hoje (ex.: *uber 15*)."}
     :{title:"Seu Pro grátis está rolando 🎁",body:hi+"mande “gastei 20 no lanche” no WhatsApp e a VIVA anota pra você. Sem planilha.",wa:"Seu Pro grátis está ativo 🎁 Pode me mandar seus gastos por aqui que eu anoto tudo."};
-   jobs.push({user:p.id,key:"activation:d"+day+":"+p.id,...m});
+   jobs.push({user:p.id,key:"activation:d"+day+":"+p.id,...m,mail:first=>activationEmail(day as 1|2|3,first)});
   }
   const newIds=new Set((profiles||[]).map(p=>p.id));
   for(const [user,last] of lastTx){
    if(newIds.has(user))continue;const days=Math.floor((now.getTime()-Date.parse(last))/86400000);if(days<3||days>30)continue;
-   jobs.push({user,key:"activation:winback:"+user+":"+String(last).slice(0,10),title:"Sentimos sua falta 💜",body:"Faz "+days+" dias que você não anota nada. Lance os gastos de hoje e veja seu valor do dia atualizado.",wa:"Oi! Faz "+days+" dias que a gente não se fala 💜 Me manda os gastos de hoje que eu atualizo quanto você pode gastar."});
+   jobs.push({user,key:"activation:winback:"+user+":"+String(last).slice(0,10),title:"Sentimos sua falta 💜",body:"Faz "+days+" dias que você não anota nada. Lance os gastos de hoje e veja seu valor do dia atualizado.",wa:"Oi! Faz "+days+" dias que a gente não se fala 💜 Me manda os gastos de hoje que eu atualizo quanto você pode gastar.",mail:first=>winbackEmail(days,first)});
   }
   let count=0;
   for(const j of jobs){
+   await emailOnce(admin,j.user,j.key,"activation",j.mail);
    if(push.has(j.user)){const d=await createDelivery({user_id:j.user,notification_type:"activation",dedupe_key:j.key,title:j.title,body:j.body,target_url:"/meu-dia",payload:{type:"activation"}});if(d)count++}
    else if(wa.has(j.user)){
     const {data:seen}=await admin.from("viva_notification_deliveries").select("id").eq("dedupe_key",j.key+":wa").maybeSingle();if(seen)continue;
