@@ -1,63 +1,95 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Eye, EyeOff, Check, LockKeyhole } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
+// Criar nova senha: aberta pelo link do e-mail "Crie sua nova senha da VIVA+" (sessão de recuperação já aberta).
 export default function AlterarSenhaPage() {
-  const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+  const [session, setSession] = useState<"loading" | "ok" | "missing">("loading");
+
+  useEffect(() => {
+    createClient().auth.getSession().then(({ data }) => setSession(data.session ? "ok" : "missing")).catch(() => setSession("missing"));
+  }, []);
+
+  const rules = [
+    { ok: password.length >= 8, label: "Pelo menos 8 caracteres" },
+    { ok: /\d/.test(password), label: "Pelo menos 1 número" },
+    { ok: password.length > 0 && password === confirm, label: "As duas senhas iguais" },
+  ];
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    setMessage("");
-    if (password.length < 8) {
-      setMessage("A nova senha precisa ter pelo menos 8 caracteres.");
-      return;
-    }
-    if (password !== confirm) {
-      setMessage("As senhas não são iguais. Confira e tente novamente.");
-      return;
-    }
+    setError("");
+    if (password.length < 8) { setError("A nova senha precisa ter pelo menos 8 caracteres."); return; }
+    if (password !== confirm) { setError("As senhas não são iguais. Confira e tente de novo."); return; }
     setBusy(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
-      await supabase.auth.signOut();
-      setMessage("Senha alterada com sucesso. Entre novamente com sua nova senha.");
-      setTimeout(() => router.replace("/login"), 1200);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Não foi possível alterar a senha. Solicite um novo link de recuperação.");
+      const { error } = await createClient().auth.updateUser({ password });
+      if (error) {
+        const m = error.message.toLowerCase();
+        throw new Error(m.includes("same") ? "A nova senha precisa ser diferente da antiga." : m.includes("session") || m.includes("auth") ? "Seu link expirou. Peça um novo para trocar a senha." : "Não foi possível alterar a senha agora. Tente de novo.");
+      }
+      setDone(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível alterar a senha agora.");
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <main className="auth-page grid min-h-[100svh] place-items-center bg-white px-4 py-8">
-      <section className="auth-form-panel w-full max-w-lg rounded-[28px] border bg-white p-6 shadow-xl sm:p-10">
-        <Link href="/login" className="auth-back text-sm font-semibold text-neutral-500">Voltar ao login</Link>
-        <span className="auth-eyebrow mt-10 block">ACESSO SEGURO · VIVA+</span>
-        <h1 className="mt-3 text-3xl font-black tracking-tight text-neutral-900">Criar nova senha</h1>
-        <p className="mt-2 text-sm leading-6 text-neutral-500">Defina uma nova senha para continuar usando seu espaço VIVA+.</p>
-        <form onSubmit={submit} className="mt-8 space-y-5">
-          <label className="auth-field-label block text-sm font-semibold text-neutral-800">
-            Nova senha
-            <input className="field mt-2" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={event => setPassword(event.target.value)} placeholder="Mínimo de 8 caracteres" />
-          </label>
-          <label className="auth-field-label block text-sm font-semibold text-neutral-800">
-            Confirmar nova senha
-            <input className="field mt-2" type="password" autoComplete="new-password" minLength={8} required value={confirm} onChange={event => setConfirm(event.target.value)} placeholder="Digite a senha novamente" />
-          </label>
-          <button className="btn-primary auth-submit w-full" disabled={busy}>{busy ? "Salvando..." : "Alterar senha"}</button>
-          {message && <p role="status" className="rounded-xl border border-[var(--color-gray)] bg-neutral-50 p-3 text-sm leading-6 text-neutral-700">{message}</p>}
-        </form>
+    <main className="np-page">
+      <section className="np-card">
+        <header className="np-head">
+          <span className="np-logo">VIVA<span>+</span></span>
+          <span className="np-icon" aria-hidden><LockKeyhole size={26} /></span>
+        </header>
+        <div className="np-body">
+          {session === "loading" ? <p className="np-muted">Carregando…</p>
+          : done ? <>
+            <span className="np-ok" aria-hidden><Check size={30} /></span>
+            <h1>Senha alterada ✅</h1>
+            <p className="np-muted">Pronto! Da próxima vez, entre com a sua nova senha.</p>
+            <Link className="np-btn" href="/meu-dia">Ir para o meu dia</Link>
+          </>
+          : session === "missing" ? <>
+            <h1>Esse link expirou</h1>
+            <p className="np-muted">Por segurança, o link para trocar a senha vale por 1 hora e só pode ser usado uma vez. Peça um novo, leva 1 minuto.</p>
+            <Link className="np-btn" href="/recuperar-senha">Pedir um novo link</Link>
+            <Link className="np-link" href="/login">Voltar ao login</Link>
+          </>
+          : <>
+            <span className="np-eyebrow">ACESSO SEGURO</span>
+            <h1>Crie sua nova senha</h1>
+            <p className="np-muted">Escolha uma senha que você não usa em outros sites.</p>
+            <form onSubmit={submit} className="np-form">
+              <label>Nova senha
+                <span className="np-input">
+                  <input type={show ? "text" : "password"} autoComplete="new-password" minLength={8} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo de 8 caracteres" />
+                  <button type="button" onClick={() => setShow(s => !s)} aria-label={show ? "Esconder senha" : "Mostrar senha"}>{show ? <EyeOff size={19} /> : <Eye size={19} />}</button>
+                </span>
+              </label>
+              <label>Confirme a nova senha
+                <span className="np-input">
+                  <input type={show ? "text" : "password"} autoComplete="new-password" minLength={8} required value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Digite de novo" />
+                </span>
+              </label>
+              <ul className="np-rules">{rules.map(r => <li key={r.label} className={r.ok ? "ok" : ""}><Check size={15} aria-hidden /> {r.label}</li>)}</ul>
+              {error && <p className="np-error" role="alert">{error}</p>}
+              <button className="np-btn" disabled={busy}>{busy ? "Salvando…" : "Salvar nova senha"}</button>
+            </form>
+          </>}
+        </div>
       </section>
+      <p className="np-foot">VIVA+ · seus dados protegidos · <Link href="/privacidade">Privacidade</Link></p>
     </main>
   );
 }

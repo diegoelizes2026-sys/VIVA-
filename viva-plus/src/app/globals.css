@@ -1958,3 +1958,28 @@ html:has(.lp),body:has(.lp){background:#fff}
 .fx-hint{margin:0;font-size:14px;line-height:1.4;opacity:.92}
 .fx-wa{display:grid;gap:8px;width:100%}.fx-wa>b{font-size:15px;color:#20162b}
 .fx-done .fx-line,.fx-done .fx-hint{color:#fff}
+/* Criar nova senha */
+.np-page{min-height:100svh;display:grid;place-items:center;align-content:center;gap:14px;padding:24px 16px;background:radial-gradient(circle at 50% 0%,#efe3ff,#f6f3f9 55%)}
+.np-card{width:100%;max-width:440px;overflow:hidden;border-radius:28px;background:#fff;box-shadow:0 24px 70px rgba(61,10,134,.16)}
+.np-head{display:flex;align-items:center;justify-content:space-between;padding:22px 24px;background:linear-gradient(150deg,#3d0a86,#6410C9 60%,#8b3de8);color:#fff}
+.np-logo{font-size:28px;font-weight:950;letter-spacing:-.06em}.np-logo span{color:#FFD43B}
+.np-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.16)}
+.np-body{display:grid;gap:10px;padding:26px 24px 28px}
+.np-body h1{margin:0;font-size:26px;font-weight:950;letter-spacing:-.03em;color:#20162b}
+.np-eyebrow{color:#8b3de8;font-size:11px;font-weight:900;letter-spacing:.16em}
+.np-muted{margin:0;color:#6f6578;font-size:15px;line-height:1.5}
+.np-form{display:grid;gap:14px;margin-top:8px}
+.np-form label{display:grid;gap:6px;font-size:14px;font-weight:800;color:#2b2135}
+.np-input{display:flex;align-items:center;border:1px solid #e3d8f1;border-radius:14px;background:#fff;padding:0 6px 0 14px}
+.np-input:focus-within{border-color:#6410C9;box-shadow:0 0 0 4px #f3ebfd}
+.np-input input{flex:1;min-width:0;min-height:50px;border:0;outline:0;font-size:16px;background:transparent}
+.np-input button{display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:10px;background:transparent;color:#6f6578}
+.np-rules{display:grid;gap:4px;margin:0;padding:0;list-style:none}
+.np-rules li{display:flex;align-items:center;gap:6px;font-size:13px;color:#9a91a3}
+.np-rules li.ok{color:#0b7a3e;font-weight:700}
+.np-error{margin:0;padding:10px 12px;border-radius:12px;background:#fff1f1;color:#a11d1d;font-size:14px}
+.np-btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;margin-top:4px;padding:0 22px;border:0;border-radius:16px;background:linear-gradient(110deg,#6410C9,#8b3de8);color:#fff;font-size:16px;font-weight:900;text-decoration:none;box-shadow:0 10px 26px rgba(100,16,201,.28)}
+.np-btn:disabled{opacity:.6}
+.np-link{justify-self:center;color:#6410C9;font-weight:800;font-size:14px;text-decoration:none}
+.np-ok{display:grid;place-items:center;width:58px;height:58px;border-radius:50%;background:#d9fbe8;color:#0b7a3e}
+.np-foot{margin:0;font-size:12.5px;color:#8a8191}.np-foot a{color:#6410C9}

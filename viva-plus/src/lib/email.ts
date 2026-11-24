@@ -24,7 +24,7 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 /** **negrito** → <b>, quebras de linha → <br>. */
 const rich = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>");
 
-export type EmailContent = { subject: string; preheader?: string; title: string; paragraphs: string[]; highlight?: { label: string; value: string }; cta?: { label: string; url: string }; ps?: string };
+export type EmailContent = { subject: string; preheader?: string; title: string; paragraphs: string[]; highlight?: { label: string; value: string }; cta?: { label: string; url: string }; ps?: string; transactional?: boolean };
 
 export function renderEmail(c: EmailContent, userId?: string) {
   const unsub = userId ? unsubscribeUrl(userId) : `${SITE}/configuracoes/notificacoes`;
@@ -44,9 +44,9 @@ ${c.ps ? `<p style="margin:18px 0 0;font-size:14px;line-height:1.5;color:#6f6578
 </td></tr>
 <tr><td style="padding:18px 28px 24px;border-top:1px solid #eee8f4;font-size:12px;line-height:1.5;color:#8a8191">
 VIVA+ (Vivamais) · Rua Tibúrcio Targino, 389, Centro, Aquiraz – CE · CNPJ 70.254.525/0001-39<br>
-Você recebe este e-mail porque tem conta no VIVA+. <a href="${esc(unsub)}" style="color:#6410C9">Não quero mais receber e-mails</a>
+${c.transactional ? "Este é um e-mail de segurança da sua conta VIVA+." : `Você recebe este e-mail porque tem conta no VIVA+. <a href="${esc(unsub)}" style="color:#6410C9">Não quero mais receber e-mails</a>`}
 </td></tr></table></td></tr></table></body></html>`;
-  const text = [c.title.replace(/\*\*/g, ""), ...c.paragraphs.map(p => p.replace(/\*\*/g, "")), c.highlight ? `${c.highlight.label}: ${c.highlight.value}` : "", c.cta ? `${c.cta.label}: ${c.cta.url}` : "", c.ps ? c.ps.replace(/\*\*/g, "") : "", "", `Parar de receber e-mails: ${unsub}`].filter(Boolean).join("\n\n");
+  const text = [c.title.replace(/\*\*/g, ""), ...c.paragraphs.map(p => p.replace(/\*\*/g, "")), c.highlight ? `${c.highlight.label}: ${c.highlight.value}` : "", c.cta ? `${c.cta.label}: ${c.cta.url}` : "", c.ps ? c.ps.replace(/\*\*/g, "") : "", "", c.transactional ? "" : `Parar de receber e-mails: ${unsub}`].filter(Boolean).join("\n\n");
   return { html, text, unsub };
 }
 
@@ -58,7 +58,7 @@ export async function sendEmail(to: string, c: EmailContent, userId?: string) {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: FROM, to: [to], reply_to: REPLY_TO, subject: c.subject, html, text, headers: { "List-Unsubscribe": `<${unsub}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } }),
+      body: JSON.stringify({ from: FROM, to: [to], reply_to: REPLY_TO, subject: c.subject, html, text, ...(c.transactional ? {} : { headers: { "List-Unsubscribe": `<${unsub}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } }) }),
     });
     if (!res.ok) { console.error("VIVA email send failed", res.status, (await res.text()).slice(0, 300)); return false; }
     return true;

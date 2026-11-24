@@ -14,7 +14,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(() => mode === "reset" && params.get("erro") === "link-invalido" ? "Esse link expirou ou já foi usado. Digite seu e-mail para receber um novo." : "");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -94,9 +94,11 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
         const safeNext = requestedNext.startsWith("/") && !requestedNext.startsWith("//") && !requestedNext.includes("\\") ? requestedNext : "/meu-dia";
         router.replace(safeNext); router.refresh();
       } else {
-        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/auth/callback?next=/alterar-senha` });
-        if (error) throw error;
-        setMessage("Se o endereço estiver cadastrado, você receberá as instruções de recuperação.");
+        // E-mail próprio da VIVA (português, pelo Resend), com link para www.vivamaiss.app.br.
+        const res = await fetch("/api/auth/reset-request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email.trim() }) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Não foi possível enviar agora. Tente de novo.");
+        setMessage(data.message || "Se o e-mail estiver cadastrado, você vai receber um link para criar uma nova senha.");
       }
     } catch (err) { const raw = err instanceof Error ? err.message : ""; const normalized = raw.toLowerCase(); setMessage(normalized.includes("invalid login credentials") || normalized.includes("invalid_credentials") ? "E-mail ou senha incorretos. Se você já criou sua conta e não lembra a senha, clique em “Esqueci a senha” para receber um link de recuperação." : raw || "Não foi possível concluir. Tente novamente."); }
     finally { setBusy(false); }
