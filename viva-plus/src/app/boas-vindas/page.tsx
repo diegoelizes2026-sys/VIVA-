@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 export const metadata = { title: "Boas-vindas · VIVA+" };
 
 // Primeiro acesso: conversa de diagnóstico (fora do layout do app, em tela cheia).
-export default async function WelcomePage() {
+export default async function WelcomePage({ searchParams }: { searchParams: Promise<{ presente?: string }> }) {
+  const { presente } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=%2Fboas-vindas");
@@ -13,6 +14,7 @@ export default async function WelcomePage() {
   if (!profile?.terms_accepted_at) redirect("/aceite-termos");
   return <main id="conteudo" className="ob-page">
     <header className="ob-page-head"><span className="viva-wordmark">VIVA<span>+</span></span></header>
+    {presente === "pro" && <p className="ob-gift" role="status">🎁 <b>Presente de boas-vindas:</b> 7 dias do VIVA+ Pro grátis, já ativados. Sem cartão e sem cobrança.</p>}
     <InviteClaim />
     <OnboardingChat kind="finance" />
   </main>;

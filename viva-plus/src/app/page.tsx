@@ -38,7 +38,7 @@ export default async function Home() {
   const faq = [
     { q: "Preciso ligar minha conta do banco?", a: "Não. A VIVA não pede senha de banco nem acesso à sua conta. Você conta o que quiser e ela organiza." },
     { q: "É seguro?", a: "Seus dados ficam protegidos e só você acessa. Você pode ver, corrigir ou apagar tudo em Meus dados." },
-    { q: "Quanto custa?", a: "Começar é grátis, sem cartão. Se quiser mais conversas com a VIVA, existem planos pagos, e o Pro pode ser testado grátis por 7 dias, sem cartão. A VIVA no WhatsApp já funciona no plano grátis, com 10 mensagens por semana." },
+    { q: "Quanto custa?", a: "Começar é grátis, sem cartão. Ao criar a conta você ganha 7 dias do Pro grátis; depois, continua no plano grátis ou assina se quiser mais conversas com a VIVA. A VIVA no WhatsApp já funciona no plano grátis, com 10 mensagens por semana." },
     { q: "O que são créditos?", a: "Cada conversa com a inteligência da VIVA usa créditos. Anotar gastos pelo atalho, ver contas, lista de compras e lembretes não gastam créditos." },
     { q: "Ganho dinheiro indicando?", a: "Sim. Você ganha R$ 10 por amigo indicado que assinar e pagar o plano Pro (o teste grátis não conta). O valor é liberado 30 dias depois do pagamento e você saca por Pix a partir de R$ 30, até R$ 200 por mês." },
     { q: "Funciona no celular?", a: "Sim. Abra no navegador do celular e adicione à tela de início para usar como um aplicativo." },
@@ -60,7 +60,7 @@ export default async function Home() {
           <Link href="/cadastro" className="lp-btn">Quero fechar o mês no azul</Link>
           <a href="https://wa.me/558588252048?text=Oi%20VIVA!%20Quero%20conhecer" target="_blank" rel="noopener noreferrer" className="lp-btn wa">💬 Falar com a VIVA no WhatsApp</a>
         </div>
-        <ul className="lp-trust"><li><Check size={16} /> Grátis para começar</li><li><Check size={16} /> Sem cartão</li><li><Check size={16} /> Não pede senha de banco</li></ul>
+        <ul className="lp-trust"><li><Check size={16} /> 7 dias de Pro grátis</li><li><Check size={16} /> Sem cartão</li><li><Check size={16} /> Não pede senha de banco</li></ul>
       </div>
       <div className="lp-hero-art" aria-hidden="true">
         <div className="ap-stage">
@@ -124,7 +124,7 @@ export default async function Home() {
           <Link href="/cadastro" className={"lp-btn" + (pro ? "" : " ghost")}>{free ? "Criar conta grátis" : pro ? "Testar o Pro grátis" : `Começar com o ${p.name}`}</Link>
         </div>;
       })}</div>
-      <p className="lp-small">O teste grátis do Pro é ativado dentro do app, uma vez por conta, sem cartão. Planos pagos são confirmados pelo Mercado Pago.</p>
+      <p className="lp-small">Ao criar sua conta você ganha 7 dias do Pro grátis, uma vez por conta, sem cartão e sem cobrança. Planos pagos são confirmados pelo Mercado Pago.</p>
     </section>}
 
     <section className="lp-sec lp-first">
