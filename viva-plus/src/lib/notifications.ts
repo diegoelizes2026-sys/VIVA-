@@ -33,7 +33,7 @@ export async function logDeliveryFailure(delivery:Delivery,error:unknown){
  await admin.from("viva_notification_deliveries").update({status:"failed",attempts:Math.max(1,delivery.attempts),last_error:detail.slice(0,500),updated_at:now}).eq("id",delivery.id).eq("status","processing");
  await log(admin,{user_id:delivery.user_id,delivery_id:delivery.id,notification_type:delivery.notification_type,status:"failed",title:delivery.title,detail:detail.slice(0,500)});
 }
-export async function createDelivery(input:{user_id:string;event_id?:string|null;notification_type:"morning"|"agenda"|"bill"|"test"|"evening"|"trial";group_key?:string|null;dedupe_key:string;scheduled_for?:string;title:string;body:string;target_url?:string;payload?:Record<string,unknown>}){
+export async function createDelivery(input:{user_id:string;event_id?:string|null;notification_type:"morning"|"agenda"|"bill"|"test"|"evening"|"trial"|"report";group_key?:string|null;dedupe_key:string;scheduled_for?:string;title:string;body:string;target_url?:string;payload?:Record<string,unknown>}){
  const admin=createAdminClient();
  const {data,error}=await admin.from("viva_notification_deliveries").upsert({user_id:input.user_id,event_id:input.event_id||null,notification_type:input.notification_type,group_key:input.group_key||null,dedupe_key:input.dedupe_key,scheduled_for:input.scheduled_for||new Date().toISOString(),title:input.title,body:input.body,target_url:input.target_url||"/assistente",payload:input.payload||{},status:"pending"},{onConflict:"dedupe_key",ignoreDuplicates:true}).select().maybeSingle();
  if(error)throw error;if(data)return data;

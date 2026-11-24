@@ -3,6 +3,7 @@ import {createAdminClient} from "@/lib/supabase/admin";
 import {createDelivery,sendDelivery,logDeliveryFailure} from "@/lib/notifications";
 import {loadTodayBudget} from "@/lib/daily-budget-load";
 import {SITE_URL,sendWhatsappText} from "@/lib/whatsapp";
+import {buildReport,monthName,reportMessage,reportRange,type ReportPeriod} from "@/lib/report";
 export const runtime="nodejs";
 type Settings={user_id:string;timezone:string;morning_enabled:boolean;morning_time:string;evening_enabled?:boolean;evening_time?:string;agenda_enabled:boolean;bills_enabled:boolean;silent_start:string|null;silent_end:string|null};
 function parts(date:Date,timeZone:string){const p=new Intl.DateTimeFormat("en-CA",{timeZone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(date);return Object.fromEntries(p.filter(x=>x.type!=="literal").map(x=>[x.type,x.value])) as Record<string,string>}
@@ -86,6 +87,43 @@ async function enqueueTrialReminder(admin:ReturnType<typeof createAdminClient>,n
   return count;
  }catch(e){console.error("VIVA trial reminder skipped",e);return 0}
 }
+// Relatórios: semana no domingo às 19h e mês anterior no dia 1º às 9h (horário de Brasília).
+// Vai por push (quem ativou) e pelo WhatsApp para quem falou com a VIVA nas últimas 24h (janela da Meta).
+async function enqueueReports(admin:ReturnType<typeof createAdminClient>,now:Date){
+ try{
+  const tz="America/Sao_Paulo";const today=localDate(now,tz);const hour=Number(parts(now,tz).hour);const dow=new Date(today+"T12:00:00Z").getUTCDay();
+  const jobs:ReportPeriod[]=[];if(dow===0&&hour===19)jobs.push("semana");if(today.slice(8,10)==="01"&&hour===9)jobs.push("mes-passado");
+  if(!jobs.length)return 0;
+  const [{data:subs},{data:links},settingsRes]=await Promise.all([
+   admin.from("viva_push_subscriptions").select("user_id"),
+   admin.from("viva_whatsapp_links").select("user_id,wa_id,last_inbound_at,last_report_key").not("wa_id","is",null).gt("last_inbound_at",new Date(now.getTime()-23*3600000).toISOString()).limit(5000),
+   admin.from("viva_notification_settings").select("user_id,reports_enabled").eq("reports_enabled",false)
+  ]);
+  const off=new Set(settingsRes.error?[]:(settingsRes.data||[]).map((x:{user_id:string})=>x.user_id));
+  const pushUsers=new Set((subs||[]).map(x=>x.user_id));const waByUser=new Map((links||[]).map(l=>[l.user_id,l] as const));
+  let count=0;
+  for(const job of jobs){
+   const range=reportRange(job,today);const key="report:"+range.kind+":"+range.from;const target="/relatorio?p="+job;
+   const {data:done}=await admin.from("viva_notification_deliveries").select("user_id").like("dedupe_key",key+":%").limit(10000);
+   const pushed=new Set((done||[]).map(d=>d.user_id));
+   const users=[...new Set([...pushUsers,...waByUser.keys()])].filter(u=>!off.has(u)&&((pushUsers.has(u)&&!pushed.has(u))||(waByUser.has(u)&&waByUser.get(u)!.last_report_key!==key))).slice(0,150);
+   for(const userId of users){
+    const r=await buildReport(admin,userId,range,today).catch(()=>null);if(!r)continue;
+    const empty=r.count===0&&r.income===0;
+    const title=range.kind==="semana"?"Seu resumo da semana 📊":"Seu mês de "+monthName(range.from)+" 📊";
+    const body=empty?"Nenhum gasto anotado "+(range.kind==="semana"?"nesta semana":"no mês")+". Anote seus gastos e a VIVA mostra para onde foi seu dinheiro.":reportMessage(r);
+    if(pushUsers.has(userId)&&!pushed.has(userId)){const d=await createDelivery({user_id:userId,notification_type:"report",dedupe_key:key+":"+userId,title,body,target_url:target,payload:{type:"report",period:job}});if(d)count++}
+    const link=waByUser.get(userId);
+    if(link?.wa_id&&link.last_report_key!==key){
+     const text=title.replace(/^(.*?) 📊$/,"📊 *$1*")+"\n\n"+(empty?body:reportMessage(r,true))+"\n\nVeja o relatório completo: "+SITE_URL+target;
+     const ok=await sendWhatsappText(link.wa_id,text);
+     if(ok)await admin.from("viva_whatsapp_links").update({last_report_key:key}).eq("user_id",userId);
+    }
+   }
+  }
+  return count;
+ }catch(e){console.error("VIVA reports skipped",e);return 0}
+}
 async function enqueueAgenda(admin:ReturnType<typeof createAdminClient>,now:Date){
  const {data:subs}=await admin.from("viva_push_subscriptions").select("user_id");const subscribed=new Set((subs||[]).map(x=>x.user_id));const {data:events,error}=await admin.from("viva_events").select("id,user_id,title,start_at,reminder_enabled,reminder_before_minutes,reminder_at_start").eq("reminder_enabled",true).gte("start_at",new Date(now.getTime()-15*60000).toISOString()).lte("start_at",new Date(now.getTime()+25*60*60*1000).toISOString()).limit(500);if(error)throw error;const userIds=[...new Set((events||[]).map(e=>e.user_id))];const {data:userSettings}=userIds.length?await admin.from("viva_notification_settings").select("user_id,timezone").in("user_id",userIds):{data:[]};const timezoneByUser=new Map((userSettings||[]).map(s=>[s.user_id,s.timezone||"America/Sao_Paulo"] as [string,string]));let count=0;
  for(const event of events||[]){if(!subscribed.has(event.user_id))continue;const start=new Date(event.start_at);const startText=hhmm(start,timezoneByUser.get(event.user_id)||"America/Sao_Paulo");const common={user_id:event.user_id,event_id:event.id,notification_type:"agenda" as const,title:"Lembrete: "+event.title,body:"Seu compromisso começa "+(start<=now?"agora.":"às "+startText+".")+" Toque em Estou ciente para parar os avisos.",target_url:"/agenda?alarme="+event.id,payload:{type:"agenda",eventId:event.id,eventTitle:event.title,startAt:event.start_at}};
@@ -108,7 +146,7 @@ async function enqueueBills(admin:ReturnType<typeof createAdminClient>,now:Date)
  }
  return count;
 }
-async function runCron(req:Request){try{const secret=process.env.CRON_SECRET;if(!secret||req.headers.get("authorization")!=="Bearer "+secret)return NextResponse.json({error:"Não autorizado."},{status:401});const admin=createAdminClient();const now=new Date();const [morningQueued,agendaQueued,billsQueued,eveningQueued,trialQueued]=await Promise.all([enqueueMorning(admin,now),enqueueAgenda(admin,now),enqueueBills(admin,now),enqueueEvening(admin,now),enqueueTrialReminder(admin,now)]);const {data:due,error}=await admin.from("viva_notification_deliveries").select("*").eq("status","pending").lte("scheduled_for",now.toISOString()).order("scheduled_for").limit(100);if(error)throw error;let sent=0,failed=0,skipped=0;for(const item of due||[]){const {data:claimed,error:claimError}=await admin.from("viva_notification_deliveries").update({status:"processing",attempts:Number(item.attempts||0)+1,updated_at:now.toISOString()}).eq("id",item.id).eq("status","pending").select("*").maybeSingle();if(claimError)throw claimError;if(!claimed)continue;const {data:settings}=await admin.from("viva_notification_settings").select("*").eq("user_id",item.user_id).maybeSingle();const s=(settings||{user_id:item.user_id,timezone:"America/Sao_Paulo",morning_enabled:true,agenda_enabled:true,bills_enabled:true}) as Settings;if(item.notification_type==="bill"&&item.payload?.billId){const {data:bill,error:billError}=await admin.from("viva_bills").select("status").eq("id",String(item.payload.billId)).eq("user_id",item.user_id).maybeSingle();if(billError)throw billError;if(!bill||bill.status==="paid"){await admin.from("viva_notification_deliveries").update({status:"cancelled",updated_at:now.toISOString()}).eq("id",item.id);skipped++;continue}}const enabled=item.notification_type==="morning"?s.morning_enabled:item.notification_type==="agenda"?s.agenda_enabled:item.notification_type==="bill"?s.bills_enabled:true;if(!enabled){await admin.from("viva_notification_deliveries").update({status:"cancelled",updated_at:now.toISOString()}).eq("id",item.id);skipped++;continue}if(isSilent(now,s)){await admin.from("viva_notification_deliveries").update({status:"pending",scheduled_for:nextAllowed(now,s),updated_at:now.toISOString()}).eq("id",item.id);skipped++;continue}try{await sendDelivery(claimed as Parameters<typeof sendDelivery>[0]);sent++}catch(e){await logDeliveryFailure(claimed as Parameters<typeof logDeliveryFailure>[0],e);failed++}}return NextResponse.json({ok:true,morningQueued,agendaQueued,billsQueued,eveningQueued,trialQueued,processed:(due||[]).length,sent,failed,skipped,at:now.toISOString()})}catch(e){console.error("VIVA notification cron failed",e);return NextResponse.json({error:e instanceof Error?e.message:"Falha no agendador."},{status:500})}}
+async function runCron(req:Request){try{const secret=process.env.CRON_SECRET;if(!secret||req.headers.get("authorization")!=="Bearer "+secret)return NextResponse.json({error:"Não autorizado."},{status:401});const admin=createAdminClient();const now=new Date();const [morningQueued,agendaQueued,billsQueued,eveningQueued,trialQueued,reportsQueued]=await Promise.all([enqueueMorning(admin,now),enqueueAgenda(admin,now),enqueueBills(admin,now),enqueueEvening(admin,now),enqueueTrialReminder(admin,now),enqueueReports(admin,now)]);const {data:due,error}=await admin.from("viva_notification_deliveries").select("*").eq("status","pending").lte("scheduled_for",now.toISOString()).order("scheduled_for").limit(100);if(error)throw error;let sent=0,failed=0,skipped=0;for(const item of due||[]){const {data:claimed,error:claimError}=await admin.from("viva_notification_deliveries").update({status:"processing",attempts:Number(item.attempts||0)+1,updated_at:now.toISOString()}).eq("id",item.id).eq("status","pending").select("*").maybeSingle();if(claimError)throw claimError;if(!claimed)continue;const {data:settings}=await admin.from("viva_notification_settings").select("*").eq("user_id",item.user_id).maybeSingle();const s=(settings||{user_id:item.user_id,timezone:"America/Sao_Paulo",morning_enabled:true,agenda_enabled:true,bills_enabled:true}) as Settings;if(item.notification_type==="bill"&&item.payload?.billId){const {data:bill,error:billError}=await admin.from("viva_bills").select("status").eq("id",String(item.payload.billId)).eq("user_id",item.user_id).maybeSingle();if(billError)throw billError;if(!bill||bill.status==="paid"){await admin.from("viva_notification_deliveries").update({status:"cancelled",updated_at:now.toISOString()}).eq("id",item.id);skipped++;continue}}const enabled=item.notification_type==="morning"?s.morning_enabled:item.notification_type==="agenda"?s.agenda_enabled:item.notification_type==="bill"?s.bills_enabled:true;if(!enabled){await admin.from("viva_notification_deliveries").update({status:"cancelled",updated_at:now.toISOString()}).eq("id",item.id);skipped++;continue}if(isSilent(now,s)){await admin.from("viva_notification_deliveries").update({status:"pending",scheduled_for:nextAllowed(now,s),updated_at:now.toISOString()}).eq("id",item.id);skipped++;continue}try{await sendDelivery(claimed as Parameters<typeof sendDelivery>[0]);sent++}catch(e){await logDeliveryFailure(claimed as Parameters<typeof logDeliveryFailure>[0],e);failed++}}return NextResponse.json({ok:true,morningQueued,agendaQueued,billsQueued,eveningQueued,trialQueued,reportsQueued,processed:(due||[]).length,sent,failed,skipped,at:now.toISOString()})}catch(e){console.error("VIVA notification cron failed",e);return NextResponse.json({error:e instanceof Error?e.message:"Falha no agendador."},{status:500})}}
 
 export async function GET(req:Request){return runCron(req)}
 export async function POST(req:Request){return runCron(req)}

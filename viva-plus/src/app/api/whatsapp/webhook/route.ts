@@ -1,6 +1,7 @@
 import { after } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { buildReport, reportMessage, reportRange, type ReportPeriod } from "@/lib/report";
 import { FREE_WHATSAPP_NOTE, WHATSAPP_FREE_WEEKLY, SITE_URL, activeWhatsappPlan, brl, connectUrlFor, featuresMessage, freeLeftFooter, freeLimitMessage, linkWhatsapp, notLinkedMessage, requestKeyFor, sendWhatsappText, validSignature, welcomeAfterLink } from "@/lib/whatsapp";
 
 export const runtime = "nodejs";
@@ -101,6 +102,20 @@ async function handleMessage(m: WaMessage, origin: string) {
 
   if (/^\s*(ajuda|menu|fun[çc][õo]es|funcionalidades|o que voc[êe] faz\??|comandos)\s*$/i.test(text)) {
     await sendWhatsappText(from, plan ? featuresMessage(plan.planName) : `${featuresMessage()}\n\n${FREE_WHATSAPP_NOTE}`);
+    return;
+  }
+
+  // "relatório" / "resumo da semana" / "relatório do mês": responde na hora, sem IA (não gasta créditos nem a cota do Free).
+  const reportAsk = text.match(/^\s*(relat[óo]rio|resumo)(\s+(da|desta)\s+semana|\s+semanal|\s+(do|deste)\s+m[êe]s|\s+mensal|\s+do\s+m[êe]s\s+passado|\s+da\s+semana\s+passada)?\s*[.!?]*\s*$/i);
+  if (reportAsk) {
+    const tail = (reportAsk[2] || "").toLowerCase();
+    const period: ReportPeriod = /passad/.test(tail) ? (/m[êe]s/.test(tail) ? "mes-passado" : "semana-passada") : /m[êe]s|mensal/.test(tail) ? "mes" : "semana";
+    const range = reportRange(period);
+    const r = await buildReport(admin, link.user_id, range).catch(() => null);
+    if (!r) { await sendWhatsappText(from, "Não consegui montar o relatório agora. Tente de novo em instantes."); return; }
+    const head = `📊 *${range.title}* (${range.subtitle})`;
+    const body = r.count === 0 && r.income === 0 ? "Nenhum gasto anotado nesse período. Me mande seus gastos (“gastei 20 no lanche”) que eu monto o relatório." : reportMessage(r, true);
+    await sendWhatsappText(from, `${head}\n\n${body}\n\nRelatório completo: ${SITE_URL}/relatorio?p=${period}\n\n_Dica: peça “relatório do mês” ou “relatório da semana passada”._`);
     return;
   }
 
