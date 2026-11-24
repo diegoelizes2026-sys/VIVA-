@@ -1874,3 +1874,21 @@ html:has(.lp),body:has(.lp){background:#fff}
 .viva-plans-legal{margin:14px auto 0;max-width:760px;font-size:13px;line-height:1.55;color:#5b5466;text-align:center}
 .viva-plans-legal a{color:#5a0fb4;text-decoration:underline}
 .lp-foot nav.lp-foot-links{flex-wrap:wrap;justify-content:center;gap:10px 18px}
+
+/* Pix: passo a passo, confirmação automática e retomada */
+.viva-pix-sheet .viva-pix-plan{margin:4px 0 14px;color:#5b4e69;font-size:13px}
+.viva-pix-resume{display:inline-block;margin-bottom:8px;padding:4px 11px;border-radius:99px;background:#fff4d6;color:#7a5600;font-size:11px;font-weight:800}
+.viva-pix-steps{margin:0 0 16px;padding:0;list-style:none;counter-reset:pix;text-align:left;display:grid;gap:9px}
+.viva-pix-steps li{counter-increment:pix;display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:13px;background:#f7f2fc;color:#3b2d4a;font-size:12.5px;line-height:1.45}
+.viva-pix-steps li::before{content:counter(pix);flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#6410C9;color:#fff;font-size:12px;font-weight:900}
+.viva-pix-sheet .viva-pix-copy{width:100%;min-height:52px;margin-top:0;border-radius:15px;font-size:15px;font-weight:900;transition:background .2s}
+.viva-pix-sheet .viva-pix-copy.is-copied{background:#12a150}
+.viva-pix-qr{margin-top:12px;text-align:left}.viva-pix-qr summary{cursor:pointer;color:#6410C9;font-size:12px;font-weight:700}.viva-pix-qr img{margin-top:12px!important}
+.viva-pix-sheet .viva-pix-wait{display:flex!important;align-items:center;justify-content:center;gap:8px;margin-top:16px}
+.viva-pix-card-alt{display:block;width:100%;margin-top:14px;padding:11px;border:1px dashed #cdb8e6;border-radius:13px;background:#fff;color:#5b4e69;font-size:12px}
+.viva-pix-card-alt b{color:#6410C9}
+.viva-pix-success{padding:10px 0}.viva-pix-party{display:block;font-size:56px;animation:vivaPixPop .6s cubic-bezier(.2,1.6,.4,1)}@keyframes vivaPixPop{from{transform:scale(.2);opacity:0}}
+.viva-pix-go{display:block;margin-top:6px;padding:15px;border-radius:15px;background:#12a150;color:#fff;font-weight:900;text-decoration:none}
+.viva-pix-pending{display:flex;gap:12px;align-items:center;justify-content:space-between;margin:16px 0;padding:14px 16px;border:1.5px solid #f0c75a;border-radius:18px;background:#fff9e8}
+.viva-pix-pending div{display:grid;gap:3px}.viva-pix-pending b{color:#3b2d4a;font-size:13.5px}.viva-pix-pending span{color:#7a6a55;font-size:12px}
+.viva-pix-pending button{flex:none;padding:11px 16px;border:0;border-radius:12px;background:#6410C9;color:#fff;font-weight:900}
