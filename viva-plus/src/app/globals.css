@@ -1892,3 +1892,8 @@ html:has(.lp),body:has(.lp){background:#fff}
 .viva-pix-pending{display:flex;gap:12px;align-items:center;justify-content:space-between;margin:16px 0;padding:14px 16px;border:1.5px solid #f0c75a;border-radius:18px;background:#fff9e8}
 .viva-pix-pending div{display:grid;gap:3px}.viva-pix-pending b{color:#3b2d4a;font-size:13.5px}.viva-pix-pending span{color:#7a6a55;font-size:12px}
 .viva-pix-pending button{flex:none;padding:11px 16px;border:0;border-radius:12px;background:#6410C9;color:#fff;font-weight:900}
+
+/* Posicionamento: promessa do plano em destaque, créditos em segundo plano */
+.viva-plan-promise{margin:8px 0 2px;color:#2b1d3a;font-size:14px;font-weight:800;line-height:1.4}
+.viva-plans-grid .viva-plan-credits{font-size:11px;opacity:.75}
+.lp-plan li.lp-muted{opacity:.65;font-size:.88em}
