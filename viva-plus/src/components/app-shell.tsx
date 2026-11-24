@@ -14,6 +14,7 @@ const ICONS:Record<string,React.ReactNode>={
  menu:<path d="M5 8h18M5 14h18M5 20h18"/>,
  close:<path d="m7 7 14 14M21 7 7 21"/>,
  wallet:<><path d="M5 9.5A2.5 2.5 0 0 1 7.5 7H21a1 1 0 0 1 1 1v3"/><path d="M5 9.5V20a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1v-3"/><path d="M23 11h-5a3 3 0 0 0 0 6h5z"/><circle cx="18.5" cy="14" r=".8" fill="currentColor"/></>,
+ report:<><path d="M6 23.5V12M12 23.5V6M18 23.5v-8M24 23.5V9"/><path d="M3.5 23.5h21"/></>,
  planning:<><circle cx="14" cy="14" r="9.5"/><circle cx="14" cy="14" r="5.5"/><circle cx="14" cy="14" r="1.6" fill="currentColor"/><path d="m20 8 3-3M20 5h3v3"/></>,
  bills:<><path d="M7 4h14v20l-2.5-1.6L16 24l-2-1.6-2 1.6-2.5-1.6L7 24z"/><path d="M11 10h6M11 14h6M11 18h3"/></>,
  cart:<><path d="M3.5 5h3l2.6 12.2a1.5 1.5 0 0 0 1.5 1.2h9.6a1.5 1.5 0 0 0 1.5-1.1L24 9H8"/><circle cx="11.5" cy="22.5" r="1.4"/><circle cx="20" cy="22.5" r="1.4"/></>,
@@ -42,7 +43,7 @@ export default function AppShell({children,email,isAdmin=false,entryOfferPlans=[
  async function logout(){if(loggingOut)return;setLoggingOut(true);try{const supabase=createClient();await supabase.auth.signOut();router.replace("/login");router.refresh()}finally{setLoggingOut(false)}}
  // Menu organizado: destaques (VIVA e Saúde) e ferramentas agrupadas por assunto.
  const groups:{title:string;items:{href:string;label:string;kind:string}[]}[]=[
-  {title:"Dinheiro",items:[{href:"/financas",label:"Meu dinheiro",kind:"wallet"},{href:"/planejamento",label:"Planejamento financeiro",kind:"planning"},{href:"/contas",label:"Contas a pagar",kind:"bills"},{href:"/lista-de-compras",label:"Lista de compras",kind:"cart"},{href:"/perto",label:"Perto de mim",kind:"nearby"},{href:"/economizar",label:"Radar de preços",kind:"price"}]},
+  {title:"Dinheiro",items:[{href:"/financas",label:"Meu dinheiro",kind:"wallet"},{href:"/relatorio",label:"Relatórios",kind:"report"},{href:"/planejamento",label:"Planejamento financeiro",kind:"planning"},{href:"/contas",label:"Contas a pagar",kind:"bills"},{href:"/lista-de-compras",label:"Lista de compras",kind:"cart"},{href:"/perto",label:"Perto de mim",kind:"nearby"},{href:"/economizar",label:"Radar de preços",kind:"price"}]},
   {title:"Organização",items:[{href:"/agenda",label:"Minha agenda",kind:"agenda"},{href:"/configuracoes/notificacoes",label:"Notificações",kind:"notifications"}]},
   {title:"Conta",items:[{href:"/creditos",label:"Meus créditos",kind:"credits"},{href:"/indique",label:"Indique e ganhe",kind:"gift"},{href:"/planos",label:"Planos",kind:"plans"},{href:"/meus-dados",label:"Meus dados",kind:"mydata"},{href:"/perfil",label:"Minha conta",kind:"account"},...(isAdmin?[{href:"/admin",label:"Painel administrativo",kind:"admin"}]:[])]},
  ];
