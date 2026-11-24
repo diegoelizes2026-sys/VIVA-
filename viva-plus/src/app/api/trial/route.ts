@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyWhatsappPlanActive } from "@/lib/whatsapp";
 
 // Teste grátis do Pro: 7 dias, uma vez por conta, sem cartão (regras no banco: viva_start_pro_trial).
 export async function GET() {
@@ -42,5 +44,7 @@ export async function POST() {
   }
   // Sincroniza a carteira para o app já mostrar o Pro.
   await supabase.rpc("viva_get_ai_quota").then(() => null, () => null);
+  // Teste do Pro também libera a VIVA no WhatsApp: avisa por lá se o número já estiver conectado.
+  await notifyWhatsappPlanActive(createAdminClient(), user.id);
   return NextResponse.json(data);
 }

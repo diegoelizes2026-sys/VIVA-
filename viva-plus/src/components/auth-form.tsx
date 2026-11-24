@@ -37,7 +37,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
             terms_of_use_version: "2026-11-15-v1",
             privacy_policy_version: "2026-11-15-v1",
             terms_accepted_at: acceptedAt
-          }, emailRedirectTo: location.origin + "/auth/callback?next=/meu-dia" }
+          }, emailRedirectTo: location.origin + "/auth/callback?next=/assinar" }
         });
         if (error) {
           const normalized = error.message.toLowerCase();
@@ -52,13 +52,13 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
           return;
         }
         if (data.session) {
-          router.replace("/meu-dia");
+          router.replace("/assinar");
           router.refresh();
           return;
         }
         const { error: loginError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (!loginError) {
-          router.replace("/meu-dia");
+          router.replace("/assinar");
           router.refresh();
           return;
         }

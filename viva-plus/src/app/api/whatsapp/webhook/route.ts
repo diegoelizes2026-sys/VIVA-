@@ -1,7 +1,7 @@
 import { after } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { LINKED_MESSAGE, SITE_URL, brl, connectUrlFor, linkWhatsapp, requestKeyFor, sendWhatsappText, validSignature } from "@/lib/whatsapp";
+import { NEEDS_PLAN_MESSAGE, SITE_URL, activeWhatsappPlan, brl, connectUrlFor, featuresMessage, linkWhatsapp, notLinkedMessage, requestKeyFor, sendWhatsappText, validSignature, welcomeAfterLink } from "@/lib/whatsapp";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -79,24 +79,37 @@ async function handleMessage(m: WaMessage, origin: string) {
       return;
     }
     await linkWhatsapp(admin, row.user_id, from);
-    await sendWhatsappText(from, LINKED_MESSAGE);
+    await welcomeAfterLink(admin, row.user_id, from);
     return;
   }
 
   const { data: link } = await admin.from("viva_whatsapp_links").select("user_id,history,last_transaction_id,last_transaction_at").eq("wa_id", from).maybeSingle();
   if (!link) {
-    await sendWhatsappText(from, `Oi! 👋 Eu sou a VIVA+, sua assistente para organizar o dinheiro.\n\n*Já tem conta no VIVA+?* Toque no link para conectar este WhatsApp (vale 1 hora):\n${connectUrlFor(from)}\n\n*Ainda não tem conta?* Crie grátis em 1 minuto:\n${SITE_URL}/cadastro\nDepois é só me mandar um *oi* de novo. 😉`);
+    await sendWhatsappText(from, notLinkedMessage(connectUrlFor(from)));
     return;
   }
   await admin.from("viva_whatsapp_links").update({ last_inbound_at: now, updated_at: now }).eq("user_id", link.user_id);
 
-  if (!text) {
-    await sendWhatsappText(from, `Por enquanto eu entendo só mensagens de texto por aqui. 🎤📷 Áudio e foto de comprovante funcionam no app: ${SITE_URL}/assistente`);
-    return;
-  }
   if (/^\s*desconectar\s*$/i.test(text)) {
     await admin.from("viva_whatsapp_links").update({ wa_id: null, linked_at: null, history: [], updated_at: now }).eq("user_id", link.user_id);
     await sendWhatsappText(from, `Pronto, desconectei este WhatsApp da sua conta. Para conectar de novo, é só me mandar um *oi*.`);
+    return;
+  }
+
+  // A VIVA no WhatsApp é exclusiva de quem assinou um plano pelo site.
+  const plan = await activeWhatsappPlan(admin, link.user_id);
+  if (!plan) {
+    await sendWhatsappText(from, NEEDS_PLAN_MESSAGE);
+    return;
+  }
+
+  if (/^\s*(ajuda|menu|fun[çc][õo]es|funcionalidades|o que voc[êe] faz\??|comandos)\s*$/i.test(text)) {
+    await sendWhatsappText(from, featuresMessage(plan.planName));
+    return;
+  }
+
+  if (!text) {
+    await sendWhatsappText(from, `Por enquanto eu entendo só mensagens de texto por aqui. 🎤📷 Áudio e foto de comprovante funcionam no app: ${SITE_URL}/assistente`);
     return;
   }
 

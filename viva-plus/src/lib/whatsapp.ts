@@ -61,7 +61,48 @@ export function readConnectToken(token: string | null | undefined) {
   return match[1];
 }
 
-export const LINKED_MESSAGE = "Pronto! ✅ Seu WhatsApp está conectado à sua conta VIVA+.\n\nAgora é só falar comigo por aqui, do mesmo jeito que no app. Por exemplo:\n• gastei 35 na farmácia\n• quanto posso gastar hoje?\n• o que vence essa semana?\n\nPara desconectar, mande *desconectar*.";
+/** Tudo o que a VIVA faz pelo WhatsApp (enviado ao conectar, ao assinar e quando a pessoa pede "ajuda"). */
+export function featuresMessage(planName?: string | null) {
+  return `${planName ? `Seu plano *${planName}* está ativo e ` : ""}a VIVA no WhatsApp está liberada! ✅\n\nOlha tudo que eu faço por aqui:\n\n💸 *Anotar gastos e entradas*\n“gastei 35 na farmácia” · “recebi 1500 de salário”\n\n📊 *Quanto posso gastar*\n“quanto posso gastar hoje?”\n\n🧾 *Contas a pagar*\n“o que vence essa semana?” · “conta de luz 180 dia 10”\n\n💳 *Sair das dívidas*\n“me ajuda a quitar minhas dívidas”\n\n🎯 *Planejamento e metas*\n“quero juntar 2 mil até dezembro”\n\n📈 *Resumo do mês*\n“como estão minhas finanças?”\n\n🛒 *Antes de comprar*\n“vale a pena comprar uma TV de 2 mil?”\n\n📅 *Agenda e lembretes*\n“dentista sexta às 15h”\n\n*Comandos:*\n• *desfazer* — apaga o último lançamento (até 15 min)\n• *ajuda* — mostra esta lista de novo\n• *desconectar* — desliga este WhatsApp da conta\n\nÁudio, foto de comprovante, Radar de preços e Personal você usa no app: ${SITE_URL}/meu-dia`;
+}
+
+/** Quem conectou mas ainda não assinou: a VIVA no WhatsApp é só para assinantes. */
+export const NEEDS_PLAN_MESSAGE = `Seu WhatsApp está conectado à sua conta VIVA+. 👍\n\nA VIVA no WhatsApp é *exclusiva para assinantes*. Escolha seu plano para liberar (Pix ou cartão, ativa na hora após o pagamento):\n${SITE_URL}/planos?whatsapp=assinar\n\nAssim que o pagamento for confirmado eu te aviso por aqui. 😉`;
+
+/** Mensagem para quem fala com a VIVA sem conta conectada. */
+export function notLinkedMessage(connectUrl: string) {
+  return `Oi! 👋 Eu sou a VIVA+, sua assistente para organizar o dinheiro.\n\nA VIVA no WhatsApp é *exclusiva para assinantes VIVA+*. É rapidinho:\n\n1️⃣ Crie sua conta no site:\n${SITE_URL}/cadastro\n2️⃣ Escolha seu plano\n3️⃣ Volte aqui e me mande um *oi*\n\n*Já tem conta?* Toque no link para conectar este WhatsApp (vale 1 hora):\n${connectUrl}`;
+}
+
+export type WhatsappPlan = { planId: string; planName: string };
+/** Plano pago (ou teste do Pro) ativo da pessoa — requisito para usar a VIVA no WhatsApp. */
+export async function activeWhatsappPlan(admin: AdminClient, userId: string): Promise<WhatsappPlan | null> {
+  const { data, error } = await admin.from("viva_subscriptions").select("plan_id")
+    .eq("user_id", userId).in("status", ["active", "trialing"]).neq("plan_id", "free")
+    .gt("current_period_end", new Date().toISOString())
+    .order("current_period_end", { ascending: false }).limit(1).maybeSingle();
+  if (error) { console.error("VIVA WhatsApp plan lookup", error); return null; }
+  if (!data?.plan_id) return null;
+  const { data: plan } = await admin.from("viva_plans").select("name").eq("id", data.plan_id).maybeSingle();
+  return { planId: String(data.plan_id), planName: String(plan?.name || data.plan_id) };
+}
+
+/** Depois que o plano é ativado: se a pessoa já ligou o WhatsApp, avisa e lembra todas as funções. Nunca lança erro. */
+export async function notifyWhatsappPlanActive(admin: AdminClient, userId: string) {
+  try {
+    const { data: link } = await admin.from("viva_whatsapp_links").select("wa_id").eq("user_id", userId).maybeSingle();
+    if (!link?.wa_id) return;
+    const plan = await activeWhatsappPlan(admin, userId);
+    if (plan) await sendWhatsappText(link.wa_id, featuresMessage(plan.planName));
+  } catch (error) { console.error("VIVA WhatsApp plan notice", error); }
+}
+
+/** Mensagem enviada logo após ligar o número à conta (com ou sem plano). */
+export async function welcomeAfterLink(admin: AdminClient, userId: string, waId: string) {
+  const plan = await activeWhatsappPlan(admin, userId);
+  await sendWhatsappText(waId, plan ? featuresMessage(plan.planName) : NEEDS_PLAN_MESSAGE);
+  return plan;
+}
 
 type AdminClient = { from: (table: string) => any }; // eslint-disable-line @typescript-eslint/no-explicit-any
 /** Liga o número de WhatsApp à conta (um número só pode estar ligado a uma conta). */
