@@ -52,14 +52,15 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
           setMessage("Este e-mail já está cadastrado. Entre com sua conta ou recupere sua senha.");
           return;
         }
+        const signupNext = (params.get("next") || "").startsWith("/parceiros") ? "?next=%2Fparceiros" : "";
         if (data.session) {
-          router.replace("/assinar");
+          router.replace("/assinar" + signupNext);
           router.refresh();
           return;
         }
         const { error: loginError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (!loginError) {
-          router.replace("/assinar");
+          router.replace("/assinar" + signupNext);
           router.refresh();
           return;
         }

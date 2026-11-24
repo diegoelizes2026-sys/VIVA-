@@ -147,7 +147,7 @@ export function ReferralPage() {
 // ---------------------------------------------------------------- Indicação paga (R$ 10 por amigo que assina o Pro)
 type Cash = { pending_cents: number; available_cents: number; requested_cents: number; paid_cents: number; paying_friends: number; next_release: string | null;
   open_payout: { amount_cents: number; created_at: string } | null; last_payout: { status: string; amount_cents: number; decided_at: string | null; note: string | null } | null;
-  reward_cents: number; min_payout_cents: number; monthly_limit_cents: number | null; hold_days: number; partner?: boolean };
+  reward_cents: number; min_payout_cents: number; monthly_limit_cents: number | null; hold_days: number; partner?: boolean; bonus_every?: number | null; bonus_cents?: number | null };
 const reais = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const PIX: { id: "cpf" | "email" | "phone" | "random"; label: string; ph: string; mode: "numeric" | "email" | "tel" | "text" }[] = [
   { id: "cpf", label: "CPF", ph: "000.000.000-00", mode: "numeric" }, { id: "phone", label: "Celular", ph: "(11) 98888-7777", mode: "tel" },
@@ -172,7 +172,7 @@ export function ReferralCash() {
     load();
   };
   return <section className="gr-card gr-cash">
-    <div className="gr-cash-head"><span className="gr-cash-ic" aria-hidden><Banknote size={20} /></span><div><b>{c.partner ? `Parceiro VIVA+: ${reais(c.reward_cents)} por assinante` : `Ganhe ${reais(c.reward_cents)} por amigo no Pro`}</b><small>{c.partner ? `Cada seguidor que assinar o Pro pelo seu link rende ${reais(c.reward_cents)} no Pix${c.monthly_limit_cents == null ? ", sem limite por mês" : `, até ${reais(c.monthly_limit_cents)} por mês`}.` : `Seu amigo assinou o Pro? ${reais(c.reward_cents)} para você, no Pix.`}</small></div></div>
+    <div className="gr-cash-head"><span className="gr-cash-ic" aria-hidden><Banknote size={20} /></span><div><b>{c.partner ? `Parceiro VIVA+: ${reais(c.reward_cents)} por assinante` : `Ganhe ${reais(c.reward_cents)} por amigo no Pro`}</b><small>{c.partner ? `Cada seguidor que assinar o Pro pelo seu link rende ${reais(c.reward_cents)} no Pix${c.monthly_limit_cents == null ? ", sem limite por mês" : `, até ${reais(c.monthly_limit_cents)} por mês`}${c.bonus_every && c.bonus_cents ? `, e mais ${reais(c.bonus_cents)} de bônus a cada ${c.bonus_every} assinantes` : ""}.` : `Seu amigo assinou o Pro? ${reais(c.reward_cents)} para você, no Pix.`}</small></div></div>
     <div className="gr-cash-grid">
       <div><Clock3 size={16} aria-hidden /><span>A liberar</span><b>{reais(c.pending_cents)}</b></div>
       <div className="hot"><Wallet size={16} aria-hidden /><span>Disponível</span><b>{reais(c.available_cents)}</b></div>
