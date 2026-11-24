@@ -70,7 +70,7 @@ export function featuresMessage(planName?: string | null) {
 export const WHATSAPP_FREE_WEEKLY = 10;
 
 /** Quem está no Free: a VIVA funciona no WhatsApp com limite semanal. */
-export const FREE_WHATSAPP_NOTE = `🎁 No plano *Free* você tem *${WHATSAPP_FREE_WEEKLY} mensagens por semana* comigo aqui. Para usar sem limite, teste o Pro grátis por 7 dias (sem cartão): ${SITE_URL}/planos`;
+export const FREE_WHATSAPP_NOTE = `🎁 No plano *Free* você tem *${WHATSAPP_FREE_WEEKLY} mensagens por semana* comigo aqui, com *5 áudios* e *3 fotos de comprovante* grátis por mês. Para usar sem limite, teste o Pro grátis por 7 dias (sem cartão): ${SITE_URL}/planos`;
 
 /** Free que usou todas as mensagens da semana. */
 export function freeLimitMessage(resetsOn?: string | null) {

@@ -117,8 +117,8 @@ export default async function Home() {
             <li><Check size={16} /> Aviso antes das contas vencerem</li>
             {!free && <li><Check size={16} /> Plano para sair das dívidas e metas</li>}
             {p.radar_enabled && <li><Check size={16} /> Radar financeiro preventivo</li>}
-            {p.voice_enabled && <li><Check size={16} /> Converse por voz</li>}
-            {p.photo_enabled && <li><Check size={16} /> Foto de comprovante</li>}
+            {p.voice_enabled ? <li><Check size={16} /> Áudio e foto de comprovante à vontade</li> : Number(p.monthly_price_brl) === 0 ? <li><Check size={16} /> 5 áudios e 3 fotos de comprovante grátis por mês</li> : null}
+            
             <li className="lp-muted">{free && p.signup_credits > 0 ? `${p.signup_credits} créditos para começar + ` : ""}{p.monthly_credits} créditos de IA por mês</li>
           </ul>
           <Link href="/cadastro" className={"lp-btn" + (pro ? "" : " ghost")}>{free ? "Criar conta grátis" : pro ? "Testar o Pro grátis" : `Começar com o ${p.name}`}</Link>
