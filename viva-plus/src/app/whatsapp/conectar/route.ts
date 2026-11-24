@@ -28,17 +28,16 @@ export async function GET(request: Request) {
     return res;
   }
 
-  let subscribed = false;
   try {
     const admin = createAdminClient();
     await linkWhatsapp(admin, user.id, waId);
-    subscribed = Boolean(await welcomeAfterLink(admin, user.id, waId));
+    await welcomeAfterLink(admin, user.id, waId);
   } catch (error) {
     console.error("VIVA WhatsApp connect link failed", error);
     return NextResponse.redirect(new URL("/meu-dia?whatsapp=erro", request.url));
   }
-  // Sem plano: leva direto para os planos (a VIVA no WhatsApp é só para assinantes).
-  const res = NextResponse.redirect(new URL(subscribed ? "/meu-dia?whatsapp=conectado" : "/planos?whatsapp=assinar", request.url));
+  // Com ou sem plano a VIVA já funciona no WhatsApp (no Free, com limite semanal).
+  const res = NextResponse.redirect(new URL("/meu-dia?whatsapp=conectado", request.url));
   res.cookies.delete({ name: COOKIE, path: "/whatsapp" });
   return res;
 }

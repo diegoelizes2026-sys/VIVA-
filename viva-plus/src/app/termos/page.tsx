@@ -26,7 +26,7 @@ export default function TermsPage() {
       <ul>
         <li><b>Plano grátis:</b> criar conta não gera cobrança. O plano grátis tem recursos e créditos limitados.</li>
         <li><b>Créditos:</b> conversas com a inteligência da VIVA consomem créditos conforme a tabela exibida no app. Créditos do plano renovam a cada ciclo pago, não acumulam entre ciclos, não têm valor em dinheiro e não podem ser transferidos.</li>
-        <li><b>Teste grátis do Pro:</b> dura <b>5 minutos</b>, uma vez por conta, sem cartão e sem cobrança. Ao terminar, a conta volta ao plano grátis, e mostramos os planos para você decidir se quer assinar.</li>
+        <li><b>Teste grátis do Pro:</b> dura <b>7 dias</b>, uma vez por conta, sem cartão e sem cobrança. Ao terminar, a conta volta ao plano grátis, e mostramos os planos para você decidir se quer assinar.</li>
         <li><b>Planos pagos:</b> preço, periodicidade (mensal ou anual), créditos e recursos de cada plano aparecem na página de planos antes da contratação. O pagamento é processado pelo <b>Mercado Pago</b> (Pix ou cartão). O plano é liberado após a confirmação do pagamento.</li>
         <li><b>Renovação:</b> no cartão, a assinatura renova automaticamente na mesma periodicidade até você cancelar. No Pix, o pagamento vale para o período contratado, sem renovação automática.</li>
         <li><b>Preços:</b> podem mudar para novos períodos, com aviso prévio no app. O valor do período já pago não muda.</li>
@@ -38,7 +38,7 @@ export default function TermsPage() {
     </Section>
 
     <Section title="6. VIVA no WhatsApp">
-      <p>A VIVA no WhatsApp é um recurso <b>exclusivo para quem tem plano ativo</b> (pago ou durante o teste grátis), ligado a uma conta criada no site. Ela usa os mesmos créditos e regras do app. Para usar, você também precisa seguir os termos do WhatsApp (Meta). Você pode desconectar a qualquer momento mandando “desconectar” ou pelo app. Sem plano ativo, a VIVA responde só com orientações para assinar.</p>
+      <p>A VIVA no WhatsApp funciona ligada a uma conta criada no site. No plano <b>Free</b>, são até <b>10 mensagens por semana</b> com a VIVA (a contagem recomeça toda segunda-feira, no horário de Brasília); com plano pago ou durante o teste grátis do Pro, o uso segue os créditos do plano, sem esse limite semanal. Ela usa os mesmos créditos e regras do app. Para usar, você também precisa seguir os termos do WhatsApp (Meta). Você pode desconectar a qualquer momento mandando “desconectar” ou pelo app. Quando as mensagens grátis da semana acabam, a VIVA avisa e mostra os planos.</p>
     </Section>
 
     <Section id="indicacao" title="7. Indique e ganhe">

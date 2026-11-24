@@ -65,24 +65,26 @@ export function CanIBuyCard() {
   </section>;
 }
 
-/** Cartão de vitória: gera a imagem e abre o compartilhar do celular (WhatsApp, Instagram…). */
+/** Cartão de vitória (ou do número do dia, enquanto não há vitória): gera a imagem e abre o compartilhar do celular (WhatsApp, Instagram…). */
 export function VictoryCard({ today, streak }: { today: TodayBudget; streak: number }) {
   const { hidden } = useHiddenValues();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const leftover = today.mode === "dynamic" && today.forecast?.kind === "leftover" ? today.forecast.amount : 0;
-  if (streak < 3 && leftover <= 0) return null;
-  const title = streak >= 3 ? `🔥 ${streak} dias seguidos no seu valor do dia!` : `🎉 No ritmo atual, vai sobrar ${hidden ? "dinheiro" : brl(leftover)}!`;
+  if (today.mode === "setup") return null;
+  // Sem vitória ainda: compartilha o número do dia (bom para o Status do WhatsApp).
+  const victory = streak >= 3 || leftover > 0;
+  const title = streak >= 3 ? `🔥 ${streak} dias seguidos no seu valor do dia!` : leftover > 0 ? `🎉 No ritmo atual, vai sobrar ${hidden ? "dinheiro" : brl(leftover)}!` : `💜 Hoje você pode gastar ${hidden ? "R$ ••" : brl(Math.max(0, today.allowance))}`;
   async function share() {
-    setBusy(true); setMsg(""); trackAction("vitoria");
+    setBusy(true); setMsg(""); trackAction(victory ? "vitoria" : "numero-do-dia");
     try {
       const [img, ref] = await Promise.all([
-        fetch(`/api/share/vitoria?valores=${hidden ? 0 : 1}`).then(r => { if (!r.ok) throw new Error(); return r.blob(); }),
+        fetch(`/api/share/vitoria?valores=${hidden ? 0 : 1}${victory ? "" : "&tipo=dia"}`).then(r => { if (!r.ok) throw new Error(); return r.blob(); }),
         fetch("/api/referral").then(r => (r.ok ? r.json() : null)).catch(() => null) as Promise<{ code?: string } | null>,
       ]);
       const link = ref?.code ? `${location.origin}/cadastro?convite=${ref.code}` : location.origin;
       const text = `A VIVA+ me diz quanto posso gastar por dia 💜 Testa aí: ${link}`;
-      const file = new File([img], "minha-vitoria-viva.png", { type: "image/png" });
+      const file = new File([img], victory ? "minha-vitoria-viva.png" : "meu-numero-do-dia-viva.png", { type: "image/png" });
       if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], text });
       } else {
@@ -98,9 +100,9 @@ export function VictoryCard({ today, streak }: { today: TodayBudget; streak: num
   return <section className="vx-victory">
     <div>
       <b>{title}</b>
-      <p>Mostre pros amigos. Quem entrar com seu convite e assinar o Pro te rende R$ 10 no Pix.</p>
+      <p>{victory ? "Mostre pros amigos." : "Poste no Status do WhatsApp."} Quem entrar com seu convite e assinar o Pro te rende R$ 10 no Pix.</p>
     </div>
-    <button type="button" onClick={share} disabled={busy}>{busy ? "Gerando…" : "Compartilhar"}</button>
+    <button type="button" onClick={share} disabled={busy}>{busy ? "Gerando…" : victory ? "Compartilhar" : "Postar no Status"}</button>
     {msg && <small role="status">{msg}</small>}
   </section>;
 }
