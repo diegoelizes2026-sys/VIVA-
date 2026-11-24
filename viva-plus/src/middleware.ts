@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal";
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -28,8 +29,9 @@ export async function middleware(request: NextRequest) {
         if (pathname.startsWith("/api/")) return NextResponse.json({ error: "Sua conta está suspensa. Fale com o suporte." }, { status: 403 });
         return NextResponse.redirect(new URL("/conta-suspensa", request.url));
       }
-      const termsExempt = ["/aceite-termos", "/termos", "/privacidade", "/api/auth/terms", "/auth/callback"];
-      const accepted = Boolean(profile?.terms_of_use_version && profile?.privacy_policy_version && profile?.terms_accepted_at);
+      const termsExempt = ["/aceite-termos", "/termos", "/privacidade", "/cookies", "/reembolso", "/api/auth/terms", "/auth/callback"];
+      // Versão atual dos documentos: quando eles mudam, todos aceitam de novo.
+      const accepted = Boolean(profile?.terms_accepted_at && profile?.terms_of_use_version === TERMS_VERSION && profile?.privacy_policy_version === PRIVACY_VERSION);
       if (!accepted && !termsExempt.some(path => pathname === path || pathname.startsWith(path + "/"))) {
         if (pathname.startsWith("/api/")) return NextResponse.json({ error: "Aceite os Termos de Uso e a Política de Privacidade para continuar." }, { status: 403 });
         return NextResponse.redirect(new URL("/aceite-termos", request.url));

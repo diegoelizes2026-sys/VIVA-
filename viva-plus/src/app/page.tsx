@@ -3,6 +3,8 @@ import Link from "next/link";
 import { BadgeDollarSign, CalendarClock, Receipt, ShoppingCart, MapPin, MessageCircleHeart, ShieldCheck, Mic, Gift, Check, ChevronDown, HeartPulse, Target } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import LandingSticky from "@/components/landing-sticky";
+import { LEGAL_LINKS, companyLine } from "@/lib/legal";
+import { SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, supportEmailUrl, supportWhatsAppUrl } from "@/lib/support";
 
 export const metadata = {
   title: "VIVA+ · Seu dinheiro em dia, sem planilha",
@@ -44,7 +46,7 @@ export default async function Home() {
     { q: "Funciona no celular?", a: "Sim. Abra no navegador do celular e adicione à tela de início para usar como um aplicativo." },
   ];
 
-  return <main className="lp">
+  return <main id="conteudo" className="lp">
     <header className="lp-nav">
       <span className="lp-logo">VIVA<span>+</span></span>
       <nav><a href="#como-funciona">Como funciona</a><a href="#planos">Planos</a><a href="#duvidas">Dúvidas</a></nav>
@@ -75,7 +77,7 @@ export default async function Home() {
           <div className="ap-bubble b1"><span className="ap-orb" />Anotado: R$ 35,90 em Farmácia ✅</div>
           <div className="ap-bubble b2"><BadgeDollarSign size={18} />Dia de pagamento! Já caiu?</div>
         </div>
-        <small className="lp-note">Tela ilustrativa, com valores de exemplo.</small>
+        <small className="lp-note">Tela ilustrativa, com nome e valores de exemplo.</small>
       </div>
     </section>
 
@@ -140,8 +142,8 @@ export default async function Home() {
     <footer className="lp-foot">
       <span className="lp-logo">VIVA<span>+</span></span>
       <p><ShieldCheck size={15} aria-hidden /> Não pedimos senha de banco. Seus dados são seus.</p>
-      <nav><Link href="/termos">Termos de Uso</Link><Link href="/privacidade">Privacidade</Link><Link href="/login">Entrar</Link></nav>
-      <small className="lp-legal">VIVA+ é um produto de 70.254.525 ISAQUE BATISTA SOARES · CNPJ 70.254.525/0001-39 · Aquiraz, CE · Suporte: <a href="mailto:vivamais597@gmail.com">vivamais597@gmail.com</a></small>
+      <nav aria-label="Documentos legais" className="lp-foot-links">{LEGAL_LINKS.map(l => <Link key={l.href} href={l.href}>{l.label}</Link>)}<Link href="/login">Entrar</Link></nav>
+      <small className="lp-legal">{companyLine()} · Atendimento: <a href={supportEmailUrl()}>{SUPPORT_EMAIL}</a> · WhatsApp <a href={supportWhatsAppUrl()} target="_blank" rel="noopener noreferrer">{SUPPORT_WHATSAPP_DISPLAY}</a></small><small className="lp-legal">A VIVA+ é uma assistente de organização com inteligência artificial e não substitui orientação financeira, médica ou de outros profissionais. Para maiores de 18 anos.</small>
     </footer>
     <LandingSticky />
   </main>;

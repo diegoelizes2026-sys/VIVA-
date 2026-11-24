@@ -152,7 +152,7 @@ export default function OnboardingChat({ kind, embedded = false, onDone, onClose
       </ul>
       <button className="ob-cta" onClick={start}>{savedAnswers ? "Continuar de onde parei" : "Vamos começar"}</button>
       {kind === "finance" && !embedded && <button className="ob-link" onClick={skipAll}>Pular por enquanto</button>}
-      <small className="ob-muted">Ao continuar, você permite que o Viva Mais use essas respostas para personalizar sua experiência, conforme a <Link href="/privacidade">Política de Privacidade</Link>.</small>
+      {kind === "finance" ? <small className="ob-muted">Ao continuar, você permite que o VIVA+ use essas respostas para personalizar sua experiência, conforme a <Link href="/privacidade">Política de Privacidade</Link>.</small> : <small className="ob-muted"><b>Consentimento para dados de saúde:</b> ao tocar em “Vamos começar”, você autoriza o VIVA+ a usar as informações de saúde que informar (objetivo, peso, rotina e limitações) só para montar e ajustar seus treinos e hábitos. Não compartilhamos esses dados para outros fins. Você pode revogar e apagar tudo em Meus dados a qualquer momento. Veja a <Link href="/privacidade">Política de Privacidade</Link>.</small>}
       {error && <p className="ob-error" role="alert">{error}</p>}
     </div>
   </div>;

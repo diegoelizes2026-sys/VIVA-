@@ -19,7 +19,7 @@ export default async function SignupPlansPage() {
   const { data } = await supabase.rpc("viva_get_public_plans");
   const plans = (data as { plans?: PublicPlan[] } | null)?.plans ?? [];
 
-  return <main className="ob-page">
+  return <main id="conteudo" className="ob-page">
     <header className="ob-page-head"><span className="viva-wordmark">VIVA<span>+</span></span></header>
     <div className="viva-plans viva-signup-plans">
       <span className="viva-eyebrow">CONTA CRIADA ✅</span>
