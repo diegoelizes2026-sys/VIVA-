@@ -1,5 +1,12 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import { MessageCircle } from "lucide-react";
+
+/** Foto da VIVA como no perfil do WhatsApp, com o pontinho verde de "online". */
+function VivaAvatar() {
+  return <span className="wa-avatar" aria-hidden><Image src="/icons/viva-192.svg" alt="" width={52} height={52} unoptimized /><i /></span>;
+}
 
 type Status = { linked: boolean; subscribed?: boolean; number: string | null; chatUrl: string };
 
@@ -67,21 +74,22 @@ export default function WhatsappConnect({ variant = "profile" }: { variant?: "ho
     if (!status) return null;
     if (status.linked) {
       return (
-        <a className="wa-home linked" href={status.chatUrl} target="_blank" rel="noopener noreferrer">
-          <span className="wa-home-icon" aria-hidden>💬</span>
+        <a className="wa-home linked" href={status.chatUrl} target="_blank" rel="noopener noreferrer" aria-label="Abrir conversa com a VIVA no WhatsApp">
+          <VivaAvatar />
           <span className="wa-home-text">
-            <b>{notice === "conectado" ? "WhatsApp conectado! ✅" : "VIVA no WhatsApp"}</b>
-            <small>{notice === "conectado" ? "Agora é só falar com a VIVA por lá." : "Anote gastos e tire dúvidas sem abrir o app."}{isFree ? " Grátis: 10 mensagens por semana." : ""}</small>
+            <span className="wa-home-name"><b>VIVA+</b><span className="wa-online-label">online</span></span>
+            <span className="wa-bubble">{notice === "conectado" ? "WhatsApp conectado! ✅ Agora é só me mandar mensagem por aqui." : "Oi! Me conta o que você gastou hoje que eu anoto pra você 💜"}</span>
+            {isFree ? <small>Grátis: 10 mensagens por semana</small> : null}
           </span>
-          <span className="wa-home-go">Abrir conversa</span>
+          <span className="wa-home-go"><MessageCircle size={18} aria-hidden /> Abrir conversa</span>
         </a>
       );
     }
     return (
       <section className="wa-home">
-        <span className="wa-home-icon" aria-hidden>💬</span>
+        <VivaAvatar />
         <div className="wa-home-text">
-          <b>Fale com a VIVA no WhatsApp</b>
+          <span className="wa-home-name"><b>Fale com a VIVA+ no WhatsApp</b><span className="wa-online-label">online</span></span>
           <small>
             {notice === "expirado" ? "Aquele link expirou. Toque abaixo para conectar de novo." : notice === "erro" ? "Não deu certo agora. Tente de novo abaixo." : `Mande “gastei 35 na farmácia” e ela anota na hora, sem abrir o app.${isFree ? " Grátis: 10 mensagens por semana." : ""}`}
           </small>
@@ -91,9 +99,9 @@ export default function WhatsappConnect({ variant = "profile" }: { variant?: "ho
           {error ? <small className="wa-home-error">{error}</small> : null}
         </div>
         {link ? (
-          <a className="wa-home-btn" href={link.url} target="_blank" rel="noopener noreferrer">Abrir o WhatsApp</a>
+          <a className="wa-home-btn" href={link.url} target="_blank" rel="noopener noreferrer"><MessageCircle size={18} aria-hidden /> Abrir o WhatsApp</a>
         ) : (
-          <button type="button" className="wa-home-btn" onClick={connect} disabled={busy}>{busy ? "Abrindo…" : "Conectar meu WhatsApp"}</button>
+          <button type="button" className="wa-home-btn" onClick={connect} disabled={busy}>{busy ? "Abrindo…" : <><MessageCircle size={18} aria-hidden /> Conectar meu WhatsApp</>}</button>
         )}
       </section>
     );
