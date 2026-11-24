@@ -26,7 +26,7 @@ export default function TermsPage() {
       <ul>
         <li><b>Plano grátis:</b> criar conta não gera cobrança. O plano grátis tem recursos e créditos limitados.</li>
         <li><b>Créditos:</b> conversas com a inteligência da VIVA consomem créditos conforme a tabela exibida no app. Créditos do plano renovam a cada ciclo pago, não acumulam entre ciclos, não têm valor em dinheiro e não podem ser transferidos.</li>
-        <li><b>Teste grátis do Pro:</b> dura <b>7 dias</b>, uma vez por conta, sem cartão e sem cobrança. Ao terminar, a conta volta ao plano grátis, e mostramos os planos para você decidir se quer assinar.</li>
+        <li><b>Teste grátis do Pro:</b> dura <b>7 dias</b> e é ativado automaticamente ao criar a conta (ou no primeiro acesso de quem ainda não testou), uma vez por conta, sem cartão e sem cobrança. Ao terminar, a conta volta ao plano grátis, e mostramos os planos para você decidir se quer assinar.</li>
         <li><b>Planos pagos:</b> preço, periodicidade (mensal ou anual), créditos e recursos de cada plano aparecem na página de planos antes da contratação. O pagamento é processado pelo <b>Mercado Pago</b> (Pix ou cartão). O plano é liberado após a confirmação do pagamento.</li>
         <li><b>Renovação:</b> no cartão, a assinatura renova automaticamente na mesma periodicidade até você cancelar. No Pix, o pagamento vale para o período contratado, sem renovação automática.</li>
         <li><b>Preços:</b> podem mudar para novos períodos, com aviso prévio no app. O valor do período já pago não muda.</li>

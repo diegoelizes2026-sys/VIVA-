@@ -6,6 +6,8 @@ import {
   type Answer, type Answers, type AnswerValue, type Diagnosis, type Question,
 } from "@/lib/onboarding/flows";
 import { ProOffer } from "@/components/credit-ui";
+import FirstExpense from "@/components/first-expense";
+import WhatsappConnect from "@/components/whatsapp-connect";
 
 type Kind = "finance" | "personal";
 type Phase = "loading" | "intro" | "chat" | "diagnosis" | "done";
@@ -159,7 +161,13 @@ export default function OnboardingChat({ kind, embedded = false, onDone, onClose
 
   if (phase === "done") return <div className={"ob" + (embedded ? " embedded" : "")}><div className="ob-done">
     <span className="ob-check" aria-hidden="true" />
-    {kind === "finance" ? <>
+    {kind === "finance" && !embedded ? <>
+      <h2>Seu planejamento está pronto ✅</h2>
+      <p>{result?.applied?.length ? `Configurei ${result.applied.length} ${result.applied.length === 1 ? "item" : "itens"} no seu painel com o que você confirmou.` : "Seu perfil foi salvo. Você pode ajustar tudo quando quiser."}</p>
+      <FirstExpense />
+      <div className="fx-wa"><b>Anote pelo WhatsApp, sem abrir o app</b><WhatsappConnect variant="home" /></div>
+      <a className="ob-cta" href="/meu-dia">Ir para o meu dia</a>
+    </> : kind === "finance" ? <>
       <h2>Seu planejamento está pronto</h2>
       <p>{result?.applied?.length ? `Configurei ${result.applied.length} ${result.applied.length === 1 ? "item" : "itens"} no seu painel com o que você confirmou.` : "Seu perfil foi salvo. Você pode ajustar tudo no painel quando quiser."}</p>
       <div className="ob-done-actions">

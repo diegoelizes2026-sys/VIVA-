@@ -10,6 +10,7 @@ import { loadTodayBudget } from "@/lib/daily-budget-load";
 import { BillsDueCard, CanIBuyCard, ForecastCard, OneTapExpenses, VictoryCard, type DueBill } from "@/components/today-cards";
 import { topQuickPicks } from "@/lib/quick-picks";
 import { addDays, todayBR } from "@/lib/payday";
+import { ensureWelcomeTrial } from "@/lib/welcome-trial";
 
 // Tela inicial: o "número do dia" (quanto dá para gastar hoje) na faixa roxa, o aviso de até quando
 // o dinheiro dura, "Posso comprar?", atalhos, pagamento, últimos lançamentos, agenda e tarefas.
@@ -25,6 +26,8 @@ export default async function Page() {
   const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Sao_Paulo", hour: "numeric", hourCycle: "h23" }).format(new Date()));
   const hello = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
   const uid = user?.id || "";
+  // Quem tem conta e nunca testou o Pro ganha os 7 dias ao abrir o app (uma vez por conta).
+  const gift = uid ? await ensureWelcomeTrial(supabase, uid) : false;
   const { budget: todayBudget, streak, cycleTx } = await loadTodayBudget(supabase, uid, today);
   const [{ data: recent }, { data: events }, { data: tasks }, { data: history }, { data: dueBills }, { data: paidBillTx }] = await Promise.all([
     supabase.from("viva_transactions").select("id,kind,amount,description,category,occurred_on,payment_method,source").eq("user_id", uid).order("occurred_on", { ascending: false }).order("created_at", { ascending: false }).limit(5),
@@ -42,6 +45,7 @@ export default async function Page() {
   const expense = (monthTx || []).filter(x => x.kind === "expense").reduce((a, x) => a + Number(x.amount), 0);
 
   return <div className="vx-page">
+    {gift && <p className="ob-gift" role="status">🎁 <b>Presente pra você:</b> 7 dias do VIVA+ Pro grátis, já ativados. VIVA no WhatsApp sem limite, voz e foto de comprovante. Sem cartão e sem cobrança.</p>}
     <MoneyHero greeting={`${hello}, ${first}`} subtitle={dateLabel} initials={initials} label="Saldo do mês" balance={income - expense} income={income} expense={expense} href="/financas" today={todayBudget} streak={streak} />
     <WhatsappConnect variant="home" />
     <ForecastCard today={todayBudget} />
