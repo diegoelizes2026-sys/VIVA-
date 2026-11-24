@@ -63,7 +63,7 @@ export function readConnectToken(token: string | null | undefined) {
 
 /** Tudo o que a VIVA faz pelo WhatsApp (enviado ao conectar, ao assinar e quando a pessoa pede "ajuda"). */
 export function featuresMessage(planName?: string | null) {
-  return `${planName ? `Seu plano *${planName}* está ativo e ` : "Seu WhatsApp está conectado e "}a VIVA no WhatsApp está liberada! ✅\n\nOlha tudo que eu faço por aqui:\n\n💸 *Anotar gastos e entradas*\n“gastei 35 na farmácia” · “recebi 1500 de salário”\n\n📊 *Quanto posso gastar*\n“quanto posso gastar hoje?”\n\n🧾 *Contas a pagar*\n“o que vence essa semana?” · “conta de luz 180 dia 10”\n\n💳 *Sair das dívidas*\n“me ajuda a quitar minhas dívidas”\n\n🎯 *Planejamento e metas*\n“quero juntar 2 mil até dezembro”\n\n📊 *Relatórios* (não gastam créditos)\n“relatório da semana” · “relatório do mês”\n\n🛒 *Antes de comprar*\n“vale a pena comprar uma TV de 2 mil?”\n\n📅 *Agenda e lembretes*\n“dentista sexta às 15h”\n\n*Comandos:*\n• *desfazer* — apaga o último lançamento (até 15 min)\n• *ajuda* — mostra esta lista de novo\n• *desconectar* — desliga este WhatsApp da conta\n\nÁudio, foto de comprovante, Radar de preços e Personal você usa no app: ${SITE_URL}/meu-dia`;
+  return `${planName ? `Seu plano *${planName}* está ativo e ` : "Seu WhatsApp está conectado e "}a VIVA no WhatsApp está liberada! ✅\n\nOlha tudo que eu faço por aqui:\n\n💸 *Anotar gastos e entradas*\n“gastei 35 na farmácia” · “lanche 20” · “recebi 1500 de salário”\n\n🎤 *Áudio*\nManda um áudio falando o gasto que eu entendo\n\n🧾 *Foto do comprovante*\nManda a foto (ou PDF) que eu leio e anoto\n\n📊 *Quanto posso gastar*\n“quanto posso gastar hoje?”\n\n🧾 *Contas a pagar*\n“o que vence essa semana?” · “conta de luz 180 dia 10”\n\n💳 *Sair das dívidas*\n“me ajuda a quitar minhas dívidas”\n\n🎯 *Planejamento e metas*\n“quero juntar 2 mil até dezembro”\n\n📊 *Relatórios* (não gastam créditos)\n“relatório da semana” · “relatório do mês”\n\n🛒 *Antes de comprar*\n“vale a pena comprar uma TV de 2 mil?”\n\n📅 *Agenda e lembretes*\n“dentista sexta às 15h”\n\n*Comandos:*\n• *desfazer* — apaga o último lançamento (até 15 min)\n• *ajuda* — mostra esta lista de novo\n• *desconectar* — desliga este WhatsApp da conta\n\nRadar de preços e Personal você usa no app: ${SITE_URL}/meu-dia`;
 }
 
 /** Mensagens grátis por semana na VIVA no WhatsApp para quem está no plano Free. */
@@ -132,4 +132,34 @@ export async function linkWhatsapp(admin: AdminClient, userId: string, waId: str
 
 export function brl(value: number) {
   return Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+/** Baixa um áudio/foto enviado no WhatsApp (2 passos na API da Meta: endereço do arquivo e depois o arquivo). */
+export async function downloadWhatsappMedia(mediaId: string, maxBytes = 5 * 1024 * 1024): Promise<{ buffer: Buffer; mime: string } | { error: "too_big" | "failed" }> {
+  const token = process.env.WHATSAPP_TOKEN;
+  if (!token || !/^\d+$/.test(mediaId)) return { error: "failed" };
+  try {
+    const meta = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${mediaId}`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+    if (!meta.ok) { console.error("VIVA WhatsApp media meta", meta.status, (await meta.text()).slice(0, 300)); return { error: "failed" }; }
+    const info = (await meta.json()) as { url?: string; mime_type?: string; file_size?: number };
+    if (!info.url) return { error: "failed" };
+    if (Number(info.file_size || 0) > maxBytes) return { error: "too_big" };
+    const file = await fetch(info.url, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+    if (!file.ok) { console.error("VIVA WhatsApp media download", file.status); return { error: "failed" }; }
+    const buffer = Buffer.from(await file.arrayBuffer());
+    if (buffer.length > maxBytes) return { error: "too_big" };
+    return { buffer, mime: String(info.mime_type || file.headers.get("content-type") || "").split(";")[0].trim().toLowerCase() };
+  } catch (e) {
+    console.error("VIVA WhatsApp media", e);
+    return { error: "failed" };
+  }
+}
+
+/** Duração de um áudio OGG/Opus (os áudios de voz do WhatsApp), lendo a última página do arquivo. */
+export function oggDurationSeconds(buffer: Buffer): number | null {
+  const at = buffer.lastIndexOf(Buffer.from("OggS"));
+  if (at < 0 || at + 14 > buffer.length) return null;
+  const granule = Number(buffer.readBigUInt64LE(at + 6));
+  if (!Number.isFinite(granule) || granule <= 0) return null;
+  return granule / 48000;
 }
