@@ -2,7 +2,7 @@ import { randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { WHATSAPP_PUBLIC_NUMBER, whatsappLinkUrl } from "@/lib/whatsapp";
+import { WHATSAPP_PUBLIC_NUMBER, activeWhatsappPlan, whatsappLinkUrl } from "@/lib/whatsapp";
 
 export const runtime = "nodejs";
 const CODE_TTL_MS = 30 * 60 * 1000;
@@ -19,9 +19,11 @@ async function currentUser() {
 export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Faça login." }, { status: 401 });
-  const { data, error } = await createAdminClient().from("viva_whatsapp_links").select("wa_id,linked_at").eq("user_id", user.id).maybeSingle();
+  const admin = createAdminClient();
+  const { data, error } = await admin.from("viva_whatsapp_links").select("wa_id,linked_at").eq("user_id", user.id).maybeSingle();
   if (error) { console.error("VIVA WhatsApp link status", error); return NextResponse.json({ error: "Não consegui consultar agora." }, { status: 500 }); }
-  return NextResponse.json({ linked: Boolean(data?.wa_id), number: data?.wa_id ? mask(data.wa_id) : null, chatUrl: `https://wa.me/${WHATSAPP_PUBLIC_NUMBER}` });
+  const subscribed = Boolean(await activeWhatsappPlan(admin, user.id));
+  return NextResponse.json({ linked: Boolean(data?.wa_id), subscribed, number: data?.wa_id ? mask(data.wa_id) : null, chatUrl: `https://wa.me/${WHATSAPP_PUBLIC_NUMBER}` });
 }
 
 // Gera um código de 6 dígitos (vale 30 minutos) para a pessoa mandar no WhatsApp da VIVA.

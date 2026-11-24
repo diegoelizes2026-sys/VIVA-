@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient as createAdmin } from "@supabase/supabase-js";
+import { notifyWhatsappPlanActive } from "@/lib/whatsapp";
 export const runtime = "nodejs";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AdminDb = { rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ error: any }> };
@@ -69,6 +70,8 @@ export async function POST(req: Request) {
           const { error: linkError } = await db.from("viva_payments").update({subscription_id:subscriptionId}).eq("id",paymentRow.id);
           if (linkError) throw linkError;
           await grantCycle(db, subscriptionId!);
+          // Plano liberado: se a pessoa já ligou o WhatsApp, a VIVA avisa por lá e lembra todas as funções.
+          await notifyWhatsappPlanActive(db, paymentRow.user_id);
         }
         if (status === "approved" && paymentRow.subscription_id) await grantCycle(db, paymentRow.subscription_id);
         if (status === "refunded" && paymentRow.subscription_id) {
@@ -97,7 +100,7 @@ export async function POST(req: Request) {
       const res = await fetch(`https://api.mercadopago.com/authorized_payments/${encodeURIComponent(id)}`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"});
       const invoice = await res.json(); if (!res.ok) throw new Error("Falha ao consultar fatura");
       if (invoice.preapproval_id && invoice.status === "approved") {
-        const { data: sub, error: subLookupError } = await db.from("viva_subscriptions").select("id,user_id,plan_id,billing_interval,external_reference").eq("gateway_subscription_id",String(invoice.preapproval_id)).maybeSingle();
+        const { data: sub, error: subLookupError } = await db.from("viva_subscriptions").select("id,user_id,plan_id,billing_interval,external_reference,status").eq("gateway_subscription_id",String(invoice.preapproval_id)).maybeSingle();
         if (subLookupError) throw subLookupError;
         if (!sub) throw new Error("Assinatura VIVA+ ainda não encontrada para esta cobrança; aguardar nova tentativa do webhook.");
         // Cada cobrança aprovada abre um novo período pago (e um novo ciclo de créditos, uma única vez).
@@ -109,6 +112,8 @@ export async function POST(req: Request) {
         const { error: payError } = await db.from("viva_payments").upsert({user_id:sub.user_id,subscription_id:sub.id,plan_id:sub.plan_id,gateway:"mercadopago",gateway_payment_id:`preapproval_payment:${invoice.id}`,gateway_subscription_id:String(invoice.preapproval_id),external_reference:`${sub.external_reference||sub.id}:${invoice.id}`,payment_method:"card",billing_interval:sub.billing_interval==="annual"?"annual":"monthly",status:"approved",amount_brl:Number.isFinite(amount)&&amount>0?amount:0,paid_at:start.toISOString(),metadata:{authorized_payment_id:String(invoice.id)}},{onConflict:"gateway,gateway_payment_id"});
         if (payError && payError.code !== "23505") throw payError;
         await grantCycle(db, sub.id);
+        // Primeira cobrança aprovada (não as renovações): avisa no WhatsApp e lembra todas as funções.
+        if (sub.status !== "active") await notifyWhatsappPlanActive(db, sub.user_id);
       }
     }
     await db.from("viva_payment_webhook_events").update({processed_at:new Date().toISOString(),processing_error:null}).eq("gateway","mercadopago").eq("gateway_event_id",eventId);

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { LINKED_MESSAGE, linkWhatsapp, readConnectToken, sendWhatsappText } from "@/lib/whatsapp";
+import { linkWhatsapp, readConnectToken, welcomeAfterLink } from "@/lib/whatsapp";
 
 export const runtime = "nodejs";
 const COOKIE = "viva_wa_connect";
@@ -28,14 +28,17 @@ export async function GET(request: Request) {
     return res;
   }
 
+  let subscribed = false;
   try {
-    await linkWhatsapp(createAdminClient(), user.id, waId);
-    await sendWhatsappText(waId, LINKED_MESSAGE);
+    const admin = createAdminClient();
+    await linkWhatsapp(admin, user.id, waId);
+    subscribed = Boolean(await welcomeAfterLink(admin, user.id, waId));
   } catch (error) {
     console.error("VIVA WhatsApp connect link failed", error);
     return NextResponse.redirect(new URL("/meu-dia?whatsapp=erro", request.url));
   }
-  const res = NextResponse.redirect(new URL("/meu-dia?whatsapp=conectado", request.url));
+  // Sem plano: leva direto para os planos (a VIVA no WhatsApp é só para assinantes).
+  const res = NextResponse.redirect(new URL(subscribed ? "/meu-dia?whatsapp=conectado" : "/planos?whatsapp=assinar", request.url));
   res.cookies.delete({ name: COOKIE, path: "/whatsapp" });
   return res;
 }

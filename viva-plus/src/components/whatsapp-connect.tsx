@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 
-type Status = { linked: boolean; number: string | null; chatUrl: string };
+type Status = { linked: boolean; subscribed?: boolean; number: string | null; chatUrl: string };
 
 /**
  * "VIVA no WhatsApp": liga o WhatsApp da pessoa à conta com um toque.
@@ -60,8 +60,23 @@ export default function WhatsappConnect({ variant = "profile" }: { variant?: "ho
     finally { setBusy(false); }
   }
 
+  // A VIVA no WhatsApp é exclusiva para assinantes: sem plano ativo, o cartão leva para os planos.
+  const needsPlan = status !== null && status.subscribed === false;
+
   if (variant === "home") {
     if (!status) return null;
+    if (needsPlan) {
+      return (
+        <a className="wa-home linked" href="/planos?whatsapp=assinar">
+          <span className="wa-home-icon" aria-hidden>💬</span>
+          <span className="wa-home-text">
+            <b>VIVA no WhatsApp</b>
+            <small>Exclusivo para assinantes. Assine um plano e anote gastos, veja contas e planeje tudo por mensagem.</small>
+          </span>
+          <span className="wa-home-go">Ver planos</span>
+        </a>
+      );
+    }
     if (status.linked) {
       return (
         <a className="wa-home linked" href={status.chatUrl} target="_blank" rel="noopener noreferrer">
@@ -99,7 +114,17 @@ export default function WhatsappConnect({ variant = "profile" }: { variant?: "ho
   return (
     <section className="card mt-5 max-w-2xl p-6">
       <b>💬 VIVA no WhatsApp</b>
-      {status?.linked ? (
+      {needsPlan ? (
+        <>
+          <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
+            {status?.linked ? `Seu número ${status.number} está conectado, mas a` : "A"} VIVA no WhatsApp é exclusiva para assinantes. Assine um plano para anotar gastos, ver contas e planejar tudo por mensagem.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <a className="btn-primary" href="/planos?whatsapp=assinar">Ver planos</a>
+            {status?.linked && <button type="button" className="btn-secondary" onClick={disconnect} disabled={busy}>Desconectar</button>}
+          </div>
+        </>
+      ) : status?.linked ? (
         <>
           <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
             Conectado ao número {status.number}. Fale com a VIVA pelo WhatsApp do mesmo jeito que no app: “gastei 35 na farmácia”, “quanto posso gastar hoje?”.

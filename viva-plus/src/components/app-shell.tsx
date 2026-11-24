@@ -7,6 +7,7 @@ import AlarmOverlay from "@/components/alarm-overlay";
 import PermissionOnboarding from "@/components/permission-onboarding";
 import { track } from "@/lib/track";
 import { TrialFollowup } from "@/components/growth";
+import TrialEndOffer from "@/components/trial-end-offer";
 function Mark(){return <span className="viva-wordmark">VIVA<span>+</span></span>}
 // Ícone próprio para cada ferramenta (nenhum repetido).
 const ICONS:Record<string,React.ReactNode>={
@@ -32,7 +33,7 @@ const ICONS:Record<string,React.ReactNode>={
 function Glyph({name}:{name:string}){return <svg viewBox="0 0 28 28" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">{ICONS[name]??ICONS.account}</svg>}
 type EntryOfferPlan={id:string;name:string;monthly_price_brl:number;annual_price_brl:number;daily_credits:number;history_messages:number;radar_enabled:boolean;voice_enabled:boolean;photo_enabled:boolean};
 // Entrada sem barreira: o usuário novo entra no plano grátis e experimenta a VIVA; os planos ficam em "Planos" no menu.
-export default function AppShell({children,email,isAdmin=false}:{children:React.ReactNode;email:string;isAdmin?:boolean;entryOfferPlans?:EntryOfferPlan[];currentPlanId?:string}){
+export default function AppShell({children,email,isAdmin=false,entryOfferPlans=[]}:{children:React.ReactNode;email:string;isAdmin?:boolean;entryOfferPlans?:EntryOfferPlan[];currentPlanId?:string}){
  // Marca que o app já abriu nesta sessão (o chat usa isso para não redirecionar de novo).
  useEffect(()=>{try{sessionStorage.setItem("viva-launched","1")}catch{}},[]);
  const path=usePathname();const router=useRouter();const [open,setOpen]=useState(false);const [loggingOut,setLoggingOut]=useState(false);const touchStart=useRef<{x:number;y:number}|null>(null);
@@ -54,7 +55,7 @@ export default function AppShell({children,email,isAdmin=false}:{children:React.
    <div className="viva-top-actions viva-desktop-actions"><button className="viva-menu-button" onClick={()=>setOpen(true)} aria-label="Abrir menu"><Glyph name="menu"/></button><Link href="/perfil" className="viva-user-avatar" title={email}>{email.slice(0,1).toUpperCase()}</Link></div>
    <div className="viva-mobile-header"><button className="viva-mobile-icon" onClick={()=>setOpen(true)} aria-label="Abrir menu"><Glyph name="menu"/></button><span className="viva-mobile-brand">VIVA<span>+</span><i className="viva-mobile-online" aria-label="Online"/></span><button className="viva-mobile-icon" onClick={newChat} aria-label="Nova conversa"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 5.5h16a2.5 2.5 0 0 1 2.5 2.5v10a2.5 2.5 0 0 1-2.5 2.5h-8l-6 4v-4H6A2.5 2.5 0 0 1 3.5 18V8A2.5 2.5 0 0 1 6 5.5Z"/><path d="M14 9v8M10 13h8"/></svg></button></div>
   </header>
-  <main className="viva-main">{path!=="/planos"&&<TrialFollowup/>}{children}</main><AlarmOverlay/><PermissionOnboarding/>
+  <main className="viva-main"><TrialEndOffer plans={entryOfferPlans}/>{path!=="/planos"&&<TrialFollowup/>}{children}</main><AlarmOverlay/><PermissionOnboarding/>
   {open&&<><button className="viva-drawer-backdrop" aria-label="Fechar menu" onClick={()=>setOpen(false)}/><aside className="viva-drawer" role="dialog" aria-modal="true" aria-label="Menu principal"><div className="viva-drawer-head"><Mark/><button onClick={()=>setOpen(false)} aria-label="Fechar menu"><Glyph name="close"/></button></div><nav aria-label="Menu principal">
   <div className="viva-drawer-featured"><Link href="/meu-dia" onClick={()=>setOpen(false)} className={"viva-feature viva-feature-today"+(path==="/meu-dia"?" active":"")}><span className="viva-feature-icon">☀️</span><b>Meu dia</b><small>Quanto posso gastar hoje</small></Link>
    <Link href="/assistente" onClick={()=>setOpen(false)} className={"viva-feature viva-feature-chat"+(path==="/assistente"?" active":"")}><span className="viva-feature-icon"><span className="viva-mini-orb"/></span><b>Conversar com a VIVA</b><small>Dinheiro, agenda e dia a dia</small></Link>

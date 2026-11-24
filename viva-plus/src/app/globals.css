@@ -1819,3 +1819,19 @@ html:has(.lp),body:has(.lp){background:#fff}
 .wa-home.linked{padding:12px 14px;box-shadow:none}.wa-home.linked .wa-home-icon{width:40px;height:40px;font-size:20px}
 @media(max-width:520px){.wa-home-btn{width:100%}}
 .lp-btn.wa{background:#25d366;color:#fff;box-shadow:0 12px 26px rgba(37,211,102,.28)}
+
+/* Planos: aviso de VIVA no WhatsApp exclusiva para assinantes */
+.viva-wa-plan-notice{margin:14px 0 4px;padding:12px 14px;border-radius:14px;background:#e9fbe9;border:1px solid #b7ebc0;color:#14532d;font-size:14px;line-height:1.5}
+.viva-wa-plan-notice b{display:block;margin-bottom:2px}
+
+/* Assinar logo após o cadastro */
+.viva-signup-plans{max-width:1100px;margin:0 auto;padding:8px 16px 48px}
+.viva-signup-plans .viva-signup-steps{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px;padding:0;list-style:none;font-size:13px;font-weight:700;color:#5b5466}
+.viva-signup-plans .viva-signup-steps li{padding:6px 10px;border-radius:999px;background:#f4f3f6}
+.viva-signup-plans .viva-signup-steps li.done{background:#e9fbe9;color:#14532d}
+.viva-signup-plans .viva-signup-steps li.now{background:#7028D8;color:#fff}
+.viva-signup-plans .viva-signup-skip{display:block;margin:24px auto 0;text-align:center;font-weight:700;color:#5b5466;text-decoration:underline}
+
+/* Teste grátis do Pro: contagem regressiva */
+.viva-trial-timer{position:sticky;top:8px;z-index:50;width:max-content;max-width:calc(100% - 32px);margin:8px auto;padding:8px 14px;border-radius:999px;background:#2a1050;color:#fff;font-size:13.5px;font-weight:700;box-shadow:0 8px 24px rgba(42,16,80,.25)}
+.viva-trial-timer b{color:#ffd43b;font-variant-numeric:tabular-nums}
