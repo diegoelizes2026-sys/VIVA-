@@ -153,6 +153,7 @@ async function handleMessage(m: WaMessage, origin: string) {
     let userContent = text;
     let prefix = "";
     let receiptUploadId: string | null = null;
+    let sampleNote = "";
     if (media?.kind === "audio") {
       await sendWhatsappText(from, "🎧 Ouvindo seu áudio…");
       const file = await downloadWhatsappMedia(media.id);
@@ -167,13 +168,14 @@ async function handleMessage(m: WaMessage, origin: string) {
       const transcript = String(tr.data.text || "").trim();
       if (!tr.ok || !transcript) {
         let err = String(tr.data.error || "Não consegui entender o áudio. Tenta falar mais perto do microfone? 🎤");
-        if (tr.data.upgrade) err += `\n\nÁudio está no plano Pro: ${SITE_URL}/planos`;
+        if (tr.data.upgrade) err += `\n\nAssine o Pro (Pix ou cartão): ${SITE_URL}/planos`;
         await sendWhatsappText(from, err);
         return;
       }
       message = transcript.slice(0, 4000);
       userContent = message;
       prefix = `🎤 _“${transcript.slice(0, 280)}”_\n\n`;
+      if (tr.data.sample_left != null) sampleNote = sampleFooter("audio", Number(tr.data.sample_left));
     } else if (media?.kind === "receipt") {
       const file = await downloadWhatsappMedia(media.id);
       if ("error" in file) { await sendWhatsappText(from, file.error === "too_big" ? "Esse arquivo passou de 5 MB 😅 Tenta uma foto mais leve." : "Não consegui baixar a foto. Tenta mandar de novo?"); return; }
@@ -195,7 +197,8 @@ async function handleMessage(m: WaMessage, origin: string) {
     const history: HistoryItem[] = Array.isArray(link.history) ? (link.history as HistoryItem[]).slice(-10) : [];
     const res = await callApp(origin, session.cookie, "/api/assistant", { method: "POST", body: JSON.stringify({ message, history, requestId: requestKeyFor(id), ...(receiptUploadId ? { receiptUploadId } : {}) }) });
     const { reply: rawReply, clarification, transactionId } = await buildReply(res, origin, session.cookie);
-    const reply = (res.ok && !res.data.error ? prefix : prefix.startsWith("🎤") ? prefix : "") + rawReply;
+    if (receiptUploadId && res.data.sample_left != null) sampleNote = sampleFooter("photo", Number(res.data.sample_left));
+    const reply = (res.ok && !res.data.error ? prefix : prefix.startsWith("🎤") ? prefix : "") + rawReply + sampleNote;
     await sendWhatsappText(from, freeLeft === null ? reply : reply + freeLeftFooter(freeLeft));
 
     const nextHistory: HistoryItem[] = [...history, { role: "user" as const, content: userContent.slice(0, 4000) }, { role: "assistant" as const, content: reply.slice(0, 4000), ...(clarification ? { clarification } : {}) }].slice(-12);
@@ -210,6 +213,12 @@ async function handleMessage(m: WaMessage, origin: string) {
 }
 
 type AppResult = { ok: boolean; status: number; data: Record<string, unknown> };
+/** Plano grátis: avisa quantos áudios/fotos grátis ainda restam no mês. */
+function sampleFooter(kind: "audio" | "photo", left: number) {
+  const what = kind === "audio" ? (left === 1 ? "áudio grátis" : "áudios grátis") : (left === 1 ? "leitura de comprovante grátis" : "leituras de comprovante grátis");
+  if (left <= 0) return `\n\n_🎁 Esse foi o último ${kind === "audio" ? "áudio grátis" : "comprovante grátis"} do mês. Com o Pro é à vontade: ${SITE_URL}/planos_`;
+  return `\n\n_🎁 ${kind === "audio" ? "Resta" + (left === 1 ? "" : "m") : "Resta" + (left === 1 ? "" : "m")} ${left} ${what} este mês._`;
+}
 type Media = { kind: "audio" | "receipt"; id: string; mime: string; caption?: string };
 function mediaOf(m: WaMessage): Media | null {
   const audio = m.audio || m.voice;

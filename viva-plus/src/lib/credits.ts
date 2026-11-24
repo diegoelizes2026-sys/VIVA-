@@ -42,7 +42,7 @@ export type WalletSnapshot = {
   next_renewal_at: string | null; last_renewal_at: string | null; monthly_credits: number;
 };
 
-type Guard = { allowed?: boolean; reason?: string; cached_answer?: string | null; wallet?: WalletSnapshot | null; is_free?: boolean; operation_label?: string; credits_required?: number; required_plan?: string } | null;
+type Guard = { allowed?: boolean; reason?: string; cached_answer?: string | null; wallet?: WalletSnapshot | null; is_free?: boolean; operation_label?: string; credits_required?: number; required_plan?: string; sample_limit?: number; sample_feature?: string; sample_left?: number; sample?: boolean } | null;
 
 function renewalText(wallet?: WalletSnapshot | null) {
   if (!wallet?.next_renewal_at) return "";
@@ -64,7 +64,11 @@ export function blockedResponse(guard: Guard, who: "VIVA" | "Personal" = "VIVA",
       : `Seus créditos deste ciclo acabaram.${renewalText(wallet)}`,
     feature_not_in_plan: feature === "radar"
       ? "O Radar de preços está disponível nos planos Essencial e Pro."
-      : `${guard?.operation_label ? guard.operation_label + " é" : "Este recurso é"} exclusivo do VIVA+ Pro.`,
+      : guard?.sample_limit
+        ? (guard.sample_feature === "photo"
+          ? `Você já usou as ${guard.sample_limit} leituras de comprovante grátis deste mês 🧾 Para mandar fotos à vontade, assine o VIVA+ Pro. No dia 1º você ganha mais ${guard.sample_limit}.`
+          : `Você já usou os ${guard.sample_limit} áudios grátis deste mês 🎤 Para mandar áudio à vontade, assine o VIVA+ Pro. No dia 1º você ganha mais ${guard.sample_limit}.`)
+        : `${guard?.operation_label ? guard.operation_label + " é" : "Este recurso é"} exclusivo do VIVA+ Pro.`,
     rate_limit: "Muitas mensagens seguidas. Aguarde alguns segundos e tente de novo.",
     concurrent: `${who === "VIVA" ? "A VIVA" : "O Personal"} ainda está respondendo a sua mensagem anterior. Aguarde um instante.`,
     in_progress: "Sua mensagem já está sendo respondida. Aguarde um instante.",
