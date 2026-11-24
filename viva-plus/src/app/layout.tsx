@@ -4,7 +4,9 @@ import PwaRegister from "@/components/pwa-register";
 import CookieNotice from "@/components/cookie-notice";
 
 export const metadata: Metadata = {
-  title: "VIVA+ | Sua vida mais inteligente",
+  title: "VIVA+ (Vivamais) | Sua vida mais inteligente",
+  applicationName: "Vivamais",
+  openGraph: { siteName: "Vivamais", title: "VIVA+ (Vivamais)" },
   description: "Organize sua rotina, cuide do seu dinheiro e descubra oportunidades para economizar.",
   manifest: "/manifest.webmanifest",
   icons: {
