@@ -8,7 +8,7 @@ export const metadata = { title: "Termos de Uso · VIVA+" };
 export default function TermsPage() {
   return <LegalPage title="Termos de Uso" version={TERMS_VERSION} current="/termos">
     <Section title="1. Quem somos e aceite">
-      <p>Estes Termos regulam o uso do {COMPANY.product} (site {COMPANY.site}, aplicativo web e atendimento pelo WhatsApp), oferecido por <b>{COMPANY.legalName}</b>, CNPJ {COMPANY.cnpj}, com sede em {COMPANY.address || COMPANY.city} (“VIVA+”, “nós”).</p>
+      <p>Estes Termos regulam o uso do {COMPANY.product} (site {COMPANY.site}, aplicativo web e atendimento pelo WhatsApp), oferecido por <b>{COMPANY.legalName}</b>, CNPJ {COMPANY.cnpj}, com sede em {COMPANY.address || COMPANY.city} (“VIVA+” ou “Vivamais”, “nós”).</p>
       <p>Ao criar uma conta e marcar o aceite, você concorda com estes Termos, com a <Link href="/privacidade">Política de Privacidade</Link>, a <Link href="/cookies">Política de Cookies</Link> e a <Link href="/reembolso">Política de Cancelamento e Reembolso</Link>. Se não concordar, não use o serviço.</p>
     </Section>
 

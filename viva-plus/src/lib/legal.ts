@@ -2,6 +2,8 @@
 // Sem dependências: usado também no middleware.
 export const COMPANY = {
   product: "VIVA+",
+  // Nome por extenso (o mesmo do perfil do WhatsApp Business).
+  brandName: "Vivamais",
   legalName: "70.254.525 ISAQUE BATISTA SOARES",
   cnpj: "70.254.525/0001-39",
   city: "Aquiraz, CE",
@@ -23,5 +25,5 @@ export const LEGAL_LINKS = [
 ] as const;
 
 export function companyLine() {
-  return `${COMPANY.product} é um produto de ${COMPANY.legalName} · CNPJ ${COMPANY.cnpj} · ${COMPANY.address || COMPANY.city}`;
+  return `${COMPANY.product} (${COMPANY.brandName}) é um produto de ${COMPANY.legalName} · CNPJ ${COMPANY.cnpj} · ${COMPANY.address || COMPANY.city}`;
 }
