@@ -2,14 +2,16 @@ import { after } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildReport, reportMessage, reportRange, type ReportPeriod } from "@/lib/report";
-import { FREE_WHATSAPP_NOTE, WHATSAPP_FREE_WEEKLY, SITE_URL, activeWhatsappPlan, brl, connectUrlFor, featuresMessage, freeLeftFooter, freeLimitMessage, linkWhatsapp, notLinkedMessage, requestKeyFor, sendWhatsappText, validSignature, welcomeAfterLink } from "@/lib/whatsapp";
+import { randomUUID } from "node:crypto";
+import { downloadWhatsappMedia, oggDurationSeconds, FREE_WHATSAPP_NOTE, WHATSAPP_FREE_WEEKLY, SITE_URL, activeWhatsappPlan, brl, connectUrlFor, featuresMessage, freeLeftFooter, freeLimitMessage, linkWhatsapp, notLinkedMessage, requestKeyFor, sendWhatsappText, validSignature, welcomeAfterLink } from "@/lib/whatsapp";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 type Admin = ReturnType<typeof createAdminClient>;
 type HistoryItem = { role: "user" | "assistant"; content: string; clarification?: Record<string, unknown> };
-type WaMessage = { id?: string; from?: string; type?: string; text?: { body?: string }; button?: { text?: string }; interactive?: { button_reply?: { title?: string }; list_reply?: { title?: string } } };
+type WaMedia = { id?: string; mime_type?: string; caption?: string; filename?: string };
+type WaMessage = { id?: string; from?: string; type?: string; text?: { body?: string }; audio?: WaMedia; voice?: WaMedia; image?: WaMedia; document?: WaMedia; button?: { text?: string }; interactive?: { button_reply?: { title?: string }; list_reply?: { title?: string } } };
 
 const UNDO_WINDOW_MS = 15 * 60 * 1000;
 
@@ -119,8 +121,10 @@ async function handleMessage(m: WaMessage, origin: string) {
     return;
   }
 
-  if (!text) {
-    await sendWhatsappText(from, `Por enquanto eu entendo só mensagens de texto por aqui. 🎤📷 Áudio e foto de comprovante funcionam no app: ${SITE_URL}/assistente`);
+  // Áudio (vira texto) e foto/PDF de comprovante (a VIVA lê e anota).
+  const media = mediaOf(m);
+  if (!text && !media) {
+    await sendWhatsappText(from, "Ainda não entendo esse tipo de mensagem 😅 Pode me mandar *texto*, *áudio* ou *foto do comprovante*.");
     return;
   }
 
@@ -145,12 +149,56 @@ async function handleMessage(m: WaMessage, origin: string) {
       freeLeft = Number(q.left ?? 0);
     }
 
+    let message = text;
+    let userContent = text;
+    let prefix = "";
+    let receiptUploadId: string | null = null;
+    if (media?.kind === "audio") {
+      await sendWhatsappText(from, "🎧 Ouvindo seu áudio…");
+      const file = await downloadWhatsappMedia(media.id);
+      if ("error" in file) { await sendWhatsappText(from, file.error === "too_big" ? "Esse áudio ficou grande demais 😅 Me manda um de até 1 minuto." : "Não consegui baixar seu áudio. Tenta mandar de novo?"); return; }
+      const seconds = (file.mime.includes("ogg") ? oggDurationSeconds(file.buffer) : null) ?? Math.max(1, file.buffer.length / 4000);
+      if (seconds > 60) { await sendWhatsappText(from, "Esse áudio passou de 1 minuto 😅 Me manda em partes menores, por favor."); return; }
+      const form = new FormData();
+      const mime = file.mime && file.mime.startsWith("audio/") ? file.mime : "audio/ogg";
+      form.append("audio", new Blob([new Uint8Array(file.buffer)], { type: mime }), mime.includes("ogg") ? "audio.ogg" : mime.includes("mpeg") ? "audio.mp3" : "audio.m4a");
+      form.append("duration_seconds", String(Math.min(60, Math.max(1, Math.round(seconds)))));
+      const tr = await callAppForm(origin, session.cookie, "/api/assistant/transcribe", form);
+      const transcript = String(tr.data.text || "").trim();
+      if (!tr.ok || !transcript) {
+        let err = String(tr.data.error || "Não consegui entender o áudio. Tenta falar mais perto do microfone? 🎤");
+        if (tr.data.upgrade) err += `\n\nÁudio está no plano Pro: ${SITE_URL}/planos`;
+        await sendWhatsappText(from, err);
+        return;
+      }
+      message = transcript.slice(0, 4000);
+      userContent = message;
+      prefix = `🎤 _“${transcript.slice(0, 280)}”_\n\n`;
+    } else if (media?.kind === "receipt") {
+      const file = await downloadWhatsappMedia(media.id);
+      if ("error" in file) { await sendWhatsappText(from, file.error === "too_big" ? "Esse arquivo passou de 5 MB 😅 Tenta uma foto mais leve." : "Não consegui baixar a foto. Tenta mandar de novo?"); return; }
+      const mime = file.mime || media.mime;
+      const ext = mime === "application/pdf" ? "pdf" : mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : mime === "image/jpeg" || mime === "image/jpg" ? "jpg" : null;
+      if (!ext) { await sendWhatsappText(from, "Consigo ler *foto* (JPG/PNG) ou *PDF* do comprovante. Tenta mandar assim?"); return; }
+      const contentType = ext === "jpg" ? "image/jpeg" : mime;
+      const path = `${link.user_id}/${randomUUID()}.${ext}`;
+      const { error: upError } = await admin.storage.from("viva-receipt-temp").upload(path, file.buffer, { contentType, cacheControl: "0", upsert: false });
+      if (upError) { console.error("VIVA WhatsApp receipt upload", upError); await sendWhatsappText(from, "Não consegui guardar a foto agora. Tenta de novo em instantes."); return; }
+      const { data: row, error: rowError } = await admin.from("viva_receipt_uploads").insert({ user_id: link.user_id, temp_path: path, file_name: `whatsapp.${ext}`, mime_type: contentType, status: "uploaded", expires_at: new Date(Date.now() + 60 * 60000).toISOString() }).select("id").single();
+      if (rowError || !row) { await admin.storage.from("viva-receipt-temp").remove([path]); await sendWhatsappText(from, "Não consegui preparar o comprovante. Tenta de novo?"); return; }
+      receiptUploadId = String(row.id);
+      message = (media.caption || "").slice(0, 500);
+      userContent = `[foto de comprovante]${media.caption ? " " + media.caption : ""}`;
+      prefix = "🧾 Li seu comprovante!\n\n";
+    }
+
     const history: HistoryItem[] = Array.isArray(link.history) ? (link.history as HistoryItem[]).slice(-10) : [];
-    const res = await callApp(origin, session.cookie, "/api/assistant", { method: "POST", body: JSON.stringify({ message: text.slice(0, 4000), history, requestId: requestKeyFor(id) }) });
-    const { reply, clarification, transactionId } = await buildReply(res, origin, session.cookie);
+    const res = await callApp(origin, session.cookie, "/api/assistant", { method: "POST", body: JSON.stringify({ message, history, requestId: requestKeyFor(id), ...(receiptUploadId ? { receiptUploadId } : {}) }) });
+    const { reply: rawReply, clarification, transactionId } = await buildReply(res, origin, session.cookie);
+    const reply = (res.ok && !res.data.error ? prefix : prefix.startsWith("🎤") ? prefix : "") + rawReply;
     await sendWhatsappText(from, freeLeft === null ? reply : reply + freeLeftFooter(freeLeft));
 
-    const nextHistory: HistoryItem[] = [...history, { role: "user" as const, content: text.slice(0, 4000) }, { role: "assistant" as const, content: reply.slice(0, 4000), ...(clarification ? { clarification } : {}) }].slice(-12);
+    const nextHistory: HistoryItem[] = [...history, { role: "user" as const, content: userContent.slice(0, 4000) }, { role: "assistant" as const, content: reply.slice(0, 4000), ...(clarification ? { clarification } : {}) }].slice(-12);
     await admin.from("viva_whatsapp_links").update({
       history: nextHistory,
       ...(transactionId ? { last_transaction_id: transactionId, last_transaction_at: new Date().toISOString() } : {}),
@@ -162,6 +210,20 @@ async function handleMessage(m: WaMessage, origin: string) {
 }
 
 type AppResult = { ok: boolean; status: number; data: Record<string, unknown> };
+type Media = { kind: "audio" | "receipt"; id: string; mime: string; caption?: string };
+function mediaOf(m: WaMessage): Media | null {
+  const audio = m.audio || m.voice;
+  if ((m.type === "audio" || m.type === "voice") && audio?.id) return { kind: "audio", id: audio.id, mime: String(audio.mime_type || "audio/ogg").split(";")[0] };
+  if (m.type === "image" && m.image?.id) return { kind: "receipt", id: m.image.id, mime: String(m.image.mime_type || "image/jpeg"), caption: m.image.caption };
+  if (m.type === "document" && m.document?.id && /^(application\/pdf|image\/)/.test(String(m.document.mime_type || ""))) return { kind: "receipt", id: m.document.id, mime: String(m.document.mime_type), caption: m.document.caption };
+  return null;
+}
+async function callAppForm(origin: string, cookie: string, path: string, body: FormData): Promise<AppResult> {
+  const res = await fetch(origin + path, { method: "POST", body, headers: { cookie }, cache: "no-store" });
+  let data: Record<string, unknown> = {};
+  try { data = await res.json(); } catch { /* resposta sem JSON */ }
+  return { ok: res.ok, status: res.status, data };
+}
 async function callApp(origin: string, cookie: string, path: string, init: RequestInit): Promise<AppResult> {
   const res = await fetch(origin + path, { ...init, headers: { "content-type": "application/json", cookie }, cache: "no-store" });
   let data: Record<string, unknown> = {};
@@ -196,7 +258,7 @@ async function buildReply(res: AppResult, origin: string, cookie: string): Promi
   const clarification = d.clarification as Record<string, unknown> | undefined;
   if (clarification) {
     const amount = Number(clarification.amount || 0);
-    const reply = d.clarificationPrompt ? String(d.clarificationPrompt) : amount > 0 ? `Anotei ${brl(amount)}. Foi uma *despesa* ou uma *receita*?` : "Qual foi o valor?";
+    const reply = d.clarificationPrompt ? String(d.clarificationPrompt) : amount > 0 ? `${brl(amount)}: foi um *gasto* ou uma *entrada*?\nResponda *1* para gasto ou *2* para entrada.` : "Qual foi o valor?";
     return { reply, clarification };
   }
 
