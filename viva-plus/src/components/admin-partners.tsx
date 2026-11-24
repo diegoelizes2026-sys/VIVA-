@@ -56,6 +56,23 @@ export function AdminUserGrowthTools({ userId, name, onChanged }: { userId: stri
 
 type Partner = { user_id: string; full_name: string; email: string; code: string | null; reward_cents: number; monthly_limit_cents: number | null; active: boolean; signups: number; paying: number; earned_cents: number; created_at: string };
 
+/** Botão de teste dos e-mails (Resend). */
+export function AdminEmailTest() {
+  const [busy, setBusy] = useState(false); const [msg, setMsg] = useState(""); const [err, setErr] = useState("");
+  async function send() {
+    setBusy(true); setMsg(""); setErr("");
+    const r = await fetch("/api/admin/email-test", { method: "POST" });
+    const j = await r.json().catch(() => ({})); setBusy(false);
+    if (!r.ok) { setErr(j.error || "Não foi possível enviar."); return; }
+    setMsg(`E-mail de teste enviado para ${j.to}. Confira a caixa de entrada (e o spam).`);
+  }
+  return <section className="viva-admin-section">
+    <div className="viva-admin-section-title"><div><h2>E-mails (Resend)</h2><p>Manda um e-mail de teste para você, para conferir se o envio está funcionando.</p></div><button className="viva-admin-save" disabled={busy} onClick={send}>{busy ? "Enviando…" : "Enviar e-mail de teste"}</button></div>
+    {msg && <p role="status" style={{ color: "#0b6b37", fontWeight: 700 }}>{msg}</p>}
+    {err && <p role="alert" style={{ color: "#b42318" }}>{err}</p>}
+  </section>;
+}
+
 /** Seção do painel: parceiros e resultados. */
 export default function AdminPartners() {
   const [list, setList] = useState<Partner[] | null>(null); const [err, setErr] = useState(""); const [copied, setCopied] = useState("");
