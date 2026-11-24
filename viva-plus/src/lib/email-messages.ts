@@ -90,3 +90,15 @@ export function reportEmail(r: Report, first: string): EmailContent {
     cta: { label: "Ver relatório completo", url: `${SITE}/relatorio?p=${week ? "semana" : "mes-passado"}` },
   };
 }
+
+export function passwordResetEmail(first: string, link: string): EmailContent {
+  return {
+    subject: "🔐 Crie sua nova senha da VIVA+",
+    preheader: "O link vale por 1 hora.",
+    title: `${hi(first)} Vamos criar sua nova senha`,
+    paragraphs: ["Recebemos um pedido para trocar a senha da sua conta VIVA+. Toque no botão abaixo para escolher uma nova.", "O link vale por **1 hora** e só pode ser usado uma vez."],
+    cta: { label: "Criar nova senha", url: link },
+    ps: "Não foi você? É só ignorar este e-mail: sua senha continua a mesma e ninguém entra na sua conta sem ela.",
+    transactional: true,
+  };
+}
