@@ -8,13 +8,15 @@ export const dynamic = "force-dynamic";
 
 const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
-// Cartão de vitória (1080x1350, tamanho de status/stories) para compartilhar com o convite.
+// Cartão de vitória ou do número do dia (?tipo=dia) (1080x1350, tamanho de status/stories) para compartilhar com o convite.
 // ?valores=0 esconde os valores em reais.
 export async function GET(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return new Response("Não autenticado.", { status: 401 });
-  const showValues = new URL(request.url).searchParams.get("valores") !== "0";
+  const params = new URL(request.url).searchParams;
+  const showValues = params.get("valores") !== "0";
+  const dayCard = params.get("tipo") === "dia";
   const today = todayBR();
   const [{ budget, streak }, referral] = await Promise.all([
     loadTodayBudget(supabase, user.id, today),
@@ -27,6 +29,14 @@ export async function GET(request: Request) {
   if (streak >= 3) { emoji = "🔥"; big = `${streak} dias seguidos`; small = "dentro do meu valor do dia, sem estourar o orçamento."; }
   else if (leftover > 0) { emoji = "🎉"; big = showValues ? `Vai sobrar ${brl(leftover)}` : "Vai sobrar dinheiro"; small = "neste mês, no ritmo que estou gastando."; }
 
+  // ?tipo=dia: "número do dia" para o Status do WhatsApp (o valor que dá para gastar hoje).
+  if (dayCard && budget.mode !== "setup") {
+    const value = Math.max(0, budget.allowance);
+    emoji = budget.forecast?.kind === "runs_out" ? "💪" : "💜";
+    big = showValues ? `Hoje posso gastar ${brl(value)}` : "Eu sei quanto posso gastar hoje";
+    small = budget.forecast?.kind === "runs_out" ? "e estou ajustando para fechar o mês no azul." : "e vou fechar o mês no azul.";
+  }
+
   const code = referral?.code ? String(referral.code) : "";
   return new ImageResponse(
     (
@@ -37,7 +47,7 @@ export async function GET(request: Request) {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
           <div style={{ display: "flex", fontSize: 150 }}>{emoji}</div>
-          {first && <div style={{ display: "flex", fontSize: 44, fontWeight: 700, opacity: 0.85 }}>{first} conseguiu:</div>}
+          {first && <div style={{ display: "flex", fontSize: 44, fontWeight: 700, opacity: 0.85 }}>{dayCard ? `${first}:` : `${first} conseguiu:`}</div>}
           <div style={{ display: "flex", fontSize: 112, fontWeight: 900, letterSpacing: -4, lineHeight: 1.02 }}>{big}</div>
           <div style={{ display: "flex", fontSize: 46, fontWeight: 600, opacity: 0.9, lineHeight: 1.3, maxWidth: 860 }}>{small}</div>
         </div>

@@ -6,11 +6,11 @@ import { Gift, Copy, Share2, Check, Sparkles, Banknote, Clock3, Wallet } from "l
 
 // ---------------------------------------------------------------- Teste grátis do Pro
 type Trial = { eligible: boolean; active: boolean; ends_at: string | null; minutes?: number; days?: number; credits: number };
-const hm = (iso: string) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+const hm = (iso: string) => { const d = new Date(iso); return d.getTime() - Date.now() > 86400000 ? d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) : d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); };
 const trialLength = (t: Trial) => (t.minutes ? `${t.minutes} minutos` : `${t.days ?? 7} dias`);
 const dm = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 
-/** Botão/cartão "Testar o Pro grátis por 5 minutos". Some se a conta já usou o teste ou já é paga. */
+/** Botão/cartão "Testar o Pro grátis por 7 dias". Some se a conta já usou o teste ou já é paga. */
 export function TrialOffer({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [t, setT] = useState<Trial | null>(null);

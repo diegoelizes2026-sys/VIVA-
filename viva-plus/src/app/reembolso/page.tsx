@@ -35,7 +35,7 @@ export default function RefundPage() {
     </Section>
 
     <Section title="6. Teste grátis e créditos">
-      <p>O teste grátis do Pro (5 minutos) não gera cobrança. Créditos de boas-vindas, de indicação ou de teste são bônus e não podem ser trocados por dinheiro. Recompensas em dinheiro do Indique e ganhe seguem as regras dos <Link href="/termos#indicacao">Termos de Uso</Link>.</p>
+      <p>O teste grátis do Pro (7 dias) não gera cobrança. Créditos de boas-vindas, de indicação ou de teste são bônus e não podem ser trocados por dinheiro. Recompensas em dinheiro do Indique e ganhe seguem as regras dos <Link href="/termos#indicacao">Termos de Uso</Link>.</p>
     </Section>
   </LegalPage>;
 }

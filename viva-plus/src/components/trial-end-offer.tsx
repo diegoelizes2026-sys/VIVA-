@@ -8,7 +8,7 @@ type TrialInfo = { active?: boolean; ends_at?: string | null; followup?: { ends_
 const SEEN = "viva-trial-end-offer-seen";
 
 /**
- * Teste grátis do Pro (5 minutos): mostra o tempo restante e, quando o teste acaba,
+ * Teste grátis do Pro (7 dias): mostra o tempo restante e, quando o teste acaba,
  * abre os planos na hora para a pessoa fechar a assinatura. Reaparece a cada sessão até assinar.
  */
 export default function TrialEndOffer({ plans }: { plans: Plan[] }) {
@@ -53,7 +53,9 @@ export default function TrialEndOffer({ plans }: { plans: Plan[] }) {
   const paid = plans.filter(p => p.id !== "free" && Number(p.monthly_price_brl) > 0);
   if (endsAt && !open) {
     const left = Math.max(0, Math.ceil((endsAt - now) / 1000));
-    return <div className="viva-trial-timer" role="status">⏳ Teste do Pro: <b>{Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}</b> restantes</div>;
+    const days = Math.ceil(left / 86400), h = Math.floor(left / 3600), m = Math.floor((left % 3600) / 60);
+    const label = left > 86400 ? `${days} dias` : h > 0 ? `${h}h${String(m).padStart(2, "0")}` : `${m}:${String(left % 60).padStart(2, "0")}`;
+    return <div className="viva-trial-timer" role="status">⏳ Teste do Pro: <b>{label}</b> restantes</div>;
   }
   if (!open || paid.length === 0) return null;
   return (

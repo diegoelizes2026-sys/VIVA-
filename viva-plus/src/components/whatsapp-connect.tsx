@@ -60,30 +60,18 @@ export default function WhatsappConnect({ variant = "profile" }: { variant?: "ho
     finally { setBusy(false); }
   }
 
-  // A VIVA no WhatsApp é exclusiva para assinantes: sem plano ativo, o cartão leva para os planos.
-  const needsPlan = status !== null && status.subscribed === false;
+  // Sem plano pago, a VIVA no WhatsApp funciona com o limite do Free (10 mensagens por semana).
+  const isFree = status !== null && status.subscribed === false;
 
   if (variant === "home") {
     if (!status) return null;
-    if (needsPlan) {
-      return (
-        <a className="wa-home linked" href="/planos?whatsapp=assinar">
-          <span className="wa-home-icon" aria-hidden>💬</span>
-          <span className="wa-home-text">
-            <b>VIVA no WhatsApp</b>
-            <small>Exclusivo para assinantes. Assine um plano e anote gastos, veja contas e planeje tudo por mensagem.</small>
-          </span>
-          <span className="wa-home-go">Ver planos</span>
-        </a>
-      );
-    }
     if (status.linked) {
       return (
         <a className="wa-home linked" href={status.chatUrl} target="_blank" rel="noopener noreferrer">
           <span className="wa-home-icon" aria-hidden>💬</span>
           <span className="wa-home-text">
             <b>{notice === "conectado" ? "WhatsApp conectado! ✅" : "VIVA no WhatsApp"}</b>
-            <small>{notice === "conectado" ? "Agora é só falar com a VIVA por lá." : "Anote gastos e tire dúvidas sem abrir o app."}</small>
+            <small>{notice === "conectado" ? "Agora é só falar com a VIVA por lá." : "Anote gastos e tire dúvidas sem abrir o app."}{isFree ? " Grátis: 10 mensagens por semana." : ""}</small>
           </span>
           <span className="wa-home-go">Abrir conversa</span>
         </a>
@@ -95,7 +83,7 @@ export default function WhatsappConnect({ variant = "profile" }: { variant?: "ho
         <div className="wa-home-text">
           <b>Fale com a VIVA no WhatsApp</b>
           <small>
-            {notice === "expirado" ? "Aquele link expirou. Toque abaixo para conectar de novo." : notice === "erro" ? "Não deu certo agora. Tente de novo abaixo." : "Mande “gastei 35 na farmácia” e ela anota na hora, sem abrir o app."}
+            {notice === "expirado" ? "Aquele link expirou. Toque abaixo para conectar de novo." : notice === "erro" ? "Não deu certo agora. Tente de novo abaixo." : `Mande “gastei 35 na farmácia” e ela anota na hora, sem abrir o app.${isFree ? " Grátis: 10 mensagens por semana." : ""}`}
           </small>
           {link ? (
             <small className="wa-home-hint">Abrimos o WhatsApp com a mensagem pronta: é só <b>enviar</b>. Se não abriu, mande <b>Conectar VIVA {link.code}</b>.</small>
@@ -114,21 +102,12 @@ export default function WhatsappConnect({ variant = "profile" }: { variant?: "ho
   return (
     <section className="card mt-5 max-w-2xl p-6">
       <b>💬 VIVA no WhatsApp</b>
-      {needsPlan ? (
-        <>
-          <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-            {status?.linked ? `Seu número ${status.number} está conectado, mas a` : "A"} VIVA no WhatsApp é exclusiva para assinantes. Assine um plano para anotar gastos, ver contas e planejar tudo por mensagem.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <a className="btn-primary" href="/planos?whatsapp=assinar">Ver planos</a>
-            {status?.linked && <button type="button" className="btn-secondary" onClick={disconnect} disabled={busy}>Desconectar</button>}
-          </div>
-        </>
-      ) : status?.linked ? (
+      {status?.linked ? (
         <>
           <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
             Conectado ao número {status.number}. Fale com a VIVA pelo WhatsApp do mesmo jeito que no app: “gastei 35 na farmácia”, “quanto posso gastar hoje?”.
           </p>
+          {isFree && <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>No plano Free são <b>10 mensagens por semana</b>. <a href="/planos?whatsapp=assinar" style={{ color: "var(--purple, #6410C9)", fontWeight: 700 }}>Sem limite no Pro</a> (teste grátis por 7 dias).</p>}
           <div className="mt-4 flex flex-wrap gap-3">
             <a className="btn-primary" href={status.chatUrl} target="_blank" rel="noopener noreferrer">Abrir conversa com a VIVA</a>
             <button type="button" className="btn-secondary" onClick={disconnect} disabled={busy}>Desconectar</button>

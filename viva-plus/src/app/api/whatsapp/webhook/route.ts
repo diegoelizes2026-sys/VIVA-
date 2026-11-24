@@ -1,7 +1,7 @@
 import { after } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { NEEDS_PLAN_MESSAGE, SITE_URL, activeWhatsappPlan, brl, connectUrlFor, featuresMessage, linkWhatsapp, notLinkedMessage, requestKeyFor, sendWhatsappText, validSignature, welcomeAfterLink } from "@/lib/whatsapp";
+import { FREE_WHATSAPP_NOTE, WHATSAPP_FREE_WEEKLY, SITE_URL, activeWhatsappPlan, brl, connectUrlFor, featuresMessage, freeLeftFooter, freeLimitMessage, linkWhatsapp, notLinkedMessage, requestKeyFor, sendWhatsappText, validSignature, welcomeAfterLink } from "@/lib/whatsapp";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -96,15 +96,11 @@ async function handleMessage(m: WaMessage, origin: string) {
     return;
   }
 
-  // A VIVA no WhatsApp é exclusiva de quem assinou um plano pelo site.
+  // Assinantes (e quem está no teste do Pro) usam sem limite; o Free tem mensagens grátis por semana.
   const plan = await activeWhatsappPlan(admin, link.user_id);
-  if (!plan) {
-    await sendWhatsappText(from, NEEDS_PLAN_MESSAGE);
-    return;
-  }
 
   if (/^\s*(ajuda|menu|fun[çc][õo]es|funcionalidades|o que voc[êe] faz\??|comandos)\s*$/i.test(text)) {
-    await sendWhatsappText(from, featuresMessage(plan.planName));
+    await sendWhatsappText(from, plan ? featuresMessage(plan.planName) : `${featuresMessage()}\n\n${FREE_WHATSAPP_NOTE}`);
     return;
   }
 
@@ -124,10 +120,20 @@ async function handleMessage(m: WaMessage, origin: string) {
       return;
     }
 
+    // Free: conta a mensagem na cota da semana antes de chamar a VIVA (ajuda e desfazer não contam).
+    let freeLeft: number | null = null;
+    if (!plan) {
+      const { data: quota, error: quotaError } = await admin.rpc("viva_whatsapp_free_use", { p_user_id: link.user_id, p_limit: WHATSAPP_FREE_WEEKLY });
+      if (quotaError) { console.error("VIVA WhatsApp free quota", quotaError); await sendWhatsappText(from, "Não consegui responder agora. Tente de novo em instantes."); return; }
+      const q = quota as { allowed?: boolean; left?: number; resets_on?: string } | null;
+      if (!q?.allowed) { await sendWhatsappText(from, freeLimitMessage(q?.resets_on)); return; }
+      freeLeft = Number(q.left ?? 0);
+    }
+
     const history: HistoryItem[] = Array.isArray(link.history) ? (link.history as HistoryItem[]).slice(-10) : [];
     const res = await callApp(origin, session.cookie, "/api/assistant", { method: "POST", body: JSON.stringify({ message: text.slice(0, 4000), history, requestId: requestKeyFor(id) }) });
     const { reply, clarification, transactionId } = await buildReply(res, origin, session.cookie);
-    await sendWhatsappText(from, reply);
+    await sendWhatsappText(from, freeLeft === null ? reply : reply + freeLeftFooter(freeLeft));
 
     const nextHistory: HistoryItem[] = [...history, { role: "user" as const, content: text.slice(0, 4000) }, { role: "assistant" as const, content: reply.slice(0, 4000), ...(clarification ? { clarification } : {}) }].slice(-12);
     await admin.from("viva_whatsapp_links").update({
