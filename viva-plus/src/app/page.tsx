@@ -7,8 +7,9 @@ import { LEGAL_LINKS, companyLine } from "@/lib/legal";
 import { SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, supportEmailUrl, supportWhatsAppUrl } from "@/lib/support";
 
 export const metadata = {
-  title: "VIVA+ (Vivamais) · Chega de o mês acabar antes do salário",
-  description: "Todo dia a VIVA te diz quanto você pode gastar sem faltar dinheiro até o próximo pagamento. Você só manda mensagem no WhatsApp. Comece grátis.",
+  title: { absolute: "VIVA+ (Vivamais) · Controle financeiro pelo WhatsApp: chega de o mês acabar antes do salário" },
+  description: "Todo dia a VIVA te diz quanto você pode gastar sem faltar dinheiro até o próximo pagamento. Anote gastos pelo WhatsApp (texto, áudio ou foto), receba aviso das contas e resumo do mês. Comece grátis, com 7 dias de Pro.",
+  alternates: { canonical: "/" },
 };
 
 type Plan = { id: string; name: string; monthly_price_brl: number; annual_price_brl: number; monthly_credits: number; signup_credits: number; voice_enabled: boolean; photo_enabled: boolean; radar_enabled: boolean };
@@ -44,7 +45,21 @@ export default async function Home() {
     { q: "Funciona no celular?", a: "Sim. Abra no navegador do celular e adicione à tela de início para usar como um aplicativo." },
   ];
 
+  // Dados estruturados para o Google (empresa, site, aplicativo e perguntas frequentes).
+  const site = "https://www.vivamaiss.app.br";
+  const jsonLd = [
+    { "@context": "https://schema.org", "@type": "Organization", "@id": site + "/#org", name: "VIVA+ (Vivamais)", alternateName: ["Vivamais", "VIVA+"], url: site, logo: site + "/icons/viva-512.svg", email: SUPPORT_EMAIL,
+      address: { "@type": "PostalAddress", streetAddress: "Rua Tibúrcio Targino, 389", addressLocality: "Aquiraz", addressRegion: "CE", addressCountry: "BR" } },
+    { "@context": "https://schema.org", "@type": "WebSite", "@id": site + "/#site", name: "Vivamais", alternateName: "VIVA+", url: site, inLanguage: "pt-BR", publisher: { "@id": site + "/#org" } },
+    { "@context": "https://schema.org", "@type": "SoftwareApplication", name: "VIVA+", applicationCategory: "FinanceApplication", operatingSystem: "Web, Android, iOS (navegador) e WhatsApp", url: site, inLanguage: "pt-BR",
+      description: "Assistente financeira pelo WhatsApp que diz quanto você pode gastar por dia sem faltar dinheiro até o salário.",
+      offers: plans.filter(p => Number(p.monthly_price_brl) >= 0).map(p => ({ "@type": "Offer", name: p.name, price: Number(p.monthly_price_brl).toFixed(2), priceCurrency: "BRL" })),
+      publisher: { "@id": site + "/#org" } },
+    { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map(f => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
+  ];
+
   return <main id="conteudo" className="lp">
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
     <header className="lp-nav">
       <span className="lp-logo">VIVA<span>+</span></span>
       <nav><a href="#como-funciona">Como funciona</a><a href="#planos">Planos</a><a href="#duvidas">Dúvidas</a></nav>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import LegalPage, { Section } from "@/components/legal-page";
 import { SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, supportEmailUrl, supportWhatsAppUrl } from "@/lib/support";
 
-export const metadata = { title: "Cancelamento e reembolso · VIVA+" };
+export const metadata = { title: "Cancelamento e reembolso", description: "Como cancelar o VIVA+ e pedir reembolso: arrependimento em 7 dias, Pix e cartão.", alternates: { canonical: "/reembolso" } };
 
 export default function RefundPage() {
   return <LegalPage title="Política de Cancelamento e Reembolso" current="/reembolso">

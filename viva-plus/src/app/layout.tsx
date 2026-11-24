@@ -3,11 +3,28 @@ import "./globals.css";
 import PwaRegister from "@/components/pwa-register";
 import CookieNotice from "@/components/cookie-notice";
 
+const SITE_URL = "https://www.vivamaiss.app.br";
+const DESCRIPTION = "Controle financeiro pelo WhatsApp: todo dia a VIVA+ te diz quanto você pode gastar sem faltar dinheiro até o salário. Anote gastos por mensagem, áudio ou foto. Comece grátis.";
+
 export const metadata: Metadata = {
-  title: "VIVA+ (Vivamais) | Sua vida mais inteligente",
+  metadataBase: new URL(SITE_URL),
+  title: { default: "VIVA+ (Vivamais) · Chega de o mês acabar antes do salário", template: "%s · VIVA+" },
+  description: DESCRIPTION,
   applicationName: "Vivamais",
-  openGraph: { siteName: "Vivamais", title: "VIVA+ (Vivamais)" },
-  description: "Organize sua rotina, cuide do seu dinheiro e descubra oportunidades para economizar.",
+  keywords: ["controle financeiro", "controle de gastos pelo WhatsApp", "app de finanças pessoais", "organizar dinheiro", "quanto posso gastar por dia", "planilha de gastos", "orçamento pessoal", "sair das dívidas", "VIVA+", "Vivamais"],
+  authors: [{ name: "VIVA+ (Vivamais)" }],
+  creator: "VIVA+ (Vivamais)",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website", locale: "pt_BR", url: SITE_URL, siteName: "Vivamais",
+    title: "VIVA+ · Chega de o mês acabar antes do salário",
+    description: DESCRIPTION,
+  },
+  twitter: { card: "summary_large_image", title: "VIVA+ · Chega de o mês acabar antes do salário", description: DESCRIPTION },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 } },
+  // Google Search Console (método "tag HTML"): coloque o código em GOOGLE_SITE_VERIFICATION na Vercel.
+  verification: process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : undefined,
+  category: "finance",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [{ url: "/icons/viva-192.svg", type: "image/svg+xml" }],

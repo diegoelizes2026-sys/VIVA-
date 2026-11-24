@@ -3,7 +3,7 @@ import LegalPage, { Section } from "@/components/legal-page";
 import { COMPANY, PRIVACY_VERSION } from "@/lib/legal";
 import { SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, supportEmailUrl, supportWhatsAppUrl } from "@/lib/support";
 
-export const metadata = { title: "Política de Privacidade · VIVA+" };
+export const metadata = { title: "Política de Privacidade", description: "Como o VIVA+ (Vivamais) cuida dos seus dados, conforme a LGPD: o que coletamos, por quê e seus direitos.", alternates: { canonical: "/privacidade" } };
 
 export default function PrivacyPage() {
   return <LegalPage title="Política de Privacidade" version={PRIVACY_VERSION} current="/privacidade">
