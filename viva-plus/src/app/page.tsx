@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { BadgeDollarSign, CalendarClock, Receipt, MessageCircleHeart, ShieldCheck, Mic, Gift, Check, ChevronDown, Target, PiggyBank } from "lucide-react";
+import { BadgeDollarSign, CalendarClock, Receipt, MessageCircleHeart, ShieldCheck, Mic, Gift, Check, ChevronDown, Target, PiggyBank, Camera, Flame, Dumbbell, Radar, Droplet, HeartPulse } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import LandingSticky from "@/components/landing-sticky";
 import { LEGAL_LINKS, companyLine } from "@/lib/legal";
@@ -8,7 +8,7 @@ import { SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, supportEmailUrl, supportWhatsA
 
 export const metadata = {
   title: { absolute: "VIVA+ (Vivamais) · Controle financeiro pelo WhatsApp: chega de o mês acabar antes do salário" },
-  description: "Todo dia a VIVA te diz quanto você pode gastar sem faltar dinheiro até o próximo pagamento. Anote gastos pelo WhatsApp (texto, áudio ou foto), receba aviso das contas e resumo do mês. Comece grátis, com 7 dias de Pro.",
+  description: "Todo dia a VIVA te diz quanto você pode gastar sem faltar dinheiro até o próximo pagamento. E no VIVA Saúde: diário de calorias com foto do prato, Personal com IA e radar de personais e academias credenciados. Tudo pelo WhatsApp. Comece grátis, com 7 dias de Pro.",
   alternates: { canonical: "/" },
 };
 
@@ -36,12 +36,22 @@ export default async function Home() {
     { i: <Receipt />, t: "Gasto anotado em 3 toques", d: "Valor, com o quê e como pagou. Sem planilha, sem complicação." },
     { i: <Target />, t: "Metas que andam", d: "Sair das dívidas, montar uma reserva ou comprar algo, com o valor por mês." },
   ];
+  const health = [
+    { i: <Camera />, t: "Foto do prato", d: "Tire uma foto do almoço e a IA mostra os alimentos, as calorias e os macros. Você confere e salva." },
+    { i: <Flame />, t: "Diário de calorias", d: "Quanto você ainda pode comer hoje, com carboidratos, proteínas e gorduras. Busca de alimentos e código de barras." },
+    { i: <MessageCircleHeart />, t: "Saúde pelo WhatsApp", d: "“Almocei arroz, feijão e frango”, “bebi 2 copos de água”, “corri 30 min”. A VIVA anota no seu diário." },
+    { i: <Dumbbell />, t: "Personal com IA", d: "Treino da semana do seu jeito: em casa ou na academia, para emagrecer, ganhar massa ou ter mais saúde." },
+    { i: <Radar />, t: "Radar Fitness", d: "Personais e academias credenciados perto de você, com a distância em km, preço e WhatsApp." },
+    { i: <Droplet />, t: "Água, sono e peso", d: "Metas do dia, evolução da semana e lembretes para manter a rotina sem esforço." },
+  ];
   const faq = [
     { q: "Preciso ligar minha conta do banco?", a: "Não. A VIVA não pede senha de banco nem acesso à sua conta. Você conta o que quiser e ela organiza." },
     { q: "É seguro?", a: "Seus dados ficam protegidos e só você acessa. Você pode ver, corrigir ou apagar tudo em Meus dados." },
     { q: "Quanto custa?", a: "Começar é grátis, sem cartão. Ao criar a conta você ganha 7 dias do Pro grátis; depois, continua no plano grátis ou assina se quiser mais conversas com a VIVA. A VIVA no WhatsApp já funciona no plano grátis, com 10 mensagens por semana." },
     { q: "O que são créditos?", a: "Cada conversa com a inteligência da VIVA usa créditos. Anotar gastos pelo atalho, ver contas, lista de compras e lembretes não gastam créditos." },
     { q: "Ganho dinheiro indicando?", a: "Sim. Você ganha R$ 10 por amigo indicado que assinar e pagar o plano Pro (o teste grátis não conta). O valor é liberado 30 dias depois do pagamento e você saca por Pix a partir de R$ 30, até R$ 200 por mês." },
+    { q: "O que é o VIVA Saúde?", a: "É a parte de saúde da VIVA: diário de calorias (com foto do prato e código de barras), água, sono, peso, treino da semana com o Personal com IA e o Radar Fitness, com personais e academias credenciados perto de você. Já vem na sua conta, sem pagar a mais." },
+    { q: "O que é um profissional ou academia credenciado VIVA+?", a: "É um personal com CREF ou uma academia com CNPJ conferidos pela nossa equipe. Só quem é aprovado aparece no Radar Fitness, com o selo de credenciado. O serviço é combinado direto com o profissional ou a academia." },
     { q: "Funciona no celular?", a: "Sim. Abra no navegador do celular e adicione à tela de início para usar como um aplicativo." },
   ];
 
@@ -51,8 +61,8 @@ export default async function Home() {
     { "@context": "https://schema.org", "@type": "Organization", "@id": site + "/#org", name: "VIVA+ (Vivamais)", alternateName: ["Vivamais", "VIVA+"], url: site, logo: site + "/icons/viva-512.svg", email: SUPPORT_EMAIL,
       address: { "@type": "PostalAddress", streetAddress: "Rua Tibúrcio Targino, 389", addressLocality: "Aquiraz", addressRegion: "CE", addressCountry: "BR" } },
     { "@context": "https://schema.org", "@type": "WebSite", "@id": site + "/#site", name: "Vivamais", alternateName: "VIVA+", url: site, inLanguage: "pt-BR", publisher: { "@id": site + "/#org" } },
-    { "@context": "https://schema.org", "@type": "SoftwareApplication", name: "VIVA+", applicationCategory: "FinanceApplication", operatingSystem: "Web, Android, iOS (navegador) e WhatsApp", url: site, inLanguage: "pt-BR",
-      description: "Assistente financeira pelo WhatsApp que diz quanto você pode gastar por dia sem faltar dinheiro até o salário.",
+    { "@context": "https://schema.org", "@type": "SoftwareApplication", name: "VIVA+", applicationCategory: "FinanceApplication", applicationSubCategory: "Finanças pessoais e saúde", operatingSystem: "Web, Android, iOS (navegador) e WhatsApp", url: site, inLanguage: "pt-BR",
+      description: "Assistente pelo WhatsApp que diz quanto você pode gastar por dia sem faltar dinheiro até o salário, com diário de calorias, Personal com IA e radar de personais e academias credenciados.",
       offers: plans.filter(p => Number(p.monthly_price_brl) >= 0).map(p => ({ "@type": "Offer", name: p.name, price: Number(p.monthly_price_brl).toFixed(2), priceCurrency: "BRL" })),
       publisher: { "@id": site + "/#org" } },
     { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map(f => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
@@ -62,7 +72,7 @@ export default async function Home() {
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
     <header className="lp-nav">
       <span className="lp-logo">VIVA<span>+</span></span>
-      <nav><a href="#como-funciona">Como funciona</a><a href="#planos">Planos</a><a href="#duvidas">Dúvidas</a></nav>
+      <nav><a href="#como-funciona">Como funciona</a><a href="#saude">Saúde</a><a href="#planos">Planos</a><a href="#duvidas">Dúvidas</a></nav>
       <div className="lp-nav-cta"><Link href="/login" className="lp-link">Entrar</Link><Link href="/cadastro" className="lp-btn sm">Criar conta grátis</Link></div>
     </header>
 
@@ -113,7 +123,35 @@ export default async function Home() {
       <span className="lp-kicker">Tudo para fechar o mês no azul</span>
       <h2>O que a VIVA faz por você</h2>
       <div className="lp-features">{features.map(f => <div key={f.t} className="lp-feat"><span aria-hidden>{f.i}</span><h3>{f.t}</h3><p>{f.d}</p></div>)}</div>
-      <p className="lp-small">E ainda: lista de compras, lugares perto de você e Personal com treinos, tudo no mesmo app.</p>
+      <p className="lp-small">E ainda: lista de compras, lugares perto de você e o VIVA Saúde, tudo no mesmo app.</p>
+    </section>
+
+    <section className="lp-sec lp-health" id="saude">
+      <div className="lp-health-band">
+        <div className="lp-health-copy">
+          <span className="lp-pill hp"><HeartPulse size={15} aria-hidden /> Novo · VIVA Saúde</span>
+          <h2>Cuide do corpo com a mesma facilidade que cuida do dinheiro</h2>
+          <p>Mande a <b>foto do prato</b> e a VIVA calcula as calorias. Saiba quanto ainda pode comer hoje, registre água e treino pelo WhatsApp e encontre <b>personais e academias credenciados</b> perto de você.</p>
+          <div className="lp-hero-cta"><Link href="/cadastro" className="lp-btn light">Quero cuidar da minha saúde</Link></div>
+          <ul className="lp-trust on-dark"><li><Check size={16} /> Já vem na sua conta</li><li><Check size={16} /> Funciona no WhatsApp</li><li><Check size={16} /> Profissionais com registro conferido</li></ul>
+        </div>
+        <div className="lp-health-art" aria-hidden="true">
+          <div className="hp-phone">
+            <div className="hp-head"><b>Calorias de hoje</b><small>Restante = Meta − Alimentos + Exercício</small></div>
+            <div className="hp-ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" className="bg" /><circle cx="60" cy="60" r="50" className="fg" /></svg><div><strong>1.240</strong><span>restantes</span></div></div>
+            <div className="hp-macros">{([["Carbo", "62%", "c"], ["Proteína", "48%", "p"], ["Gordura", "35%", "f"]] as const).map(([l, w, c]) => <div key={l}><small>{l}</small><i><em className={c} style={{ width: w }} /></i></div>)}</div>
+            <div className="hp-meal"><span>Almoço</span><b>534 kcal</b></div>
+          </div>
+          <div className="hp-bubble b1"><Camera size={16} />Almoço anotado: 534 kcal. Restam 1.240 hoje 🔥</div>
+          <div className="hp-bubble b2"><Radar size={16} />Ana Souza · Credenciada VIVA+ · 2,5 km</div>
+          <small className="lp-note">Tela ilustrativa, com valores de exemplo.</small>
+        </div>
+      </div>
+      <div className="lp-features">{health.map(f => <div key={f.t} className="lp-feat"><span aria-hidden>{f.i}</span><h3>{f.t}</h3><p>{f.d}</p></div>)}</div>
+      <div className="lp-health-join">
+        <Link href="/parceiros"><Dumbbell size={20} aria-hidden /><span><b>É personal trainer?</b>Apareça no Radar com selo de credenciado e ganhe alunos.</span></Link>
+        <Link href="/academias"><Radar size={20} aria-hidden /><span><b>Tem academia?</b>Cadastre grátis e apareça para quem procura academia perto de casa.</span></Link>
+      </div>
     </section>
 
     {plans.length > 0 && <section className="lp-sec" id="planos">
