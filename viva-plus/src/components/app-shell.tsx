@@ -29,6 +29,7 @@ const ICONS:Record<string,React.ReactNode>={
  account:<><circle cx="14" cy="9.5" r="4.5"/><path d="M5 24c.9-4.6 4.4-7 9-7s8.1 2.4 9 7"/></>,
  admin:<><circle cx="14" cy="14" r="3.4"/><path d="M14 3.5v3M14 21.5v3M24.5 14h-3M6.5 14h-3M21.4 6.6l-2.1 2.1M8.7 19.3l-2.1 2.1M21.4 21.4l-2.1-2.1M8.7 8.7 6.6 6.6"/></>,
  health:<path d="M14 23s-9-5.5-9-12a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.5-9 12-9 12ZM6 14h4l2-3 3 6 2-3h5"/>,
+ sun:<><circle cx="14" cy="14" r="5"/><path d="M14 3v2.5M14 22.5V25M3 14h2.5M22.5 14H25M6.2 6.2l1.8 1.8M20 20l1.8 1.8M21.8 6.2 20 8M8 20l-1.8 1.8"/></>,
  chat:<path d="M6 5.5h16a2.5 2.5 0 0 1 2.5 2.5v10a2.5 2.5 0 0 1-2.5 2.5h-8l-6 4v-4H6A2.5 2.5 0 0 1 3.5 18V8A2.5 2.5 0 0 1 6 5.5Z"/>,
 };
 function Glyph({name}:{name:string}){return <svg viewBox="0 0 28 28" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">{ICONS[name]??ICONS.account}</svg>}
@@ -58,7 +59,7 @@ export default function AppShell({children,email,isAdmin=false,entryOfferPlans=[
   </header>
   <main id="conteudo" className="viva-main"><TrialEndOffer plans={entryOfferPlans}/>{path!=="/planos"&&<TrialFollowup/>}{children}</main><AlarmOverlay/><PermissionOnboarding/>
   {open&&<><button className="viva-drawer-backdrop" aria-label="Fechar menu" onClick={()=>setOpen(false)}/><aside className="viva-drawer" role="dialog" aria-modal="true" aria-label="Menu principal"><div className="viva-drawer-head"><Mark/><button onClick={()=>setOpen(false)} aria-label="Fechar menu"><Glyph name="close"/></button></div><nav aria-label="Menu principal">
-  <div className="viva-drawer-featured"><Link href="/meu-dia" onClick={()=>setOpen(false)} className={"viva-feature viva-feature-today"+(path==="/meu-dia"?" active":"")}><span className="viva-feature-icon">☀️</span><b>Meu dia</b><small>Quanto posso gastar hoje</small></Link>
+  <div className="viva-drawer-featured"><Link href="/meu-dia" onClick={()=>setOpen(false)} className={"viva-feature viva-feature-today"+(path==="/meu-dia"?" active":"")}><span className="viva-feature-icon"><Glyph name="sun"/></span><b>Meu dia</b><small>Quanto posso gastar hoje</small></Link>
    <Link href="/assistente" onClick={()=>setOpen(false)} className={"viva-feature viva-feature-chat"+(path==="/assistente"?" active":"")}><span className="viva-feature-icon"><span className="viva-mini-orb"/></span><b>Conversar com a VIVA</b><small>Dinheiro, agenda e dia a dia</small></Link>
    <Link href="/saude" onClick={()=>setOpen(false)} className={"viva-feature viva-feature-health"+(path==="/saude"?" active":"")}><span className="viva-feature-icon"><Glyph name="health"/></span><b>Saúde e bem-estar</b><small>Personal com IA e rotina</small></Link>
   </div>
