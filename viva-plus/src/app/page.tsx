@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { BadgeDollarSign, CalendarClock, Receipt, MessageCircleHeart, ShieldCheck, Mic, Gift, Check, ChevronDown, Target, PiggyBank, CheckCircle2, Camera, Flame, Dumbbell, Radar, Droplet, HeartPulse } from "lucide-react";
+import { BadgeDollarSign, CalendarClock, Receipt, MessageCircleHeart, ShieldCheck, Mic, Gift, Check, ChevronDown, Target, PiggyBank, CheckCircle2, Camera, Flame, Dumbbell, Radar, Droplet, HeartPulse, Building2, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import LandingSticky from "@/components/landing-sticky";
 import WhatsAppIcon from "@/components/whatsapp-icon";
@@ -73,7 +73,7 @@ export default async function Home() {
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
     <header className="lp-nav">
       <span className="lp-logo">VIVA<span>+</span></span>
-      <nav><a href="#como-funciona">Como funciona</a><a href="#saude">Saúde</a><a href="#planos">Planos</a><a href="#duvidas">Dúvidas</a></nav>
+      <nav><a href="#como-funciona">Como funciona</a><a href="#saude">Saúde</a><a href="#planos">Planos</a><a href="#duvidas">Dúvidas</a><span className="lp-nav-sep" aria-hidden /><Link href="/parceiros" className="lp-nav-pro"><Dumbbell size={16} aria-hidden />Sou personal</Link><Link href="/academias" className="lp-nav-pro"><Building2 size={16} aria-hidden />Tenho academia</Link></nav>
       <div className="lp-nav-cta"><Link href="/login" className="lp-link">Entrar</Link><Link href="/cadastro" className="lp-btn sm">Criar conta grátis</Link></div>
     </header>
 
@@ -192,6 +192,23 @@ export default async function Home() {
       <span className="lp-kicker">Dúvidas</span>
       <h2>Perguntas frequentes</h2>
       <div className="lp-faq">{faq.map(f => <details key={f.q}><summary>{f.q}<ChevronDown size={18} aria-hidden /></summary><p>{f.a}</p></details>)}</div>
+    </section>
+
+    <section className="lp-sec lp-pros" aria-labelledby="lp-pros-title">
+      <span className="lp-kicker">Para profissionais</span>
+      <h2 id="lp-pros-title">Trabalha com saúde? Apareça no Radar Fitness</h2>
+      <div className="lp-pros-grid">
+        <Link href="/parceiros" className="lp-pro-card">
+          <span className="lp-pro-ic"><Dumbbell aria-hidden /></span>
+          <span className="lp-pro-txt"><b>Sou personal trainer</b><small>Cadastre seu CREF, marque onde atende e ganhe o selo de credenciado. Grátis.</small></span>
+          <ArrowRight className="lp-pro-go" aria-hidden />
+        </Link>
+        <Link href="/academias" className="lp-pro-card">
+          <span className="lp-pro-ic"><Building2 aria-hidden /></span>
+          <span className="lp-pro-txt"><b>Tenho uma academia</b><small>Cadastre a academia com CNPJ e apareça para quem procura academia perto de casa. Grátis.</small></span>
+          <ArrowRight className="lp-pro-go" aria-hidden />
+        </Link>
+      </div>
     </section>
 
     <footer className="lp-foot">
