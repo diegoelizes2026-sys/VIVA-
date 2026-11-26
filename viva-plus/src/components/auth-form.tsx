@@ -107,7 +107,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
 
   const title = mode === "signup" ? "Crie sua conta" : mode === "reset" ? "Recuperar senha" : "Que bom ter você de volta";
   return <main id="conteudo" className="auth-page grid min-h-[100svh] place-items-center bg-white px-4 py-8"><InviteStore />
-    <div className="grid w-full max-w-5xl overflow-hidden rounded-[28px] border bg-white shadow-[0_24px_80px_rgba(25,21,31,.08)] md:grid-cols-[.9fr_1.1fr]" style={{ borderColor: "var(--color-gray)" }}><div className="auth-mobile-hero md:hidden"><div className="am-top"><span className="am-word">VIVA<span>+</span></span>{mode === "login" ? <Link href="/cadastro" className="am-switch">Criar conta</Link> : <Link href="/login" className="am-switch">Entrar</Link>}</div><h2>{mode === "signup" ? "Bora organizar sua vida financeira?" : mode === "reset" ? "Vamos recuperar seu acesso." : "Olá! Que bom te ver de novo."}</h2><p>{mode === "signup" ? "Leva 2 minutos. A VIVA te ajuda a sair das dívidas e a juntar dinheiro." : mode === "reset" ? "Recupere seu acesso com segurança e continue de onde parou." : "Seu dinheiro em dia, sem planilha."}</p><div className="am-bubbles" aria-hidden="true"><span className="am-b"><i className="ap-orb" />Anotado: R$ 35,90 em Farmácia ✅</span><span className="am-b pay"><BadgeDollarSign size={16} />Dia de pagamento! Já caiu?</span></div></div>
+    <div className="grid w-full max-w-5xl overflow-hidden rounded-[28px] border bg-white shadow-[0_24px_80px_rgba(25,21,31,.08)] md:grid-cols-[.9fr_1.1fr]" style={{ borderColor: "var(--color-gray)" }}><div className="auth-mobile-hero md:hidden"><div className="am-top"><span className="am-word">VIVA<span>+</span></span>{mode === "login" ? <Link href="/cadastro" className="am-switch">Criar conta</Link> : <Link href="/login" className="am-switch">Entrar</Link>}</div><h2>{mode === "signup" ? "Bora organizar sua vida financeira?" : mode === "reset" ? "Vamos recuperar seu acesso." : "Olá! Que bom te ver de novo."}</h2><p>{mode === "signup" ? "Leva 2 minutos. A VIVA te ajuda a sair das dívidas e a juntar dinheiro." : mode === "reset" ? "Recupere seu acesso com segurança e continue de onde parou." : "Seu dinheiro em dia, sem planilha."}</p><div className="am-bubbles" aria-hidden="true"><span className="am-b"><i className="ap-orb" />Anotado: R$ 35,90 em Farmácia</span><span className="am-b pay"><BadgeDollarSign size={16} />Dia de pagamento! Já caiu?</span></div></div>
       <section className="auth-brand-panel ap relative hidden min-h-[680px] flex-col justify-between overflow-hidden p-10 md:flex">
         <Link href="/" className="auth-wordmark relative"><span className="auth-wordmark-main">VIVA<span>+</span></span><small>UM JEITO MAIS LEVE DE VIVER</small></Link>
         <div className="ap-copy">
@@ -124,7 +124,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
               <div className="ap-input">Converse com a VIVA…<span><Mic size={13} /></span></div>
             </div>
           </div>
-          <div className="ap-bubble b1"><span className="ap-orb" />Anotado: R$ 35,90 em Farmácia ✅</div>
+          <div className="ap-bubble b1"><span className="ap-orb" />Anotado: R$ 35,90 em Farmácia</div>
           <div className="ap-bubble b2"><BadgeDollarSign size={18} />Dia de pagamento! Já caiu?</div>
         </div>
         <p className="ap-trust"><ShieldCheck size={16} /> Seus dados são só seus · conexão protegida</p>

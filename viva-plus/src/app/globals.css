@@ -1,7 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  color-scheme: light;
+  /* "only light": o navegador do celular não escurece o site sozinho (modo escuro forçado do Chrome/Samsung).
+     As telas do app continuam com o tema escuro próprio, feito no CSS. */
+  color-scheme: only light;
   --color-primary: #7028D8;
   --color-white: #FFFFFF;
   --color-gray: #E9E9E9;
@@ -2216,3 +2218,11 @@ html:has(.lp),body:has(.lp){background:#fff}
 .lp-health-join a:hover{border-color:var(--lp-p);background:#faf7fe}
 @media(max-width:900px){.lp-health-band{grid-template-columns:1fr}.lp-health .lp-features{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.lp-health .lp-features,.lp-health-join{grid-template-columns:1fr}.lp-health-band{border-radius:26px}.lp-health-copy .lp-btn{width:100%}}
+
+/* Ícones no lugar de emojis */
+.lp-btn.wa{gap:10px}.lp-btn.wa svg{flex:none}
+.lp-pill.wa{display:inline-flex;align-items:center;gap:7px}.lp-pill.wa svg{color:#128c4a}
+.ap-ok{flex:none;color:#16a34a}
+.pl-card h3{display:flex;align-items:center;gap:7px}.pl-card h3 svg{width:19px;height:19px;color:#6410C9}
+.pl-privacy{display:flex;align-items:flex-start;gap:6px}.pl-privacy svg{flex:none;width:14px;height:14px;margin-top:3px}
+.pr-sub-ic{display:flex;align-items:center;gap:8px}.pr-sub-ic svg{width:18px;height:18px;color:#6410C9}

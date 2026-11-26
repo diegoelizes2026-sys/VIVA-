@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Clock3, Dumbbell, Gift, Instagram, LocateFixed, MapPin, MessageCircle, Navigation, Radar, Users } from "lucide-react";
+import { Clock3, Dumbbell, Monitor, Gift, Instagram, LocateFixed, MapPin, MessageCircle, Navigation, Radar, Users } from "lucide-react";
 import { MODALITIES, brlFromCents, modalityLabel } from "@/lib/gyms";
 import { MODES } from "@/components/partner-location";
 import CredentialSeal from "@/components/credential-seal";
@@ -99,7 +99,7 @@ export default function PartnerRadar() {
         <h2 className="pr-sub">{near.length ? `${near.length} ${near.length === 1 ? "personal" : "personais"} até ${radius} km` : `Nenhum personal até ${radius} km`}</h2>
         {!near.length && <p className="pr-muted">{radius < 50 ? <>Tente aumentar a distância. </> : null}A rede está crescendo: indique seu personal para entrar na VIVA+!</p>}
         <div className="pr-list">{near.map(p => <Card key={p.cref} p={p} />)}</div>
-        {online.length > 0 && mode !== "academia" && mode !== "domicilio" && mode !== "ar_livre" && <><h2 className="pr-sub">💻 Atendem online, de qualquer lugar</h2><div className="pr-list">{online.map(p => <Card key={p.cref} p={p} />)}</div></>}
+        {online.length > 0 && mode !== "academia" && mode !== "domicilio" && mode !== "ar_livre" && <><h2 className="pr-sub pr-sub-ic"><Monitor aria-hidden />Atendem online, de qualquer lugar</h2><div className="pr-list">{online.map(p => <Card key={p.cref} p={p} />)}</div></>}
       </>}
     </>}
 

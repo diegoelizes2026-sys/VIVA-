@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Dumbbell, Home, LocateFixed, MapPin, Monitor, Trees } from "lucide-react";
+import { Dumbbell, Home, LocateFixed, Lock, MapPin, Monitor, Trees } from "lucide-react";
 
 export type PartnerLocationData = { gym_name: string | null; neighborhood: string | null; service_lat: number | null; modes: string[] | null; home_radius_km: number | null };
 type Gym = { id: string; name: string; lat: number; lon: number; distance: number; address: string | null };
@@ -68,7 +68,7 @@ export default function PartnerLocation({ data, onSaved }: { data: PartnerLocati
       } else r = await fetch("/api/partners/location", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) { setErr(d.error || "Não consegui salvar."); return; }
-      setOk("Pronto! Você já aparece no Radar de Personais. ✅"); setEditing(false); setGyms(null); setGym(null); setManual(false); onSaved();
+      setOk("Pronto! Você já aparece no Radar de Personais."); setEditing(false); setGyms(null); setGym(null); setManual(false); onSaved();
     } catch { setErr("Sem conexão. Tente de novo."); }
     finally { setBusy(""); }
   }
@@ -82,7 +82,7 @@ export default function PartnerLocation({ data, onSaved }: { data: PartnerLocati
   </div>;
 
   return <section className="pl-card">
-    <h3>📍 Onde você atende</h3>
+    <h3><MapPin aria-hidden />Onde você atende</h3>
     {!editing ? <>
       {summary}
       {ok && <p className="pl-ok">{ok}</p>}
@@ -105,7 +105,7 @@ export default function PartnerLocation({ data, onSaved }: { data: PartnerLocati
           {manual && <div className="pl-manual">
             <label>Bairro<input maxLength={60} value={place.hood} onChange={e => setPlace({ ...place, hood: e.target.value })} placeholder="Ex.: Aldeota" /></label>
             <label>Nome do local (opcional)<input maxLength={80} value={place.gym} onChange={e => setPlace({ ...place, gym: e.target.value })} placeholder="Ex.: Estúdio Corpo em Movimento" /></label>
-            <small className="pa-muted">{coords ? "📍 Usamos sua localização aproximada (cerca de 1 km). Seu endereço nunca aparece." : busy === "locating" ? "Pegando sua localização…" : "Permita a localização para marcar o bairro."}</small>
+            <small className="pa-muted">{coords ? "Usamos sua localização aproximada (cerca de 1 km). Seu endereço nunca aparece." : busy === "locating" ? "Pegando sua localização…" : "Permita a localização para marcar o bairro."}</small>
           </div>}
         </>}
         {gym && <label className="pl-hood">Bairro (opcional)<input maxLength={60} value={place.hood} onChange={e => setPlace({ ...place, hood: e.target.value })} placeholder="Ex.: Aldeota" /></label>}
@@ -114,7 +114,7 @@ export default function PartnerLocation({ data, onSaved }: { data: PartnerLocati
       {err && <p className="pa-error" role="alert">{err}</p>}
       <button type="button" className="pa-btn" onClick={save} disabled={busy === "saving"}>{busy === "saving" ? "Salvando…" : "Salvar e aparecer no radar"}</button>
       {placed && <button type="button" className="pa-ghost" onClick={() => { setEditing(false); setErr(""); }}>Cancelar</button>}
-      <p className="pa-muted pl-privacy">🔒 Os alunos veem só a distância, a academia e o bairro. Nunca o seu endereço.</p>
+      <p className="pa-muted pl-privacy"><Lock aria-hidden />Os alunos veem só a distância, a academia e o bairro. Nunca o seu endereço.</p>
     </>}
   </section>;
 }

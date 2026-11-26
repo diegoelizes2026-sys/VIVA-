@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { BadgeDollarSign, CalendarClock, Receipt, MessageCircleHeart, ShieldCheck, Mic, Gift, Check, ChevronDown, Target, PiggyBank, Camera, Flame, Dumbbell, Radar, Droplet, HeartPulse } from "lucide-react";
+import { BadgeDollarSign, CalendarClock, Receipt, MessageCircleHeart, ShieldCheck, Mic, Gift, Check, ChevronDown, Target, PiggyBank, CheckCircle2, Camera, Flame, Dumbbell, Radar, Droplet, HeartPulse } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import LandingSticky from "@/components/landing-sticky";
+import WhatsAppIcon from "@/components/whatsapp-icon";
 import { LEGAL_LINKS, companyLine } from "@/lib/legal";
 import { SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, supportEmailUrl, supportWhatsAppUrl } from "@/lib/support";
 
@@ -78,12 +79,12 @@ export default async function Home() {
 
     <section className="lp-hero">
       <div className="lp-hero-copy">
-        <span className="lp-pill">💬 Funciona no seu WhatsApp</span>
+        <span className="lp-pill wa"><WhatsAppIcon size={15} /> Funciona no seu WhatsApp</span>
         <h1>Chega de o mês acabar <em>antes do salário.</em></h1>
         <p>Todo dia a VIVA te diz <b>quanto você pode gastar</b> sem faltar dinheiro até o próximo pagamento. Você só manda mensagem: “gastei 20 no lanche”. Ela organiza o resto e lembra das contas por você.</p>
         <div className="lp-hero-cta">
           <Link href="/cadastro" className="lp-btn">Quero fechar o mês no azul</Link>
-          <a href="https://wa.me/558588252048?text=Oi%20VIVA!%20Quero%20conhecer" target="_blank" rel="noopener noreferrer" className="lp-btn wa">💬 Falar com a VIVA no WhatsApp</a>
+          <a href="https://wa.me/558588252048?text=Oi%20VIVA!%20Quero%20conhecer" target="_blank" rel="noopener noreferrer" className="lp-btn wa"><WhatsAppIcon size={20} /> Falar com a VIVA no WhatsApp</a>
         </div>
         <ul className="lp-trust"><li><Check size={16} /> 7 dias de Pro grátis</li><li><Check size={16} /> Sem cartão</li><li><Check size={16} /> Não pede senha de banco</li></ul>
       </div>
@@ -92,12 +93,12 @@ export default async function Home() {
           <div className="ap-phone"><span className="ap-notch" />
             <div className="ap-screen">
               <div className="ap-bar"><b>VIVA<span>+</span></b></div>
-              <div className="ap-card"><b>Oi, Ana!</b><small>Seu número de hoje</small><em>Você pode gastar até</em><strong>R$ 42,00</strong><i>e ainda chega no dia 5 no azul ✓</i></div>
+              <div className="ap-card"><b>Oi, Ana!</b><small>Seu número de hoje</small><em>Você pode gastar até</em><strong>R$ 42,00</strong><i>e ainda chega no dia 5 no azul</i></div>
               <div className="ap-tiles">{([["Lancei um gasto", <Receipt key="a" />], ["Recebi dinheiro", <BadgeDollarSign key="b" />], ["Contas", <CalendarClock key="c" />], ["Metas", <Target key="d" />], ["Meu dia", <CalendarClock key="e" />], ["Guardar", <PiggyBank key="f" />]] as const).map(([t, ic]) => <span key={t}><i>{ic}</i>{t}</span>)}</div>
               <div className="ap-input">Converse com a VIVA…<span><Mic size={13} /></span></div>
             </div>
           </div>
-          <div className="ap-bubble b1"><span className="ap-orb" />Anotado: R$ 35,90 em Farmácia ✅</div>
+          <div className="ap-bubble b1"><CheckCircle2 size={18} className="ap-ok" />Anotado: R$ 35,90 em Farmácia</div>
           <div className="ap-bubble b2"><CalendarClock size={18} />Conta de luz vence amanhã. Já separei!</div>
         </div>
         <small className="lp-note">Tela ilustrativa, com nome e valores de exemplo.</small>
@@ -142,7 +143,7 @@ export default async function Home() {
             <div className="hp-macros">{([["Carbo", "62%", "c"], ["Proteína", "48%", "p"], ["Gordura", "35%", "f"]] as const).map(([l, w, c]) => <div key={l}><small>{l}</small><i><em className={c} style={{ width: w }} /></i></div>)}</div>
             <div className="hp-meal"><span>Almoço</span><b>534 kcal</b></div>
           </div>
-          <div className="hp-bubble b1"><Camera size={16} />Almoço anotado: 534 kcal. Restam 1.240 hoje 🔥</div>
+          <div className="hp-bubble b1"><Camera size={16} />Almoço anotado: 534 kcal. Restam 1.240 hoje</div>
           <div className="hp-bubble b2"><Radar size={16} />Ana Souza · Credenciada VIVA+ · 2,5 km</div>
           <small className="lp-note">Tela ilustrativa, com valores de exemplo.</small>
         </div>

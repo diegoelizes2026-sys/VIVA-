@@ -78,7 +78,7 @@ export default function GymApply() {
   if (gym && !editing) return <section className="pa-status">
     {gym.status === "approved" ? <>
       <CheckCircle2 className="pa-ic ok" aria-hidden />
-      <h2>{gym.name} está no Radar VIVA+ 🎉</h2>
+      <h2>{gym.name} está no Radar VIVA+</h2>
       <CredentialSeal size="lg" kind="gym" credentialedAt={gym.approved_at} />
       <p>Sua academia aparece para quem procura academias perto de <b>{gym.neighborhood ? gym.neighborhood + ", " : ""}{gym.city}/{gym.state}</b>, com distância, modalidades{gym.price_from_cents ? `, mensalidade a partir de ${brlFromCents(gym.price_from_cents)}` : ""} e o botão de WhatsApp.</p>
       <p className="pa-muted">Dica: peça aos personais que treinam alunos aí para se cadastrarem em <a href="/parceiros">/parceiros</a> e marcarem esta academia. Eles aparecem no seu card do radar.</p>
@@ -105,7 +105,7 @@ export default function GymApply() {
 
     <div className="ga-locate">
       <b>Localização no mapa</b>
-      {point ? <p className="ga-point"><MapPin aria-hidden /> Localização marcada{gym ? "" : " ✅"}. <button type="button" className="ga-link" onClick={locate}>Marcar de novo</button></p>
+      {point ? <p className="ga-point"><MapPin aria-hidden /> Localização marcada. <button type="button" className="ga-link" onClick={locate}>Marcar de novo</button></p>
         : <button type="button" className="pa-btn ga-btn" onClick={locate} disabled={Boolean(busy)}><LocateFixed aria-hidden />{busy === "locating" || busy === "osm" ? "Localizando…" : "Estou na academia agora"}</button>}
       <small className="pa-muted">Faça isso de dentro da academia: é o ponto usado para calcular a distância até cada aluno.</small>
       {osm && osm.length > 0 && <div className="ga-osm"><small>Achamos no mapa. É uma destas? (preenche nome e endereço)</small>{osm.map(o => <button type="button" key={o.id} onClick={() => pickOsm(o)}><b>{o.name}</b><span>{o.address || `${Math.round(o.distance)} m daqui`}</span></button>)}</div>}
