@@ -89,9 +89,9 @@ export default function WhatsappConnect({ variant = "profile" }: { variant?: "ho
       <section className="wa-home">
         <VivaAvatar />
         <div className="wa-home-text">
-          <span className="wa-home-name"><b>Fale com a VIVA+ no WhatsApp</b><span className="wa-online-label">online</span></span>
+          <span className="wa-home-name"><b>Receba seu valor do dia no WhatsApp</b><span className="wa-online-label">online</span></span>
           <small>
-            {notice === "expirado" ? "Aquele link expirou. Toque abaixo para conectar de novo." : notice === "erro" ? "Não deu certo agora. Tente de novo abaixo." : `Mande “gastei 35 na farmácia” e ela anota na hora, sem abrir o app.${isFree ? " Grátis: 10 mensagens por semana." : ""}`}
+            {notice === "expirado" ? "Aquele link expirou. Toque abaixo para conectar de novo." : notice === "erro" ? "Não deu certo agora. Tente de novo abaixo." : `Toda manhã, às 7h30, a VIVA te manda aqui quanto você pode gastar no dia. E para anotar é só mandar “gastei 35 na farmácia”.${isFree ? " Grátis: 10 mensagens por semana." : ""}`}
           </small>
           {link ? (
             <small className="wa-home-hint">Abrimos o WhatsApp com a mensagem pronta: é só <b>enviar</b>. Se não abriu, mande <b>Conectar VIVA {link.code}</b>.</small>
@@ -101,7 +101,7 @@ export default function WhatsappConnect({ variant = "profile" }: { variant?: "ho
         {link ? (
           <a className="wa-home-btn" href={link.url} target="_blank" rel="noopener noreferrer"><MessageCircle size={18} aria-hidden /> Abrir o WhatsApp</a>
         ) : (
-          <button type="button" className="wa-home-btn" onClick={connect} disabled={busy}>{busy ? "Abrindo…" : <><MessageCircle size={18} aria-hidden /> Conectar meu WhatsApp</>}</button>
+          <button type="button" className="wa-home-btn" onClick={connect} disabled={busy}>{busy ? "Abrindo…" : <><MessageCircle size={18} aria-hidden /> Quero receber no WhatsApp</>}</button>
         )}
       </section>
     );
