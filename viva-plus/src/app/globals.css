@@ -2168,3 +2168,24 @@ html:has(.lp),body:has(.lp){background:#fff}
 .cs-lg div{display:grid;gap:2px}.cs-lg b{font-size:15px}.cs-lg small{font-size:12px;opacity:.85}
 .pr-seal{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.pr-seal small{color:#6f6680!important;font-weight:700!important}
 .pt-info .cs-sm{margin:2px 0}
+
+/* Radar Fitness: abas e academias */
+.pr-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;border:1px solid #eee6f8;border-radius:16px;background:#fff}
+.pr-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;border:0;border-radius:12px;background:transparent;color:#6f6680;font-size:14px;font-weight:900}
+.pr-tabs button.sel{background:#6410C9;color:#fff}.pr-tabs svg{width:18px;height:18px}
+.pr-gym{flex-direction:column}
+.pr-cover{display:block;width:100%;aspect-ratio:16/7;max-width:100%;border-radius:12px;object-fit:cover;background:#F3EBFD}
+.pr-cover-ph{display:grid;place-items:center;color:#b98af2}.pr-cover-ph svg{width:40px;height:40px}
+.pr-facts{display:grid;gap:3px;font-size:13px;color:#4b4357}.pr-facts span{display:flex;align-items:center;gap:5px}.pr-facts svg{width:14px;height:14px;color:#6410C9;flex:none}
+.pr-perk{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:10px;background:#fff8d6;color:#6b4e00!important;font-weight:800}.pr-perk svg{width:16px;height:16px;flex:none}
+@media(prefers-color-scheme:dark){.pr-tabs{background:#231b2e;border-color:#3a2f47}.pr-facts{color:#b9aec6}.pr-perk{background:#3a3010;color:#ffe680!important}}
+/* Cadastro de academia */
+.ga-cover{border-radius:16px!important;width:110px!important}
+.ga-locate,.ga-mods{display:grid;gap:8px}.ga-locate>b,.ga-mods>b{font-size:14px;color:#2b2135}
+.ga-btn{gap:8px}.ga-btn svg{width:18px;height:18px}
+.ga-point{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0;padding:10px 12px;border-radius:12px;background:#e9fbf1;color:#0b6b37;font-weight:800;font-size:14px}.ga-point svg{width:18px;height:18px}
+.ga-link{border:0;background:none;color:#6410C9;font-weight:800;text-decoration:underline;padding:0}
+.ga-osm{display:grid;gap:6px}.ga-osm small{font-size:12.5px;color:#6f6578}
+.ga-osm button{display:grid;padding:10px 12px;border:1px solid #e3d8f1;border-radius:12px;background:#fff;text-align:left;color:#2b2135}.ga-osm span{font-size:12px;color:#7a7084}
+.ga-mods>div{display:flex;flex-wrap:wrap;gap:6px}
+.ga-mods button{padding:8px 12px;border:1.5px solid #e3d8f1;border-radius:99px;background:#fff;color:#2b2135;font-size:13px;font-weight:800}.ga-mods button.sel{border-color:#6410C9;background:#F3EBFD;color:#6410C9}

@@ -7,13 +7,14 @@ const since = (iso?: string | null) => {
 };
 
 /** Selo "Credenciado VIVA+": profissional com registro (CREF) conferido e aprovado pela equipe da VIVA+. */
-export default function CredentialSeal({ size = "sm", credentialedAt, cref }: { size?: "sm" | "lg"; credentialedAt?: string | null; cref?: string }) {
+export default function CredentialSeal({ size = "sm", credentialedAt, cref, kind = "pro" }: { size?: "sm" | "lg"; credentialedAt?: string | null; cref?: string; kind?: "pro" | "gym" }) {
   const s = since(credentialedAt);
-  if (size === "lg") return <div className="cs-lg" role="img" aria-label={`Profissional credenciado VIVA+${s ? " desde " + s : ""}`}>
+  const gym = kind === "gym";
+  if (size === "lg") return <div className="cs-lg" role="img" aria-label={`${gym ? "Academia credenciada" : "Profissional credenciado"} VIVA+${s ? " desde " + s : ""}`}>
     <span className="cs-shield"><ShieldCheck aria-hidden /></span>
-    <div><b>Profissional credenciado VIVA+</b><small>{cref ? `CREF ${cref} conferido` : "Registro profissional conferido"}{s ? ` · desde ${s}` : ""}</small></div>
+    <div><b>{gym ? "Academia credenciada VIVA+" : "Profissional credenciado VIVA+"}</b><small>{gym ? "CNPJ conferido pela equipe VIVA+" : cref ? `CREF ${cref} conferido` : "Registro profissional conferido"}{s ? ` · desde ${s}` : ""}</small></div>
   </div>;
-  return <span className="cs-sm" title={`Credenciado VIVA+: registro profissional${cref ? " (CREF " + cref + ")" : ""} conferido pela equipe VIVA+${s ? " desde " + s : ""}.`}>
-    <ShieldCheck aria-hidden />Credenciado VIVA+
+  return <span className="cs-sm" title={gym ? `Academia credenciada VIVA+: CNPJ conferido pela equipe VIVA+${s ? " desde " + s : ""}.` : `Credenciado VIVA+: registro profissional${cref ? " (CREF " + cref + ")" : ""} conferido pela equipe VIVA+${s ? " desde " + s : ""}.`}>
+    <ShieldCheck aria-hidden />{gym ? "Academia credenciada VIVA+" : "Credenciado VIVA+"}
   </span>;
 }

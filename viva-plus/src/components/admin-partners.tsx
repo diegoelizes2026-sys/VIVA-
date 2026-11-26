@@ -140,3 +140,49 @@ export default function AdminPartners() {
       </tr>)}</tbody></table></div>}
   </section>;
 }
+
+type GymProfile = { owner_id: string; email: string; name: string; cnpj: string; city: string; state: string; neighborhood: string | null; address: string | null; lat: number; lon: number; modalities: string[];
+  price_from_cents: number | null; hours: string | null; whatsapp: string | null; instagram: string | null; photo_url: string | null; bio: string | null; perk: string | null; status: "pending" | "approved" | "rejected" };
+/** Painel: academias cadastradas pelos donos (conferir CNPJ e aprovar). */
+export function AdminGymProfiles() {
+  const [list, setList] = useState<GymProfile[] | null>(null); const [err, setErr] = useState(""); const [busy, setBusy] = useState(""); const [msg, setMsg] = useState("");
+  const load = useCallback(() => {
+    fetch("/api/admin/gym-profiles").then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error); setList(j.gyms || []); })
+      .catch(e => setErr(e instanceof Error ? e.message : "Erro ao carregar."));
+  }, []);
+  useEffect(() => { load(); }, [load]);
+  async function decide(g: GymProfile, decision: "approved" | "rejected") {
+    let note = "";
+    if (decision === "rejected") { note = prompt("Motivo (aparece para o dono da academia):", "Não conseguimos confirmar o CNPJ. Confira os dados e envie de novo.") || ""; if (!note) return; }
+    setBusy(g.owner_id); setErr(""); setMsg("");
+    const r = await fetch("/api/admin/gym-profiles", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ owner_id: g.owner_id, decision, note }) });
+    const j = await r.json().catch(() => ({})); setBusy("");
+    if (!r.ok) { setErr(j.error || "Não foi possível salvar."); return; }
+    setMsg(decision === "approved" ? `${g.name} aprovada e já aparece no Radar.` : `${g.name} recusada.`); load();
+  }
+  const cnpj = (c: string) => c.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+  const pending = (list || []).filter(g => g.status === "pending").length;
+  return <section className="viva-admin-section">
+    <div className="viva-admin-section-title"><div><h2>Academias credenciadas {pending ? `· ${pending} para aprovar` : ""}</h2><p>Confira o CNPJ (ativo e com atividade de academia) e se o ponto no mapa bate com o endereço. Aprovada = selo e aparece no Radar Fitness.</p></div><button className="viva-admin-save" onClick={load}>Atualizar</button></div>
+    {msg && <p role="status" style={{ color: "#0b6b37", fontWeight: 700 }}>{msg}</p>}
+    {err && <p role="alert" style={{ color: "#b42318" }}>{err}</p>}
+    {!list ? <p>Carregando…</p> : list.length === 0 ? <p>Nenhuma academia ainda. Divulgue a página <b>/academias</b>.</p> : <div style={{ display: "grid", gap: 10 }}>{list.map(g => <div key={g.owner_id} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: 12, border: "1px solid #eee6f8", borderRadius: 14 }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {g.photo_url ? <img src={g.photo_url} alt="" width={72} height={56} style={{ borderRadius: 10, objectFit: "cover", flex: "none" }} /> : <span style={{ width: 72, height: 56, borderRadius: 10, background: "#f3ebfd", flex: "none" }} />}
+      <div style={{ flex: 1, display: "grid", gap: 4, fontSize: 13, minWidth: 0 }}>
+        <b style={{ fontSize: 15 }}>{g.name} <span style={{ fontWeight: 600, color: g.status === "approved" ? "#0b6b37" : g.status === "rejected" ? "#b42318" : "#8a6d00" }}>· {g.status === "approved" ? "aprovada" : g.status === "rejected" ? "recusada" : "em análise"}</span></b>
+        <span>CNPJ <b>{cnpj(g.cnpj)}</b> · {g.city}/{g.state}{g.neighborhood ? " · " + g.neighborhood : ""} · {g.email}</span>
+        <span>{g.address || "sem endereço"} · {g.modalities.join(", ")}{g.price_from_cents ? ` · a partir de R$ ${(g.price_from_cents / 100).toFixed(2).replace(".", ",")}` : ""}</span>
+        <span>{g.whatsapp ? "+" + g.whatsapp : "sem WhatsApp"} · {g.instagram ? "@" + g.instagram : "sem Instagram"}{g.perk ? " · Oferta: " + g.perk : ""}</span>
+        <span style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+          <a href={`https://solucoes.receita.fazenda.gov.br/servicos/cnpjreva/cnpjreva_solicitacao.asp?cnpj=${g.cnpj}`} target="_blank" rel="noopener noreferrer" style={{ color: "#6410C9", fontWeight: 700 }}>Conferir CNPJ (Receita) ↗</a>
+          <a href={`https://www.google.com/maps?q=${g.lat},${g.lon}`} target="_blank" rel="noopener noreferrer" style={{ color: "#6410C9", fontWeight: 700 }}>Ver ponto no mapa ↗</a>
+        </span>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+          {g.status !== "approved" && <button className="viva-admin-save" disabled={busy === g.owner_id} onClick={() => decide(g, "approved")}>Aprovar</button>}
+          {g.status !== "rejected" && <button className="viva-admin-save" style={{ background: "#fff", color: "#b42318", border: "1px solid #f2c4c4" }} disabled={busy === g.owner_id} onClick={() => decide(g, "rejected")}>{g.status === "approved" ? "Remover do Radar" : "Recusar"}</button>}
+        </div>
+      </div>
+    </div>)}</div>}
+  </section>;
+}
