@@ -60,7 +60,7 @@ export default function PartnerApply() {
   if (profile && !editing) return <section className="pa-status">
     {profile.status === "approved" ? <>
       <CheckCircle2 className="pa-ic ok" aria-hidden />
-      <h2>Você é Personal Parceiro VIVA+ 🎉</h2>
+      <h2>Você é Personal Parceiro VIVA+</h2>
       <CredentialSeal size="lg" credentialedAt={profile.approved_at} cref={profile.cref} />
       <p className="pa-muted">O selo aparece no seu perfil no Radar de Personais e mostra aos alunos que seu CREF foi conferido pela VIVA+.</p>
       <p>Seu perfil já aparece no <b>Radar de Personais</b> para os usuários de <b>{profile.city}/{profile.state}</b> e região{profile.reviewer ? " e você é o responsável pela revisão dos treinos do app" : ""}.</p>

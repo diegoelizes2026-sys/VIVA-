@@ -17,7 +17,7 @@ export default function PartnerTrainers() {
   const [list, setList] = useState<Partner[] | null>(null);
   useEffect(() => { fetch("/api/partners/directory").then(r => (r.ok ? r.json() : null)).then(d => setList(d?.partners || [])).catch(() => setList([])); }, []);
   if (!list) return null;
-  const radar = <Link href="/saude/personais" className="pt-radar"><Radar aria-hidden /><span><b>Radar de Personais</b>Veja personais perto de você, com a distância em km</span><ChevronRight aria-hidden /></Link>;
+  const radar = <Link href="/saude/personais" className="pt-radar"><Radar aria-hidden /><span><b>Radar Fitness</b>Personais e academias credenciados perto de você</span><ChevronRight aria-hidden /></Link>;
   if (list.length === 0) return <div className="pt-wrap">{radar}</div>;
   const reviewer = list.find(p => p.reviewer);
   const nearby = list.filter(p => p.same_city);

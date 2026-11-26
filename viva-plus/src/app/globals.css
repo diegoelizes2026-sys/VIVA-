@@ -1,7 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  color-scheme: light;
+  /* "only light": o navegador do celular não escurece o site sozinho (modo escuro forçado do Chrome/Samsung).
+     As telas do app continuam com o tema escuro próprio, feito no CSS. */
+  color-scheme: only light;
   --color-primary: #7028D8;
   --color-white: #FFFFFF;
   --color-gray: #E9E9E9;
@@ -2168,3 +2170,59 @@ html:has(.lp),body:has(.lp){background:#fff}
 .cs-lg div{display:grid;gap:2px}.cs-lg b{font-size:15px}.cs-lg small{font-size:12px;opacity:.85}
 .pr-seal{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.pr-seal small{color:#6f6680!important;font-weight:700!important}
 .pt-info .cs-sm{margin:2px 0}
+
+/* Radar Fitness: abas e academias */
+.pr-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;border:1px solid #eee6f8;border-radius:16px;background:#fff}
+.pr-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;border:0;border-radius:12px;background:transparent;color:#6f6680;font-size:14px;font-weight:900}
+.pr-tabs button.sel{background:#6410C9;color:#fff}.pr-tabs svg{width:18px;height:18px}
+.pr-gym{flex-direction:column}
+.pr-cover{display:block;width:100%;aspect-ratio:16/7;max-width:100%;border-radius:12px;object-fit:cover;background:#F3EBFD}
+.pr-cover-ph{display:grid;place-items:center;color:#b98af2}.pr-cover-ph svg{width:40px;height:40px}
+.pr-facts{display:grid;gap:3px;font-size:13px;color:#4b4357}.pr-facts span{display:flex;align-items:center;gap:5px}.pr-facts svg{width:14px;height:14px;color:#6410C9;flex:none}
+.pr-perk{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:10px;background:#fff8d6;color:#6b4e00!important;font-weight:800}.pr-perk svg{width:16px;height:16px;flex:none}
+@media(prefers-color-scheme:dark){.pr-tabs{background:#231b2e;border-color:#3a2f47}.pr-facts{color:#b9aec6}.pr-perk{background:#3a3010;color:#ffe680!important}}
+/* Cadastro de academia */
+.ga-cover{border-radius:16px!important;width:110px!important}
+.ga-locate,.ga-mods{display:grid;gap:8px}.ga-locate>b,.ga-mods>b{font-size:14px;color:#2b2135}
+.ga-btn{gap:8px}.ga-btn svg{width:18px;height:18px}
+.ga-point{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0;padding:10px 12px;border-radius:12px;background:#e9fbf1;color:#0b6b37;font-weight:800;font-size:14px}.ga-point svg{width:18px;height:18px}
+.ga-link{border:0;background:none;color:#6410C9;font-weight:800;text-decoration:underline;padding:0}
+.ga-osm{display:grid;gap:6px}.ga-osm small{font-size:12.5px;color:#6f6578}
+.ga-osm button{display:grid;padding:10px 12px;border:1px solid #e3d8f1;border-radius:12px;background:#fff;text-align:left;color:#2b2135}.ga-osm span{font-size:12px;color:#7a7084}
+.ga-mods>div{display:flex;flex-wrap:wrap;gap:6px}
+.ga-mods button{padding:8px 12px;border:1.5px solid #e3d8f1;border-radius:99px;background:#fff;color:#2b2135;font-size:13px;font-weight:800}.ga-mods button.sel{border-color:#6410C9;background:#F3EBFD;color:#6410C9}
+
+/* Página de vendas: VIVA Saúde */
+.lp-health,#saude{scroll-margin-top:90px}
+.lp-health-band{display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:30px;padding:clamp(22px,4vw,40px);border-radius:32px;background:radial-gradient(110% 90% at 0% 0%,#8b3de8 0%,transparent 55%),linear-gradient(130deg,var(--lp-deep),var(--lp-p));color:#fff}
+.lp-pill.hp{display:inline-flex;align-items:center;gap:6px;background:var(--lp-y);color:#2a1050}
+.lp-health-copy h2{margin:14px 0 0;max-width:560px;font-size:clamp(28px,3.6vw,44px);line-height:1.08;font-weight:950;letter-spacing:-.04em;text-wrap:balance}
+.lp-health-copy>p{margin:14px 0 0;max-width:520px;font-size:17px;line-height:1.6;color:#eadbff}.lp-health-copy b{color:#fff}
+.lp-trust.on-dark{color:#eadbff}.lp-trust.on-dark svg{color:var(--lp-y)}
+.lp-health-art{position:relative;display:grid;justify-items:center;gap:10px;padding:10px 0 4px}
+.hp-phone{display:grid;gap:12px;width:min(260px,100%);padding:18px;border-radius:30px;background:#fff;color:var(--lp-text);box-shadow:0 24px 50px rgba(20,6,46,.45);border:6px solid #1b0b36}
+.hp-head{display:grid}.hp-head b{font-size:15px;font-weight:950}.hp-head small{font-size:10.5px;color:var(--lp-muted)}
+.hp-ring{position:relative;justify-self:center;width:136px;height:136px}.hp-ring svg{width:136px;height:136px;transform:rotate(-90deg)}
+.hp-ring circle{fill:none;stroke-width:11}.hp-ring .bg{stroke:#f1eafc}.hp-ring .fg{stroke:var(--lp-p);stroke-linecap:round;stroke-dasharray:314;stroke-dashoffset:126}
+.hp-ring>div{position:absolute;inset:0;display:grid;place-content:center;text-align:center}.hp-ring strong{font-size:26px;font-weight:950;letter-spacing:-.03em;line-height:1}.hp-ring span{font-size:11px;color:var(--lp-muted);font-weight:700}
+.hp-macros{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.hp-macros small{font-size:10.5px;font-weight:800}
+.hp-macros i{display:block;height:6px;margin-top:4px;border-radius:99px;background:#f1eafc;overflow:hidden}.hp-macros em{display:block;height:100%;border-radius:99px}
+.hp-macros .c{background:#0ea5e9}.hp-macros .p{background:#8b3de8}.hp-macros .f{background:#f59e0b}
+.hp-meal{display:flex;justify-content:space-between;padding:10px 12px;border-radius:14px;background:#faf7fe;font-size:13px}.hp-meal span{font-weight:800}
+.hp-bubble{display:flex;align-items:center;gap:7px;max-width:290px;padding:10px 13px;border-radius:16px;background:#fff;color:var(--lp-text);font-size:13px;font-weight:800;box-shadow:0 12px 28px rgba(20,6,46,.3)}
+.hp-bubble svg{flex:none;color:var(--lp-p)}.hp-bubble.b1{border-top-left-radius:4px}.hp-bubble.b2{background:var(--lp-y);color:#2a1050}.hp-bubble.b2 svg{color:#2a1050}
+.lp-health .lp-features{grid-template-columns:repeat(3,1fr)}
+.lp-health-join{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.lp-health-join a{display:flex;align-items:center;gap:12px;padding:16px 18px;border:1.5px dashed #c9b3ea;border-radius:20px;color:var(--lp-text);text-decoration:none}
+.lp-health-join svg{flex:none;color:var(--lp-p)}.lp-health-join span{display:grid;gap:2px;font-size:14px;color:var(--lp-muted)}.lp-health-join b{color:var(--lp-text);font-size:15.5px}
+.lp-health-join a:hover{border-color:var(--lp-p);background:#faf7fe}
+@media(max-width:900px){.lp-health-band{grid-template-columns:1fr}.lp-health .lp-features{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.lp-health .lp-features,.lp-health-join{grid-template-columns:1fr}.lp-health-band{border-radius:26px}.lp-health-copy .lp-btn{width:100%}}
+
+/* Ícones no lugar de emojis */
+.lp-btn.wa{gap:10px}.lp-btn.wa svg{flex:none}
+.lp-pill.wa{display:inline-flex;align-items:center;gap:7px}.lp-pill.wa svg{color:#128c4a}
+.ap-ok{flex:none;color:#16a34a}
+.pl-card h3{display:flex;align-items:center;gap:7px}.pl-card h3 svg{width:19px;height:19px;color:#6410C9}
+.pl-privacy{display:flex;align-items:flex-start;gap:6px}.pl-privacy svg{flex:none;width:14px;height:14px;margin-top:3px}
+.pr-sub-ic{display:flex;align-items:center;gap:8px}.pr-sub-ic svg{width:18px;height:18px;color:#6410C9}
