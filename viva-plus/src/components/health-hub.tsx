@@ -5,10 +5,12 @@ import { createClient } from "@/lib/supabase/client";
 import { CreditMeter, CreditNotice, OutOfCredits, UpgradeSheet, makeRequestKey, type Wallet } from "@/components/credit-ui";
 import { GOALS, PLANS, TIPS, WEEKDAYS, adaptPlan, type HealthGoal } from "@/lib/health-plans";
 import OnboardingChat from "@/components/onboarding-chat";
+import CalorieDiary, { type ExerciseEntry, type FoodEntry, type MealType, type NewFood } from "@/components/calorie-diary";
+import type { Body } from "@/lib/nutrition";
 
 type Kind = "water" | "sleep" | "weight" | "meal" | "activity" | "workout";
-type Log = { id: string; kind: Kind; value: number; note: string | null; logged_on: string; created_at: string };
-type Extra = { note?: string; meal_type?: string; quantity?: string; activity_type?: string; intensity?: string };
+type Log = { id: string; kind: Kind; value: number; note: string | null; logged_on: string; created_at: string; raw?: Record<string, unknown> };
+type Extra = { note?: string; meal_type?: string; quantity?: string; activity_type?: string; intensity?: string; protein?: number; carbs?: number; fat?: number };
 const TABLE: Record<Kind, string> = { water: "viva_water_logs", sleep: "viva_sleep_logs", weight: "viva_weight_logs", meal: "viva_food_logs", activity: "viva_activity_logs", workout: "viva_workout_logs" };
 const MEAL_TYPES: [string, string][] = [["breakfast", "Café da manhã"], ["lunch", "Almoço"], ["snack", "Lanche"], ["dinner", "Jantar"]];
 const ACTIVITY_TYPES: [string, string][] = [["walking", "Caminhada"], ["running", "Corrida"], ["gym", "Academia"], ["cycling", "Bike"], ["sports", "Esporte"], ["yoga", "Yoga / alongamento"], ["other", "Outra"]];
@@ -17,7 +19,7 @@ const label = (list: [string, string][], v: string) => list.find(x => x[0] === v
 type Row = Record<string, unknown>;
 // Converte as linhas de cada tabela de saúde para um formato único usado na tela.
 function toLog(kind: Kind, r: Row): Log {
-  const base = { id: String(r.id), kind, created_at: String(r.created_at ?? ""), logged_on: String(kind === "sleep" ? r.sleep_date : r.logged_on) };
+  const base = { raw: r, id: String(r.id), kind, created_at: String(r.created_at ?? ""), logged_on: String(kind === "sleep" ? r.sleep_date : r.logged_on) };
   switch (kind) {
     case "water": return { ...base, value: Number(r.amount_ml), note: null };
     case "sleep": return { ...base, value: Number(r.sleep_hours), note: null };
@@ -28,11 +30,12 @@ function toLog(kind: Kind, r: Row): Log {
   }
 }
 type Personal = { onboarded: boolean; location: string | null; minutes: number | null; level: string | null; limitations: string | null };
-type Profile = { goal: HealthGoal; trainer: "mulher" | "homem"; water_goal_ml: number; weekly_workouts: number; weekly_activity_min: number; target_weight_kg: number | null; personal?: Personal };
+type Profile = { body: Body; goal: HealthGoal; trainer: "mulher" | "homem"; water_goal_ml: number; weekly_workouts: number; weekly_activity_min: number; target_weight_kg: number | null; personal?: Personal };
 type ChatMessage = { role: "user" | "assistant"; content: string; credits?: number };
 type Sheet = Kind | "goals" | null;
 
-const DEFAULT_PROFILE: Profile = { goal: "saude", trainer: "mulher", water_goal_ml: 2000, weekly_workouts: 5, weekly_activity_min: 150, target_weight_kg: null };
+const EMPTY_BODY: Body = { age: null, sex: null, height_cm: null, current_weight_kg: null, activity_level: null };
+const DEFAULT_PROFILE: Profile = { body: EMPTY_BODY, goal: "saude", trainer: "mulher", water_goal_ml: 2000, weekly_workouts: 5, weekly_activity_min: 150, target_weight_kg: null };
 const TZ = "America/Fortaleza";
 const todayStr = () => new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 const addDays = (d: string, n: number) => { const x = new Date(d + "T12:00:00Z"); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
@@ -81,6 +84,8 @@ export default function HealthHub() {
   // Treino ajustado ao diagnóstico do Personal (dias, local, tempo e nível).
   const plan = profile.personal?.onboarded ? adaptPlan(PLANS[profile.goal], { days: profile.weekly_workouts, location: profile.personal.location, minutes: profile.personal.minutes, level: profile.personal.level }) : PLANS[profile.goal];
   const [setupOpen, setSetupOpen] = useState(false);
+  const [tab, setTab] = useState<"diario" | "treino" | "evolucao">("diario");
+  const [diaryDay, setDiaryDay] = useState(() => todayStr());
   useEffect(() => { try { if (new URLSearchParams(window.location.search).get("configurar") === "1") setSetupOpen(true); } catch { } }, []);
   const goalInfo = GOALS.find(g => g.id === profile.goal) ?? GOALS[3];
   const tip = TIPS[Number(today.slice(8, 10)) % TIPS.length];
@@ -91,7 +96,7 @@ export default function HealthHub() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
-      const since = addDays(today, -13);
+      const since = addDays(today, -29);
       const kinds: Kind[] = ["water", "sleep", "meal", "activity", "workout"];
       const [p, w, ...rest] = await Promise.all([
         supabase.from("viva_health_profiles").select("*").eq("user_id", user.id).maybeSingle(),
@@ -100,7 +105,7 @@ export default function HealthHub() {
       ]);
       const failed = [p, w, ...rest].find(x => x.error);
       if (failed) throw failed.error;
-      if (p.data) { const d = p.data as Row; setProfile({ goal: (d.goal as HealthGoal) || "saude", trainer: d.trainer === "homem" ? "homem" : "mulher", water_goal_ml: Number(d.water_goal_ml) || 2000, weekly_workouts: Number(d.weekly_workouts) || 5, weekly_activity_min: Number(d.weekly_activity_min) || 150, target_weight_kg: d.goal_weight_kg == null ? null : Number(d.goal_weight_kg), personal: { onboarded: Boolean(d.personal_onboarded_at), location: (d.train_location as string) ?? null, minutes: d.session_minutes == null ? null : Number(d.session_minutes), level: (d.experience_level as string) ?? null, limitations: (d.limitations as string) ?? null } }); }
+      if (p.data) { const d = p.data as Row; setProfile({ body: { age: d.age == null ? null : Number(d.age), sex: (d.sex as Body["sex"]) ?? null, height_cm: d.height_cm == null ? null : Number(d.height_cm), current_weight_kg: d.current_weight_kg == null ? null : Number(d.current_weight_kg), activity_level: (d.activity_level as Body["activity_level"]) ?? null }, goal: (d.goal as HealthGoal) || "saude", trainer: d.trainer === "homem" ? "homem" : "mulher", water_goal_ml: Number(d.water_goal_ml) || 2000, weekly_workouts: Number(d.weekly_workouts) || 5, weekly_activity_min: Number(d.weekly_activity_min) || 150, target_weight_kg: d.goal_weight_kg == null ? null : Number(d.goal_weight_kg), personal: { onboarded: Boolean(d.personal_onboarded_at), location: (d.train_location as string) ?? null, minutes: d.session_minutes == null ? null : Number(d.session_minutes), level: (d.experience_level as string) ?? null, limitations: (d.limitations as string) ?? null } }); }
       const weightLogs = ((w.data || []) as Row[]).map(r => toLog("weight", r));
       setWeights(weightLogs);
       setLogs([...weightLogs, ...rest.flatMap((res, i) => ((res.data || []) as Row[]).map(r => toLog(kinds[i], r)))].sort((a, b) => b.created_at.localeCompare(a.created_at)));
@@ -133,16 +138,16 @@ export default function HealthHub() {
   const last7 = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
 
   // ---- actions ----
-  async function addLog(kind: Kind, value: number, extra: Extra = {}) {
+  async function addLog(kind: Kind, value: number, extra: Extra = {}, on: string = today) {
     if (!userId) return false;
     const note = extra.note?.trim() || null;
     const payload: Row = { user_id: userId };
-    if (kind === "water") Object.assign(payload, { amount_ml: Math.round(value), logged_on: today });
-    if (kind === "sleep") Object.assign(payload, { sleep_hours: value, sleep_date: today });
-    if (kind === "weight") Object.assign(payload, { weight_kg: value, logged_on: today });
-    if (kind === "meal") Object.assign(payload, { meal_type: extra.meal_type || "lunch", food_name: (note || "Refeição").slice(0, 120), quantity: (extra.quantity?.trim() || "1 porção").slice(0, 40), calories: value > 0 ? value : null, logged_on: today });
-    if (kind === "activity") Object.assign(payload, { activity_type: extra.activity_type || "other", intensity: extra.intensity || "moderate", duration_minutes: Math.round(value), notes: note?.slice(0, 240) ?? null, logged_on: today });
-    if (kind === "workout") Object.assign(payload, { focus: (note || "Treino").slice(0, 120), duration_minutes: Math.round(value), logged_on: today });
+    if (kind === "water") Object.assign(payload, { amount_ml: Math.round(value), logged_on: on });
+    if (kind === "sleep") Object.assign(payload, { sleep_hours: value, sleep_date: on });
+    if (kind === "weight") Object.assign(payload, { weight_kg: value, logged_on: on });
+    if (kind === "meal") Object.assign(payload, { meal_type: extra.meal_type || "lunch", food_name: (note || "Refeição").slice(0, 120), quantity: (extra.quantity?.trim() || "1 porção").slice(0, 40), calories: value > 0 ? Math.round(value) : null, protein_g: extra.protein || null, carbs_g: extra.carbs || null, fat_g: extra.fat || null, logged_on: on });
+    if (kind === "activity") Object.assign(payload, { activity_type: extra.activity_type || "other", intensity: extra.intensity || "moderate", duration_minutes: Math.round(value), notes: note?.slice(0, 240) ?? null, logged_on: on });
+    if (kind === "workout") Object.assign(payload, { focus: (note || "Treino").slice(0, 120), duration_minutes: Math.round(value), logged_on: on });
     // Sono é um registro por dia: registrar de novo atualiza as horas.
     const query = kind === "sleep" ? supabase.from(TABLE.sleep).upsert(payload, { onConflict: "user_id,sleep_date" }) : supabase.from(TABLE[kind]).insert(payload);
     const { data, error: e } = await query.select("*").single();
@@ -161,7 +166,7 @@ export default function HealthHub() {
   async function saveProfile(next: Partial<Profile>) {
     const merged = { ...profile, ...next }; setProfile(merged);
     if (!userId) return;
-    const { error: e } = await supabase.from("viva_health_profiles").upsert({ user_id: userId, goal: merged.goal, trainer: merged.trainer, water_goal_ml: merged.water_goal_ml, weekly_workouts: merged.weekly_workouts, weekly_activity_min: merged.weekly_activity_min, goal_weight_kg: merged.target_weight_kg, updated_at: new Date().toISOString() });
+    const { error: e } = await supabase.from("viva_health_profiles").upsert({ user_id: userId, goal: merged.goal, trainer: merged.trainer, water_goal_ml: merged.water_goal_ml, weekly_workouts: merged.weekly_workouts, weekly_activity_min: merged.weekly_activity_min, goal_weight_kg: merged.target_weight_kg, age: merged.body.age, sex: merged.body.sex, height_cm: merged.body.height_cm, current_weight_kg: merged.body.current_weight_kg, activity_level: merged.body.activity_level, updated_at: new Date().toISOString() });
     if (e) setError("Não foi possível salvar suas preferências.");
   }
   function toggleDone(i: number) {
@@ -190,7 +195,15 @@ export default function HealthHub() {
     rec.onend = () => setListening(false); rec.onerror = () => setListening(false);
     recRef.current = rec; setListening(true); rec.start();
   }
-  const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const scrollTo = (id: string) => { setTab(id === "vh-evolucao" ? "evolucao" : "treino"); setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 60); };
+
+  // ---- diário de calorias ----
+  const num = (v: unknown) => Number(v) || 0;
+  const dayLogs = (kind: Kind) => logs.filter(l => l.kind === kind && l.logged_on === diaryDay);
+  const foodEntries: FoodEntry[] = dayLogs("meal").slice().reverse().map(l => ({ id: l.id, meal: (String(l.raw?.meal_type) as MealType) || "lunch", name: String(l.raw?.food_name ?? "Refeição"), qty: String(l.raw?.quantity ?? ""), kcal: l.value, p: num(l.raw?.protein_g), c: num(l.raw?.carbs_g), f: num(l.raw?.fat_g) }));
+  const exerciseEntries: ExerciseEntry[] = [...dayLogs("workout"), ...dayLogs("activity")].map(l => ({ id: l.id, kind: l.kind === "workout" ? "workout" : "activity", label: l.kind === "workout" ? "Treino · " + (l.note || "") : label(ACTIVITY_TYPES, String(l.raw?.activity_type)) + " · " + label(INTENSITIES, String(l.raw?.intensity)).toLowerCase(), minutes: l.value, type: String(l.raw?.activity_type ?? "other"), intensity: String(l.raw?.intensity ?? "moderate") }));
+  const recentFoods: NewFood[] = (() => { const seen = new Set<string>(); const out: NewFood[] = []; for (const l of logs) { if (l.kind !== "meal" || l.logged_on === diaryDay) continue; const name = String(l.raw?.food_name ?? ""); const key = name + "|" + l.raw?.quantity; if (!name || seen.has(key)) continue; seen.add(key); out.push({ meal: "lunch", name, qty: String(l.raw?.quantity ?? "1 porção"), kcal: l.value, p: num(l.raw?.protein_g), c: num(l.raw?.carbs_g), f: num(l.raw?.fat_g) }); if (out.length >= 12) break; } return out; })();
+  const removeById = (kind: Kind, id: string) => { const l = logs.find(x => x.kind === kind && x.id === id); if (l) removeLog(l); };
 
   const quick: { kind: Kind | "evolucao"; label: string; icon: typeof Droplet }[] = [
     { kind: "workout", label: "Treino de hoje", icon: Dumbbell }, { kind: "water", label: "Água", icon: Droplet }, { kind: "sleep", label: "Sono", icon: BedDouble },
@@ -204,6 +217,20 @@ export default function HealthHub() {
       <div><h1>Saúde e Bem-Estar</h1><p>Cuidar de você nunca foi tão simples. Treino, alimentação, sono, hidratação e muito mais, com o apoio da IA do VIVA+.</p></div>
     </section>
 
+    {error && <p role="alert" className="vh-error">{error}</p>}
+
+    <nav className="vh-tabs" role="tablist" aria-label="Seções de saúde">
+      {([["diario", "Diário", Salad], ["treino", "Treino & Personal", Dumbbell], ["evolucao", "Evolução", ChartColumn]] as const).map(([id, l, Icon]) => <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "sel" : ""} onClick={() => setTab(id)}><Icon />{l}</button>)}
+    </nav>
+
+    {tab === "diario" && <CalorieDiary goal={profile.goal} body={profile.body} weightKg={lastWeight} foods={foodEntries} exercises={exerciseEntries} recent={recentFoods} water={sum("water", diaryDay, diaryDay)}
+      date={diaryDay} today={today} minDate={addDays(today, -29)} onChangeDate={setDiaryDay} waterGoal={profile.water_goal_ml}
+      onAddFood={f => addLog("meal", f.kcal, { note: f.name, meal_type: f.meal, quantity: f.qty, protein: f.p, carbs: f.c, fat: f.f }, diaryDay)}
+      onRemoveFood={id => removeById("meal", id)} onRemoveExercise={e => removeById(e.kind, e.id)}
+      onAddWater={ml => addLog("water", ml, {}, diaryDay)} onAddExercise={() => setSheet("activity")}
+      onSaveBody={async b => { await saveProfile({ body: b }); if (b.current_weight_kg && b.current_weight_kg !== lastWeight) await addLog("weight", b.current_weight_kg); }} />}
+
+    {tab === "treino" && <>
     <section className={"vh-hero trainer-" + profile.trainer}>
       <div className="vh-hero-photo" style={{ backgroundImage: `url(/saude/personal-${profile.trainer}.jpg)` }} role="img" aria-label="Seu Personal VIVA+" />
       <div className="vh-hero-body">
@@ -238,22 +265,10 @@ export default function HealthHub() {
       </div>
     </section>
 
-    {error && <p role="alert" className="vh-error">{error}</p>}
-
     <section className="vh-section">
       <div className="vh-head"><div><h3><Zap />Acesso rápido do dia</h3><p>Registre, acompanhe e mantenha sua rotina em dia.</p></div><button className="vh-chip" onClick={() => setSheet("goals")}><Settings2 />Minhas metas</button></div>
       <div className="vh-quick">
-        {quick.map(q => { const Icon = q.icon; return <button key={q.kind} className={q.kind === "workout" ? "primary" : ""} onClick={() => q.kind === "evolucao" ? scrollTo("vh-evolucao") : setSheet(q.kind)}><Icon /><span>{q.label}</span></button>; })}
-      </div>
-    </section>
-
-    <section className="vh-section">
-      <div className="vh-head"><div><h3><ChartColumn />Meu resumo de hoje</h3></div></div>
-      <div className="vh-summary">
-        <button onClick={() => setSheet("water")}><span><Droplet />Água</span><strong>{fmt(waterToday / 1000)} <small>/ {fmt(profile.water_goal_ml / 1000)} L</small></strong><em>{Math.round(pct(waterToday, profile.water_goal_ml) * 100)}% da meta</em></button>
-        <button onClick={() => setSheet("sleep")}><span><BedDouble />Sono</span><strong>{sleepToday == null ? "—" : fmt(sleepToday)} <small>h</small></strong><em>{sleepToday == null ? "sem registro" : "registrado"}</em></button>
-        <button onClick={() => setSheet("weight")}><span><Scale />Peso</span><strong>{lastWeight == null ? "—" : fmt(lastWeight)} <small>kg</small></strong><em>{lastWeight == null ? "sem registro" : weights[0].logged_on === today ? "registrado hoje" : "último registro"}</em></button>
-        <button onClick={() => setSheet("activity")}><span><Activity />Atividade</span><strong>{activityToday ? fmt(activityToday, 0) : "—"} <small>min</small></strong><em>{kcalToday ? fmt(kcalToday, 0) + " kcal em refeições" : "registre hoje"}</em></button>
+        {quick.map(q => { const Icon = q.icon; return <button key={q.kind} className={q.kind === "workout" ? "primary" : ""} onClick={() => q.kind === "evolucao" ? scrollTo("vh-evolucao") : q.kind === "meal" ? (setTab("diario"), window.scrollTo({ top: 0, behavior: "smooth" })) : setSheet(q.kind)}><Icon /><span>{q.label}</span></button>; })}
       </div>
     </section>
 
@@ -308,10 +323,24 @@ export default function HealthHub() {
       </section>
     </div>
 
+    </>}
+
+    {tab === "evolucao" && <>
+    <section className="vh-section">
+      <div className="vh-head"><div><h3><ChartColumn />Meu resumo de hoje</h3></div></div>
+      <div className="vh-summary">
+        <button onClick={() => setSheet("water")}><span><Droplet />Água</span><strong>{fmt(waterToday / 1000)} <small>/ {fmt(profile.water_goal_ml / 1000)} L</small></strong><em>{Math.round(pct(waterToday, profile.water_goal_ml) * 100)}% da meta</em></button>
+        <button onClick={() => setSheet("sleep")}><span><BedDouble />Sono</span><strong>{sleepToday == null ? "—" : fmt(sleepToday)} <small>h</small></strong><em>{sleepToday == null ? "sem registro" : "registrado"}</em></button>
+        <button onClick={() => setSheet("weight")}><span><Scale />Peso</span><strong>{lastWeight == null ? "—" : fmt(lastWeight)} <small>kg</small></strong><em>{lastWeight == null ? "sem registro" : weights[0].logged_on === today ? "registrado hoje" : "último registro"}</em></button>
+        <button onClick={() => setSheet("activity")}><span><Activity />Atividade</span><strong>{activityToday ? fmt(activityToday, 0) : "—"} <small>min</small></strong><em>{kcalToday ? fmt(kcalToday, 0) + " kcal em refeições" : "registre hoje"}</em></button>
+      </div>
+    </section>
+
     <section className="vh-card" id="vh-evolucao">
       <h3><ChartColumn />Minha evolução</h3>
       <p className="vh-sub">Últimos 7 dias</p>
       <div className="vh-evo">
+        <Bars title="Calorias consumidas (kcal)" days={last7} values={last7.map(d => sum("meal", d, d))} />
         <Bars title="Atividade (min)" days={last7} values={last7.map(d => sum("activity", d, d) + sum("workout", d, d))} />
         <Bars title="Água (L)" days={last7} values={last7.map(d => sum("water", d, d) / 1000)} goal={profile.water_goal_ml / 1000} />
         <div className="vh-weights">
@@ -325,10 +354,12 @@ export default function HealthHub() {
       </div>
     </section>
 
+    </>}
+
     <p className="vh-disclaimer"><Info />O VIVA+ é um assistente de bem-estar com IA. As orientações são educativas e não substituem o acompanhamento de um profissional de saúde, educação física ou nutricionista.</p>
     {loading && <p className="vh-sub" style={{ textAlign: "center" }}>Carregando seus registros…</p>}
 
-    {sheet && <LogSheet key={sheet} sheet={sheet} profile={profile} todayLogs={sheet !== "goals" ? todayLogs(sheet) : []} todayFocus={plan[todayIdx].focus} onClose={() => setSheet(null)} onAdd={addLog} onRemove={removeLog} onSaveProfile={saveProfile} />}
+    {sheet && <LogSheet key={sheet} sheet={sheet} profile={profile} todayLogs={sheet !== "goals" ? todayLogs(sheet) : []} todayFocus={plan[todayIdx].focus} onClose={() => setSheet(null)} onAdd={(k, v, e) => addLog(k, v, e, k === "activity" && tab === "diario" ? diaryDay : today)} onRemove={removeLog} onSaveProfile={saveProfile} />}
   </div>;
 }
 

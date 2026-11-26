@@ -65,7 +65,9 @@ export function blockedResponse(guard: Guard, who: "VIVA" | "Personal" = "VIVA",
     feature_not_in_plan: feature === "radar"
       ? "O Radar de preços está disponível nos planos Essencial e Pro."
       : guard?.sample_limit
-        ? (guard.sample_feature === "photo"
+        ? (guard.sample_feature === "photo" && feature === "meal_photo"
+          ? `Você já usou as ${guard.sample_limit} fotos grátis deste mês 📸 Para analisar seus pratos à vontade, assine o VIVA+ Pro. No dia 1º você ganha mais ${guard.sample_limit}.`
+          : guard.sample_feature === "photo"
           ? `Você já usou as ${guard.sample_limit} leituras de comprovante grátis deste mês 🧾 Para mandar fotos à vontade, assine o VIVA+ Pro. No dia 1º você ganha mais ${guard.sample_limit}.`
           : `Você já usou os ${guard.sample_limit} áudios grátis deste mês 🎤 Para mandar áudio à vontade, assine o VIVA+ Pro. No dia 1º você ganha mais ${guard.sample_limit}.`)
         : `${guard?.operation_label ? guard.operation_label + " é" : "Este recurso é"} exclusivo do VIVA+ Pro.`,
