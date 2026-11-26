@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import CredentialSeal from "@/components/credential-seal";
 import { BadgeCheck, ChevronRight, MessageCircle, Instagram, Radar } from "lucide-react";
 
 type Partner = { display_name: string; cref: string; city: string; state: string; instagram: string | null; whatsapp: string | null; photo_url: string | null; bio: string | null; reviewer: boolean; same_city: boolean };
@@ -29,7 +30,7 @@ export default function PartnerTrainers() {
       <h2>{nearby.length ? `Personais parceiros em ${nearby[0].city}` : "Personais parceiros da VIVA+"}</h2>
       <div className="pt-list">{shown.map(p => <article key={p.cref} className="pt-item">
         <Avatar p={p} />
-        <div className="pt-info"><b>{p.display_name}</b><small>{p.city}/{p.state} · CREF {p.cref}</small>{p.bio && <span>{p.bio}</span>}
+        <div className="pt-info"><b>{p.display_name}</b><CredentialSeal cref={p.cref} /><small>{p.city}/{p.state} · CREF {p.cref}</small>{p.bio && <span>{p.bio}</span>}
           <div className="pt-btns">
             {p.whatsapp && <a className="pt-wa" href={wa(p)} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} aria-hidden /> WhatsApp</a>}
             {p.instagram && <a className="pt-ig" href={`https://instagram.com/${p.instagram}`} target="_blank" rel="noopener noreferrer"><Instagram size={16} aria-hidden /> Instagram</a>}

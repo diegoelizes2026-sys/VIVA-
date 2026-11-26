@@ -2,8 +2,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Camera, CheckCircle2, Clock3, Copy, Check } from "lucide-react";
 import PartnerLocation from "@/components/partner-location";
+import CredentialSeal from "@/components/credential-seal";
 
-type Profile = { display_name: string; cref: string; city: string; state: string; instagram: string | null; whatsapp: string | null; photo_url: string | null; bio: string | null; desired_code: string | null; status: "pending" | "approved" | "rejected"; reviewer: boolean; admin_note: string | null; gym_name: string | null; neighborhood: string | null; service_lat: number | null; modes: string[] | null; home_radius_km: number | null };
+type Profile = { display_name: string; cref: string; city: string; state: string; instagram: string | null; whatsapp: string | null; photo_url: string | null; bio: string | null; desired_code: string | null; status: "pending" | "approved" | "rejected"; reviewer: boolean; admin_note: string | null; gym_name: string | null; neighborhood: string | null; service_lat: number | null; modes: string[] | null; home_radius_km: number | null; approved_at?: string | null };
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
 async function shrink(file: File): Promise<File> {
@@ -60,6 +61,8 @@ export default function PartnerApply() {
     {profile.status === "approved" ? <>
       <CheckCircle2 className="pa-ic ok" aria-hidden />
       <h2>Você é Personal Parceiro VIVA+ 🎉</h2>
+      <CredentialSeal size="lg" credentialedAt={profile.approved_at} cref={profile.cref} />
+      <p className="pa-muted">O selo aparece no seu perfil no Radar de Personais e mostra aos alunos que seu CREF foi conferido pela VIVA+.</p>
       <p>Seu perfil já aparece no <b>Radar de Personais</b> para os usuários de <b>{profile.city}/{profile.state}</b> e região{profile.reviewer ? " e você é o responsável pela revisão dos treinos do app" : ""}.</p>
       {link && <div className="pa-link"><span>{link}</span><button type="button" onClick={async () => { try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* */ } }}>{copied ? <Check size={16} /> : <Copy size={16} />} {copied ? "Copiado" : "Copiar"}</button></div>}
       <p className="pa-muted">Você ganha <b>R$ 10 por assinante do Pro</b> pelo seu link, sem limite, e <b>R$ 50 de bônus a cada 10 assinantes</b>. Acompanhe e saque em <a href="/indique">Indique e ganhe</a>.</p>

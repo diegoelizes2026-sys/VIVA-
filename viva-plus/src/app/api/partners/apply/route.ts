@@ -11,7 +11,7 @@ export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
-  const { data } = await supabase.from("viva_partner_profiles").select("display_name,cref,city,state,instagram,whatsapp,photo_url,bio,desired_code,status,reviewer,admin_note,gym_name,neighborhood,service_lat,modes,home_radius_km").eq("user_id", user.id).maybeSingle();
+  const { data } = await supabase.from("viva_partner_profiles").select("display_name,cref,city,state,instagram,whatsapp,photo_url,bio,desired_code,status,reviewer,admin_note,approved_at,gym_name,neighborhood,service_lat,modes,home_radius_km").eq("user_id", user.id).maybeSingle();
   const { data: code } = await supabase.from("viva_referral_codes").select("code").eq("user_id", user.id).maybeSingle();
   return NextResponse.json({ profile: data ?? null, code: data?.status === "approved" ? code?.code ?? null : null });
 }

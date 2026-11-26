@@ -74,7 +74,7 @@ returns jsonb language sql stable security definer set search_path = '' as $$
     from base
   )
   select coalesce(jsonb_agg(row_to_json(x)), '[]'::jsonb) from (
-    select display_name, cref, city, state, instagram, whatsapp, photo_url, bio, reviewer, gym_name, neighborhood, modes, home_radius_km,
+    select display_name, cref, city, state, instagram, whatsapp, photo_url, bio, reviewer, approved_at as credentialed_at, gym_name, neighborhood, modes, home_radius_km,
       case when km is null then null else round(km::numeric, 1) end as distance_km, comes_to_you,
       (not in_radius and not comes_to_you) as online_only
     from hits

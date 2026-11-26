@@ -1,10 +1,11 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { BadgeCheck, Instagram, LocateFixed, MapPin, MessageCircle, Radar } from "lucide-react";
+import { Instagram, LocateFixed, MapPin, MessageCircle, Radar } from "lucide-react";
 import { MODES } from "@/components/partner-location";
+import CredentialSeal from "@/components/credential-seal";
 
-type Partner = { display_name: string; cref: string; city: string; state: string; instagram: string | null; whatsapp: string | null; photo_url: string | null; bio: string | null; reviewer: boolean;
+type Partner = { display_name: string; cref: string; city: string; state: string; instagram: string | null; whatsapp: string | null; photo_url: string | null; bio: string | null; reviewer: boolean; credentialed_at?: string | null;
   gym_name?: string | null; neighborhood?: string | null; modes?: string[] | null; home_radius_km?: number | null; distance_km?: number | null; comes_to_you?: boolean; online_only?: boolean; same_city?: boolean };
 type Status = "idle" | "locating" | "loading" | "ready" | "denied" | "error";
 const RADII = [2, 5, 10, 20, 50];
@@ -51,7 +52,7 @@ export default function PartnerRadar() {
   return <div className="pr">
     <header className="pr-head">
       <span className="pr-icon"><Radar aria-hidden /></span>
-      <div><h1>Radar de Personais</h1><p>Personais parceiros perto de você, com CREF conferido pela VIVA+.</p></div>
+      <div><h1>Radar de Personais</h1><p>Só profissionais <b>credenciados VIVA+</b>: CREF conferido pela nossa equipe.</p></div>
     </header>
 
     {!coords ? <section className="pr-locate">
@@ -96,7 +97,7 @@ function Card({ p }: { p: Partner }) {
     {p.photo_url ? <img className="pr-avatar" src={p.photo_url} alt="" width={64} height={64} /> : <span className="pr-avatar pr-ini">{initials(p.display_name)}</span>}
     <div className="pr-info">
       <div className="pr-top"><b>{p.display_name}</b>{p.distance_km != null && !p.online_only && <span className="pr-dist">{fmtKm(p.distance_km)}</span>}</div>
-      <small><BadgeCheck aria-hidden /> CREF {p.cref}{p.reviewer ? " · revisa os treinos da VIVA" : ""}</small>
+      <div className="pr-seal"><CredentialSeal credentialedAt={p.credentialed_at} cref={p.cref} /><small>CREF {p.cref}{p.reviewer ? " · revisa os treinos da VIVA" : ""}</small></div>
       <span className="pr-where"><MapPin aria-hidden />{where}</span>
       {p.modes?.length ? <div className="pr-tags">{p.modes.map(m => <i key={m}>{MODES.find(x => x.id === m)?.label}{m === "domicilio" && p.home_radius_km ? ` (até ${p.home_radius_km} km)` : ""}</i>)}{p.comes_to_you && <i className="go">Vai até você</i>}</div> : null}
       {p.bio && <p>{p.bio}</p>}

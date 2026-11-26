@@ -2159,3 +2159,12 @@ html:has(.lp),body:has(.lp){background:#fff}
 .pl-manual,.pl-hood{display:grid;gap:8px}.pl-manual label,.pl-hood{display:grid;gap:4px;font-size:13px;font-weight:800}
 .pl-manual input,.pl-hood input{height:44px;padding:0 12px;border:1px solid #e4d8f5;border-radius:12px;font-size:15px}
 .pl-ok{margin:0;color:#16a34a;font-weight:800;font-size:13px}.pl-privacy{font-size:12px}
+
+/* Selo Credenciado VIVA+ */
+.cs-sm{display:inline-flex;align-items:center;gap:4px;width:max-content;padding:3px 9px 3px 6px;border-radius:99px;background:linear-gradient(110deg,#FFD43B,#ffe680);color:#3d0a86;font-size:11.5px;font-weight:900;line-height:1.2;box-shadow:0 1px 0 rgba(61,10,134,.15)}
+.cs-sm svg{width:14px!important;height:14px!important;flex:none}
+.cs-lg{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(120deg,#3d0a86,#6410C9);color:#fff;text-align:left;box-shadow:0 8px 22px rgba(100,16,201,.25)}
+.cs-shield{display:grid;place-items:center;flex:0 0 46px;height:46px;border-radius:50%;background:#FFD43B;color:#3d0a86}.cs-shield svg{width:26px;height:26px}
+.cs-lg div{display:grid;gap:2px}.cs-lg b{font-size:15px}.cs-lg small{font-size:12px;opacity:.85}
+.pr-seal{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.pr-seal small{color:#6f6680!important;font-weight:700!important}
+.pt-info .cs-sm{margin:2px 0}
