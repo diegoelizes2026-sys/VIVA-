@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Activity, Barcode, Camera, ChevronLeft, ChevronRight, Droplet, Dumbbell, Flame, Minus, Pencil, Plus, Search, Trash2, User, X } from "lucide-react";
+import { Activity, Barcode, Camera, Check, ImageIcon, Sparkles, ChevronLeft, ChevronRight, Droplet, Dumbbell, Flame, Minus, Pencil, Plus, Search, Trash2, User, X } from "lucide-react";
 import type { HealthGoal } from "@/lib/health-plans";
 import { ACTIVITY_LEVELS, SUGGESTIONS, dailyTargets, exerciseKcal, foodByName, searchFoods, type Body, type Food } from "@/lib/nutrition";
 
@@ -112,7 +112,7 @@ function useEsc(onClose: () => void) {
 
 function FoodSheet({ meal, recent, onClose, onAdd }: { meal: MealType; recent: NewFood[]; onClose: () => void; onAdd: (f: NewFood) => Promise<boolean> }) {
   useEsc(onClose);
-  const [mode, setMode] = useState<"search" | "barcode" | "quick">("search");
+  const [mode, setMode] = useState<"search" | "photo" | "barcode" | "quick">("search");
   const [q, setQ] = useState("");
   const [picked, setPicked] = useState<Food | null>(null);
   const [servings, setServings] = useState(1);
@@ -155,8 +155,8 @@ function FoodSheet({ meal, recent, onClose, onAdd }: { meal: MealType; recent: N
         <div className="cd-nutri"><div><b>{fmt(picked.kcal * servings)}</b><small>kcal</small></div><div><b>{fmt(picked.c * servings, 1)}g</b><small>Carbo</small></div><div><b>{fmt(picked.p * servings, 1)}g</b><small>Proteína</small></div><div><b>{fmt(picked.f * servings, 1)}g</b><small>Gordura</small></div></div>
         <button className="vh-cta" disabled={busy} onClick={addPicked}>{busy ? "Salvando..." : "Adicionar " + TO[meal]}</button>
       </div> : <>
-        <div className="vh-pick cd-tabs"><button type="button" className={mode === "search" ? "sel" : ""} onClick={() => setMode("search")}><Search />Buscar</button><button type="button" className={mode === "barcode" ? "sel" : ""} onClick={() => setMode("barcode")}><Barcode />Código</button><button type="button" className={mode === "quick" ? "sel" : ""} onClick={() => setMode("quick")}><Pencil />Rápida</button></div>
-        {mode === "barcode" ? <BarcodeScan onFound={f => { setPicked(f); setServings(1); setMsg(""); }} onManual={() => setMode("quick")} /> : mode === "search" ? <div className="vh-form">
+        <div className="vh-pick cd-tabs"><button type="button" className={mode === "search" ? "sel" : ""} onClick={() => setMode("search")}><Search />Buscar</button><button type="button" className={mode === "photo" ? "sel" : ""} onClick={() => setMode("photo")}><Camera />Foto</button><button type="button" className={mode === "barcode" ? "sel" : ""} onClick={() => setMode("barcode")}><Barcode />Código</button><button type="button" className={mode === "quick" ? "sel" : ""} onClick={() => setMode("quick")}><Pencil />Rápida</button></div>
+        {mode === "photo" ? <PhotoScan meal={meal} onAdd={onAdd} onDone={onClose} /> : mode === "barcode" ? <BarcodeScan onFound={f => { setPicked(f); setServings(1); setMsg(""); }} onManual={() => setMode("quick")} /> : mode === "search" ? <div className="vh-form">
           <label className="cd-search"><Search /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar: arroz, ovo, banana..." autoFocus aria-label="Buscar alimento" /></label>
           {!q.trim() && recent.length > 0 && <><b className="cd-list-title">Recentes</b><ul className="cd-results">{recent.slice(0, 6).map((f, i) => <li key={"r" + i}><button type="button" onClick={() => add({ ...f, meal })} disabled={busy}><div><b>{f.name}</b><small>{f.qty}</small></div><span>{fmt(f.kcal)} kcal</span><Plus /></button></li>)}</ul></>}
           <b className="cd-list-title">{q.trim() ? `${results.length} resultado(s)` : "Sugestões para " + mealName.toLowerCase()}</b>
@@ -275,5 +275,96 @@ function BarcodeScan({ onFound, onManual }: { onFound: (f: Food) => void; onManu
     </form>
     {msg && <p className="vh-warn" role="status">{msg} <button type="button" className="vh-inline" onClick={onManual}>Adição rápida</button></p>}
     <p className="vh-sub">Dados da base aberta Open Food Facts. Confira com o rótulo.</p>
+  </div>;
+}
+
+// Reduz a foto no aparelho (máx. 1024 px, JPEG) antes de enviar: mais rápido e mais barato.
+async function shrink(file: File): Promise<string> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = url; });
+    const scale = Math.min(1, 1024 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth * scale); c.height = Math.round(img.naturalHeight * scale);
+    c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.82);
+  } finally { URL.revokeObjectURL(url); }
+}
+
+type PhotoItem = { name: string; portion: string; grams: number; kcal: number; p: number; c: number; f: number; on: boolean; x: number };
+
+function PhotoScan({ meal, onAdd, onDone }: { meal: MealType; onAdd: (f: NewFood) => Promise<boolean>; onDone: () => void }) {
+  const [image, setImage] = useState<string | null>(null);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [upgrade, setUpgrade] = useState(false);
+  const [items, setItems] = useState<PhotoItem[] | null>(null);
+  const [info, setInfo] = useState<{ tip: string; confidence: string; credits: number; sample: boolean; sample_left: number | null } | null>(null);
+  const reqId = useRef("");
+
+  async function pick(f: File | undefined) {
+    if (!f) return;
+    setMsg(""); setItems(null); setUpgrade(false);
+    try { setImage(await shrink(f)); reqId.current = "meal_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+    catch { setMsg("Não consegui abrir essa imagem. Tente outra foto."); }
+  }
+  async function analyze() {
+    if (!image || busy) return;
+    setBusy(true); setMsg(""); setUpgrade(false);
+    try {
+      const r = await fetch("/api/food-photo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image, note: note.trim() || undefined, requestId: reqId.current }) });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.result) {
+        setItems(d.result.items.map((i: Omit<PhotoItem, "on" | "x">) => ({ ...i, on: true, x: 1 })));
+        setInfo({ tip: d.result.tip, confidence: d.result.confidence, credits: Number(d.usage?.credits) || 0, sample: Boolean(d.usage?.sample), sample_left: d.usage?.sample_left ?? null });
+      } else { setMsg(String(d.error || d.message || "Não consegui analisar agora.")); setUpgrade(Boolean(d.upgrade)); }
+    } catch { setMsg("Sem conexão. Tente de novo."); }
+    finally { setBusy(false); }
+  }
+  const chosen = (items || []).filter(i => i.on);
+  const total = chosen.reduce((s, i) => s + i.kcal * i.x, 0);
+  const r1 = (n: number) => Math.round(n * 10) / 10;
+  async function save() {
+    if (!chosen.length) return;
+    setBusy(true); setMsg("");
+    let fail = 0;
+    for (const i of chosen) {
+      const qty = (i.x === 1 ? i.portion : `${fmt(i.x, 1)} × ${i.portion}`).slice(0, 40);
+      const ok = await onAdd({ meal, name: i.name, qty, kcal: Math.round(i.kcal * i.x), p: r1(i.p * i.x), c: r1(i.c * i.x), f: r1(i.f * i.x) });
+      if (!ok) fail++;
+    }
+    setBusy(false);
+    if (fail) setMsg(`${fail} item(ns) não foram salvos. Tente de novo.`); else onDone();
+  }
+  const setItem = (k: number, patch: Partial<PhotoItem>) => setItems(c => c && c.map((x, j) => j === k ? { ...x, ...patch } : x));
+
+  if (items) return <div className="vh-form">
+    <div className="cd-photo-head">{image && <img src={image} alt="Sua refeição" />}<div><b>{fmt(total)} kcal</b><small>{chosen.length} de {items.length} itens selecionados</small></div></div>
+    {info?.confidence === "low" && <p className="cd-hint">⚠️ A foto não estava muito clara. Confira os itens e as porções antes de salvar.</p>}
+    <ul className="cd-photo-items">{items.map((i, k) => <li key={k} className={i.on ? "" : "off"}>
+      <button type="button" className="cd-check" onClick={() => setItem(k, { on: !i.on })} aria-label={i.on ? "Tirar " + i.name : "Incluir " + i.name}>{i.on && <Check />}</button>
+      <div><b>{i.name}</b><small>{i.x === 1 ? i.portion : `${fmt(i.x, 1)} × ${i.portion}`} · C {fmt(i.c * i.x)}g · P {fmt(i.p * i.x)}g · G {fmt(i.f * i.x)}g</small></div>
+      <div className="cd-mini"><button type="button" onClick={() => setItem(k, { x: Math.max(0.5, i.x - 0.5) })} aria-label="Menos"><Minus /></button><span>{fmt(i.kcal * i.x)}</span><button type="button" onClick={() => setItem(k, { x: Math.min(5, i.x + 0.5) })} aria-label="Mais"><Plus /></button></div>
+    </li>)}</ul>
+    {info?.tip && <p className="cd-preview"><Sparkles /><span>{info.tip}</span></p>}
+    <button type="button" className="vh-cta" disabled={busy || !chosen.length} onClick={save}>{busy ? "Salvando..." : `Adicionar ${chosen.length} ${chosen.length === 1 ? "item" : "itens"} ${TO[meal]}`}</button>
+    <button type="button" className="vh-cta ghost" onClick={() => { setItems(null); setImage(null); setNote(""); }}>Tirar outra foto</button>
+    {info && <p className="vh-sub">{info.sample ? `Foto grátis usada${info.sample_left != null ? ` · restam ${info.sample_left} este mês` : ""}.` : info.credits ? `−${info.credits} créditos.` : ""} Valores estimados pela IA; ajuste se precisar.</p>}
+    {msg && <p className="vh-warn" role="status">{msg}</p>}
+  </div>;
+
+  return <div className="vh-form">
+    {image ? <div className="cd-photo-prev"><img src={image} alt="Foto escolhida" /><button type="button" onClick={() => setImage(null)} aria-label="Trocar foto"><X /></button></div>
+      : <div className="cd-photo-pick">
+        <label className="vh-cta"><Camera />Tirar foto do prato<input type="file" accept="image/*" capture="environment" hidden onChange={e => { pick(e.target.files?.[0]); e.target.value = ""; }} /></label>
+        <label className="vh-cta ghost"><ImageIcon />Escolher da galeria<input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={e => { pick(e.target.files?.[0]); e.target.value = ""; }} /></label>
+        <p className="vh-sub">📸 Fotografe o prato de cima, com boa luz. A IA identifica os alimentos e estima calorias e macros.</p>
+      </div>}
+    {image && <>
+      <label>Algum detalhe? (opcional)<input value={note} onChange={e => setNote(e.target.value)} maxLength={300} placeholder="Ex.: comi só metade, frango frito" /></label>
+      <button type="button" className="vh-cta" disabled={busy} onClick={analyze}>{busy ? <><Sparkles />Analisando o prato...</> : <><Sparkles />Analisar com IA</>}</button>
+    </>}
+    {msg && <p className="vh-warn" role="status">{msg}{upgrade && <> <a className="vh-inline" href="/planos">Ver planos</a></>}</p>}
+    <p className="vh-sub">A foto não é guardada: é usada só para esta análise.</p>
   </div>;
 }
