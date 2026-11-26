@@ -1,4 +1,5 @@
 "use client";
+import { Hourglass } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PlansInteractive from "@/app/(app)/planos/plans-interactive";
@@ -55,7 +56,7 @@ export default function TrialEndOffer({ plans }: { plans: Plan[] }) {
     const left = Math.max(0, Math.ceil((endsAt - now) / 1000));
     const days = Math.ceil(left / 86400), h = Math.floor(left / 3600), m = Math.floor((left % 3600) / 60);
     const label = left > 86400 ? `${days} dias` : h > 0 ? `${h}h${String(m).padStart(2, "0")}` : `${m}:${String(left % 60).padStart(2, "0")}`;
-    return <div className="viva-trial-timer" role="status">⏳ Teste do Pro: <b>{label}</b> restantes</div>;
+    return <div className="viva-trial-timer" role="status"><Hourglass aria-hidden /> Teste do Pro: <b>{label}</b> restantes</div>;
   }
   if (!open || paid.length === 0) return null;
   return (
