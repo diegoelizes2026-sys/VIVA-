@@ -3,13 +3,16 @@ import { createServerClient } from "@supabase/ssr";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildReport, reportMessage, reportRange, type ReportPeriod } from "@/lib/report";
 import { randomUUID } from "node:crypto";
+import { detectHealthIntent, exerciseReply, foodReply, loadDay, mealFor, saveExercise, saveFoods, saveWater, summaryReply, undoHealth, waterReply, type MealType } from "@/lib/health-whatsapp";
+import type { FoodAiItem } from "@/lib/food-ai";
 import { downloadWhatsappMedia, oggDurationSeconds, FREE_WHATSAPP_NOTE, WHATSAPP_FREE_WEEKLY, SITE_URL, activeWhatsappPlan, brl, connectUrlFor, featuresMessage, freeLeftFooter, freeLimitMessage, linkWhatsapp, notLinkedMessage, requestKeyFor, sendWhatsappText, validSignature, welcomeAfterLink } from "@/lib/whatsapp";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 type Admin = ReturnType<typeof createAdminClient>;
-type HistoryItem = { role: "user" | "assistant"; content: string; clarification?: Record<string, unknown> };
+type HealthMark = { table: string; ids: string[]; at: string };
+type HistoryItem = { role: "user" | "assistant"; content: string; clarification?: Record<string, unknown>; health?: HealthMark };
 type WaMedia = { id?: string; mime_type?: string; caption?: string; filename?: string };
 type WaMessage = { id?: string; from?: string; type?: string; text?: { body?: string }; audio?: WaMedia; voice?: WaMedia; image?: WaMedia; document?: WaMedia; button?: { text?: string }; interactive?: { button_reply?: { title?: string }; list_reply?: { title?: string } } };
 
@@ -124,18 +127,51 @@ async function handleMessage(m: WaMessage, origin: string) {
   // Áudio (vira texto) e foto/PDF de comprovante (a VIVA lê e anota).
   const media = mediaOf(m);
   if (!text && !media) {
-    await sendWhatsappText(from, "Ainda não entendo esse tipo de mensagem 😅 Pode me mandar *texto*, *áudio* ou *foto do comprovante*.");
+    await sendWhatsappText(from, "Ainda não entendo esse tipo de mensagem 😅 Pode me mandar *texto*, *áudio*, *foto do comprovante* ou *foto do prato*.");
     return;
   }
 
   const session = await openUserSession(admin, link.user_id);
   try {
+    const history0: HistoryItem[] = Array.isArray(link.history) ? (link.history as HistoryItem[]) : [];
+    // Guarda a conversa e o que foi anotado na saúde (para o "desfazer").
+    const remember = async (userText: string, reply: string, health?: HealthMark) => {
+      const next: HistoryItem[] = [...history0.slice(-10), { role: "user" as const, content: userText.slice(0, 4000) }, { role: "assistant" as const, content: reply.slice(0, 4000), ...(health ? { health } : {}) }].slice(-12);
+      await admin.from("viva_whatsapp_links").update({ history: next, updated_at: new Date().toISOString() }).eq("user_id", link.user_id);
+    };
+
     if (/^\s*desfazer\s*$/i.test(text)) {
+      // Saúde: desfaz o último registro de comida, água ou exercício, se for o lançamento mais recente (até 15 min).
+      const mark = [...history0].reverse().find(h => h.role === "assistant")?.health;
+      const markAt = mark ? new Date(mark.at).getTime() : 0;
+      const txAt = link.last_transaction_at ? new Date(link.last_transaction_at).getTime() : 0;
+      if (mark && Date.now() - markAt < UNDO_WINDOW_MS && markAt >= txAt) {
+        const ok = await undoHealth(session.client, mark.table, mark.ids);
+        const reply = ok ? "Pronto, desfiz o último registro do seu diário de saúde. ↩️" : "Não consegui desfazer agora. Você pode apagar pela tela de Saúde do app.";
+        await sendWhatsappText(from, reply);
+        if (ok) await remember(text, reply);
+        return;
+      }
       const recent = link.last_transaction_id && link.last_transaction_at && Date.now() - new Date(link.last_transaction_at).getTime() < UNDO_WINDOW_MS;
       if (!recent) { await sendWhatsappText(from, "Não tenho nenhum lançamento recente para desfazer. Lançamentos mais antigos você apaga pela tela de Finanças do app."); return; }
       const res = await callApp(origin, session.cookie, `/api/transactions?id=${encodeURIComponent(String(link.last_transaction_id))}`, { method: "DELETE" });
       if (res.ok) await admin.from("viva_whatsapp_links").update({ last_transaction_id: null, last_transaction_at: null }).eq("user_id", link.user_id);
       await sendWhatsappText(from, res.ok ? "Pronto, desfiz o último lançamento. ↩️" : String(res.data.error || "Não consegui desfazer agora."));
+      return;
+    }
+
+    // Saúde sem IA (água, exercício, saldo de calorias): responde na hora e não conta na cota nem gasta créditos.
+    const health = text && !media ? detectHealthIntent(text) : null;
+    if (health && health.kind !== "food") {
+      try {
+        let reply: string; let mark: HealthMark | undefined;
+        const at = new Date().toISOString();
+        if (health.kind === "water") { const id = await saveWater(session.client, link.user_id, health.ml); reply = waterReply(health.ml, await loadDay(session.client, link.user_id)); mark = { table: "viva_water_logs", ids: [id], at }; }
+        else if (health.kind === "exercise") { const id = await saveExercise(session.client, link.user_id, health); reply = exerciseReply(health, await loadDay(session.client, link.user_id)); mark = { table: "viva_activity_logs", ids: [id], at }; }
+        else reply = summaryReply(await loadDay(session.client, link.user_id), SITE_URL);
+        await sendWhatsappText(from, reply);
+        await remember(text, reply, mark);
+      } catch (e) { console.error("VIVA WhatsApp health", e); await sendWhatsappText(from, "Não consegui anotar no seu diário agora. Tente de novo em instantes."); }
       return;
     }
 
@@ -147,6 +183,50 @@ async function handleMessage(m: WaMessage, origin: string) {
       const q = quota as { allowed?: boolean; left?: number; resets_on?: string } | null;
       if (!q?.allowed) { await sendWhatsappText(from, freeLimitMessage(q?.resets_on)); return; }
       freeLeft = Number(q.left ?? 0);
+    }
+
+    // Comida (texto ou foto do prato): a IA separa os alimentos e anota no diário de saúde.
+    const logFood = async (items: FoodAiItem[], meal: MealType, userText: string, tip: string, footer = "") => {
+      const ids = await saveFoods(session.client, link.user_id, items, meal);
+      const reply = foodReply(items, meal, await loadDay(session.client, link.user_id), tip) + footer;
+      await sendWhatsappText(from, freeLeft === null ? reply : reply + freeLeftFooter(freeLeft));
+      await remember(userText, reply, { table: "viva_food_logs", ids, at: new Date().toISOString() });
+    };
+    const foodError = async (d: Record<string, unknown>) => {
+      let err = String(d.error || d.message || "Não consegui analisar agora. Tente de novo em instantes.");
+      if (d.upgrade) err += `\n\nVeja os planos: ${SITE_URL}/planos`;
+      await sendWhatsappText(from, err);
+    };
+    if (health?.kind === "food") {
+      const r = await callApp(origin, session.cookie, "/api/food-text", { method: "POST", body: JSON.stringify({ text, requestId: requestKeyFor(id + ":food") }) });
+      const result = r.data.result as { items?: FoodAiItem[]; meal?: string | null; tip?: string } | undefined;
+      if (r.ok && result?.items?.length) {
+        try { await logFood(result.items, mealFor(text, result.meal), text, String(result.tip || "")); }
+        catch (e) { console.error("VIVA WhatsApp food save", e); await sendWhatsappText(from, "Entendi a refeição, mas não consegui salvar no diário agora. Tente de novo em instantes."); }
+        return;
+      }
+      if (!r.data.not_food) { await foodError(r.data); return; }
+      // Não era comida: segue para a VIVA normal.
+    }
+    // Foto: tenta como prato primeiro (sem cobrar se não for comida); se não for, lê como comprovante.
+    if (media?.kind === "receipt" && media.image && !/\b(comprovante|pix|nota|cupom|boleto|recibo|fatura|transfer)/i.test(media.caption || "")) {
+      const file = await downloadWhatsappMedia(media.id);
+      const mime = "error" in file ? "" : (file.mime || media.mime).replace("image/jpg", "image/jpeg");
+      if (!("error" in file) && /^image\/(jpeg|png|webp)$/.test(mime) && file.buffer.length <= 2_900_000) {
+        await sendWhatsappText(from, "📸 Analisando sua foto…");
+        const image = `data:${mime};base64,${file.buffer.toString("base64")}`;
+        const r = await callApp(origin, session.cookie, "/api/food-photo", { method: "POST", body: JSON.stringify({ image, note: media.caption?.slice(0, 300) || undefined, requestId: requestKeyFor(id + ":meal") }) });
+        const result = r.data.result as { items?: FoodAiItem[]; meal?: string | null; tip?: string; confidence?: string } | undefined;
+        const usage = r.data.usage as { sample_left?: number | null } | undefined;
+        if (r.ok && result?.items?.length) {
+          const low = result.confidence === "low" ? "\n\n_⚠️ A foto não estava muito clara: confira os itens no app._" : "";
+          const sample = usage?.sample_left != null ? sampleFooter("meal", Number(usage.sample_left)) : "";
+          try { await logFood(result.items, mealFor(media.caption || "", result.meal), `[foto do prato]${media.caption ? " " + media.caption : ""}`, String(result.tip || ""), low + sample); }
+          catch (e) { console.error("VIVA WhatsApp meal save", e); await sendWhatsappText(from, "Analisei o prato, mas não consegui salvar no diário agora. Tente de novo em instantes."); }
+          return;
+        }
+        if (!r.data.not_food) { await foodError(r.data); return; }
+      }
     }
 
     let message = text;
@@ -214,16 +294,17 @@ async function handleMessage(m: WaMessage, origin: string) {
 
 type AppResult = { ok: boolean; status: number; data: Record<string, unknown> };
 /** Plano grátis: avisa quantos áudios/fotos grátis ainda restam no mês. */
-function sampleFooter(kind: "audio" | "photo", left: number) {
+function sampleFooter(kind: "audio" | "photo" | "meal", left: number) {
+  if (kind === "meal") return left <= 0 ? `\n\n_🎁 Essa foi a última foto grátis do mês. Com o Pro é à vontade: ${SITE_URL}/planos_` : `\n\n_🎁 Resta${left === 1 ? "" : "m"} ${left} ${left === 1 ? "foto grátis" : "fotos grátis"} este mês._`;
   const what = kind === "audio" ? (left === 1 ? "áudio grátis" : "áudios grátis") : (left === 1 ? "leitura de comprovante grátis" : "leituras de comprovante grátis");
   if (left <= 0) return `\n\n_🎁 Esse foi o último ${kind === "audio" ? "áudio grátis" : "comprovante grátis"} do mês. Com o Pro é à vontade: ${SITE_URL}/planos_`;
   return `\n\n_🎁 ${kind === "audio" ? "Resta" + (left === 1 ? "" : "m") : "Resta" + (left === 1 ? "" : "m")} ${left} ${what} este mês._`;
 }
-type Media = { kind: "audio" | "receipt"; id: string; mime: string; caption?: string };
+type Media = { kind: "audio" | "receipt"; id: string; mime: string; caption?: string; image?: boolean };
 function mediaOf(m: WaMessage): Media | null {
   const audio = m.audio || m.voice;
   if ((m.type === "audio" || m.type === "voice") && audio?.id) return { kind: "audio", id: audio.id, mime: String(audio.mime_type || "audio/ogg").split(";")[0] };
-  if (m.type === "image" && m.image?.id) return { kind: "receipt", id: m.image.id, mime: String(m.image.mime_type || "image/jpeg"), caption: m.image.caption };
+  if (m.type === "image" && m.image?.id) return { kind: "receipt", id: m.image.id, mime: String(m.image.mime_type || "image/jpeg"), caption: m.image.caption, image: true };
   if (m.type === "document" && m.document?.id && /^(application\/pdf|image\/)/.test(String(m.document.mime_type || ""))) return { kind: "receipt", id: m.document.id, mime: String(m.document.mime_type), caption: m.document.caption };
   return null;
 }
