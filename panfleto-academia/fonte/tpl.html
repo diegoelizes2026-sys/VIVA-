@@ -3,88 +3,107 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:"Inter",sans-serif;-webkit-font-smoothing:antialiased;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .pg{width:154mm;height:216mm;position:relative;overflow:hidden;page-break-after:always}
-.D{font-family:"Inter Display","Inter";letter-spacing:-.035em;line-height:.98}
-.safe{position:absolute;left:10mm;right:10mm;top:10mm;bottom:10mm}
-.f{background:radial-gradient(130mm 130mm at 20% 15%,#7A33E6 0%,#4A12A3 45%,#1E0848 100%);color:#fff}
-.brand{display:flex;align-items:center;gap:3mm;font-weight:900;font-size:6.2mm}
-.brand .lg{width:10mm;height:10mm;border-radius:2.4mm;background:#fff;display:flex;align-items:center;justify-content:center}
-.tag{margin-left:auto;font-size:3.1mm;font-weight:800;background:#FFD43B;color:#2A0A5E;padding:1.6mm 3.4mm;border-radius:10mm;letter-spacing:.02em}
-h1{font-size:14.2mm;font-weight:900;margin-top:9mm}
-h1 .y{color:#FFD43B;display:block}
-.sub{font-size:4.1mm;line-height:1.38;margin-top:4.5mm;font-weight:500;opacity:.92;max-width:118mm}
-.mock{display:flex;gap:4mm;margin-top:7mm}
-.card{flex:0 0 49mm;background:#fff;color:#2A0A5E;border-radius:5mm;padding:4.5mm;box-shadow:0 3mm 8mm rgba(0,0,0,.25)}
-.card small{display:block;font-size:2.8mm;font-weight:700;color:#7A6F8C;text-transform:uppercase;letter-spacing:.06em}
-.card .n{font-size:10.5mm;font-weight:900;margin-top:1.6mm;color:#7028D8}
-.card .u{font-size:3.2mm;font-weight:700}
-.bar{height:2.4mm;border-radius:2mm;background:#ECE6F6;margin:3mm 0 3mm;overflow:hidden}.bar i{display:block;height:100%;width:44%;background:#FFD43B}
-.card .r{display:flex;justify-content:space-between;font-size:3mm;font-weight:600;margin-top:1.3mm}
-.card .r b{font-weight:800}
-.chat{flex:1;background:#EFE9E1;border-radius:5mm;padding:3.5mm;display:flex;flex-direction:column;gap:2.2mm;justify-content:center}
-.b{font-size:3.05mm;line-height:1.3;padding:2mm 2.8mm;border-radius:3mm;color:#1A1A22;max-width:92%;font-weight:500}
-.me{align-self:flex-end;background:#DCF8C6;border-bottom-right-radius:.8mm}
-.vv{align-self:flex-start;background:#fff;border-bottom-left-radius:.8mm}.vv b{color:#5A14B8}
-.cta{position:absolute;left:0;right:0;bottom:0;height:56mm;background:#FFD43B;color:#2A0A5E;padding:0 10mm 10mm;display:flex;align-items:center;gap:6mm}
-.qr{flex:0 0 38mm;height:38mm;background:#fff;border-radius:3.5mm;padding:3mm}
+.D{font-family:"Inter Display","Inter";letter-spacing:-.04em;line-height:.9}
+.qr{background:#fff;border-radius:3mm;padding:2.6mm}
 .qr svg{width:100%;height:100%;display:block}
-.cta h2{font-size:8.6mm;font-weight:900}
-.cta p{font-size:3.6mm;font-weight:600;margin-top:2mm;line-height:1.35}
-.cta .url{display:inline-block;margin-top:3mm;font-size:4.6mm;font-weight:900;background:#2A0A5E;color:#FFD43B;padding:1.6mm 3.6mm;border-radius:2mm}
-.note{position:absolute;left:10mm;right:10mm;bottom:58.5mm;font-size:2.4mm;opacity:.6}
+/* FRENTE */
+.f{background:#5B16C4;color:#fff}
+.f .rays{position:absolute;inset:0;background:
+  radial-gradient(90mm 90mm at 108% 52%,rgba(255,212,59,.55),rgba(255,212,59,0) 70%),
+  radial-gradient(120mm 120mm at -10% -10%,#8A45F0 0%,rgba(138,69,240,0) 70%),
+  linear-gradient(160deg,#6A1FD6 0%,#3A0C8A 70%,#24075C 100%)}
+.f .stripe{position:absolute;left:-20mm;right:-20mm;height:22mm;top:118mm;background:#FFD43B;transform:rotate(-8deg);opacity:.12}
+.top{position:absolute;left:10mm;right:10mm;top:10mm;display:flex;align-items:center;gap:2.6mm;font-weight:900;font-size:6mm}
+.lg{width:9.5mm;height:9.5mm;border-radius:2.2mm;background:#fff;display:flex;align-items:center;justify-content:center}
+.free{margin-left:auto;background:#FFD43B;color:#2A0A5E;font-weight:900;font-size:3.6mm;padding:1.8mm 3.8mm;border-radius:10mm;transform:rotate(3deg)}
+h1{position:absolute;left:9mm;top:25mm;font-weight:900;text-transform:uppercase}
+h1 .a{display:block;font-size:19mm}
+h1 .b{display:block;font-size:19mm;color:#FFD43B}
+h1 .c{display:block;font-size:13.4mm;color:#FFD43B}
+.lead{position:absolute;left:10mm;top:83mm;width:66mm;font-size:4.2mm;line-height:1.35;font-weight:600}
+.lead b{color:#FFD43B}
+.bul{position:absolute;left:10mm;top:108mm;width:66mm;display:flex;flex-direction:column;gap:2.6mm}
+.bul div{display:flex;gap:2.6mm;align-items:center;font-size:3.7mm;font-weight:800;line-height:1.15}
+.bul span{flex:0 0 7.4mm;height:7.4mm;border-radius:2mm;background:#FFD43B;color:#2A0A5E;font-size:3.4mm;font-weight:900;display:flex;align-items:center;justify-content:center}
+/* phone */
+.phone{position:absolute;left:81mm;top:78mm;width:62mm;height:104mm;border-radius:9mm;background:#0B0B0F;padding:2mm;transform:rotate(6deg);box-shadow:0 6mm 14mm rgba(0,0,0,.45)}
+.scr{width:100%;height:100%;border-radius:7mm;background:#F4F3F6;overflow:hidden;color:#2A0A5E}
+.sh{background:#7028D8;color:#fff;padding:5mm 4mm 3.4mm}
+.sh small{font-size:2.3mm;font-weight:700;opacity:.8;letter-spacing:.06em;text-transform:uppercase}
+.sh b{display:block;font-size:4.6mm;font-weight:900;margin-top:.8mm;line-height:1.1}
+.ex{margin:2.2mm 3mm 0;background:#fff;border-radius:2.4mm;padding:2.1mm 2.6mm;display:flex;justify-content:space-between;align-items:center;font-size:2.75mm;font-weight:700}
+.ex em{font-style:normal;color:#7028D8;font-weight:800;font-size:2.5mm}
+.ex.ok{background:#E9FBE0}
+.wk{margin:2.6mm 3mm 0;font-size:2.4mm;font-weight:700;color:#7A6F8C}
+.dots{display:flex;gap:1.2mm;margin-top:1.2mm}.dots i{flex:1;height:1.8mm;border-radius:1mm;background:#E2DAF0}.dots i.on{background:#FFD43B}
+.btn{margin:3mm 3mm 0;background:#7028D8;color:#fff;border-radius:2.6mm;text-align:center;font-weight:800;font-size:3mm;padding:2.4mm}
+.cta{position:absolute;left:0;right:0;bottom:0;height:40mm;background:#FFD43B;color:#2A0A5E;display:flex;align-items:center;gap:5mm;padding:0 10mm 4mm}
+.cta .qr{flex:0 0 30mm;height:30mm}
+.cta h2{font-size:9.4mm;font-weight:900;text-transform:uppercase}
+.cta p{font-size:3.5mm;font-weight:700;margin-top:1.6mm}
+.cta .url{display:inline-block;margin-top:2mm;font-size:4.2mm;font-weight:900;background:#2A0A5E;color:#FFD43B;padding:1.3mm 3.2mm;border-radius:1.8mm}
+.note{position:absolute;left:10mm;bottom:41.5mm;font-size:2.2mm;opacity:.55}
+/* VERSO */
 .k{background:#F4F3F6;color:#2A0A5E}
-.k h3{font-size:9.6mm;font-weight:900}
+.k .in{position:absolute;left:10mm;right:10mm;top:10mm}
+.k h3{font-size:10.4mm;font-weight:900;text-transform:uppercase}
 .k h3 span{color:#7028D8}
-.list{margin-top:6mm;display:grid;grid-template-columns:1fr 1fr;gap:3.5mm}
-.it{background:#fff;border-radius:4mm;padding:4.2mm;border:.3mm solid #E4DDF0}
-.it .no{font-family:"Inter Display";font-weight:900;font-size:8mm;color:#7028D8;letter-spacing:-.04em;line-height:1}
-.it.y{background:#FFD43B;border-color:#FFD43B}.it.y .no{color:#2A0A5E}
-.it b{display:block;font-size:4.3mm;font-weight:850;line-height:1.15;margin-top:2.2mm;letter-spacing:-.01em}
-.it p{font-size:3.1mm;line-height:1.35;margin-top:1.5mm;font-weight:500;color:#4A4060}
-.it.y p{color:#2A0A5E}
-.pro{margin-top:6mm;background:#2A0A5E;color:#fff;border-radius:5mm;padding:5.5mm;display:flex;gap:5mm;align-items:center}
-.pro .qr{flex:0 0 31mm;height:31mm;padding:2.4mm}
-.pro small{font-size:2.9mm;font-weight:800;color:#FFD43B;letter-spacing:.08em;text-transform:uppercase}
-.pro h4{font-size:6.4mm;font-weight:900;margin-top:1.4mm;line-height:1.05}
-.pro p{font-size:3.15mm;line-height:1.38;margin-top:2mm;opacity:.9}
-.foot{position:absolute;left:10mm;right:10mm;bottom:10mm}
-.foot .big{font-size:4.6mm;font-weight:800}
-.foot .big span{color:#7028D8}
-.foot .tiny{font-size:2.35mm;color:#7A6F8C;margin-top:2mm;line-height:1.4}
+.k .sub{font-size:3.7mm;font-weight:600;margin-top:2.4mm;color:#4A4060}
+.row{margin-top:6.4mm;border-radius:5mm;padding:5.6mm 5mm 5.6mm 5.4mm;display:flex;gap:4.5mm;align-items:center}
+.row .qr{flex:0 0 29mm;height:29mm;padding:2.2mm}
+.row .lab{display:inline-block;font-size:2.9mm;font-weight:900;letter-spacing:.08em;padding:1.1mm 2.6mm;border-radius:10mm;text-transform:uppercase}
+.row h4{font-size:6.2mm;font-weight:900;margin-top:1.8mm;line-height:1}
+.row p{font-size:3.05mm;line-height:1.36;margin-top:1.8mm;font-weight:500}
+.r1{background:#7028D8;color:#fff}.r1 .lab{background:#FFD43B;color:#2A0A5E}
+.r2{background:#FFD43B}.r2 .lab{background:#2A0A5E;color:#FFD43B}
+.r3{background:#2A0A5E;color:#fff}.r3 .lab{background:#fff;color:#2A0A5E}
+.r1 p,.r3 p{opacity:.92}
+.foot{position:absolute;left:10mm;right:10mm;bottom:9mm;font-size:2.3mm;color:#7A6F8C;line-height:1.4}
+.foot b{display:block;font-size:4.4mm;color:#2A0A5E;margin-bottom:1.6mm}
+.foot b span{color:#7028D8}
 </style></head><body>
-<div class="pg f"><div class="safe">
-  <div class="brand"><div class="lg">LOGO</div>VIVA+<span class="tag">VIVA SAÚDE</span></div>
-  <h1 class="D">Tira foto do prato.<span class="y">A VIVA conta as calorias.</span></h1>
-  <p class="sub">Para quem treina e quer resultado sem planilha e sem app complicado. Você manda mensagem no WhatsApp e ela anota comida, água e treino.</p>
-  <div class="mock">
-    <div class="card"><small>Calorias de hoje</small><div class="n D">1.240</div><div class="u">kcal restantes</div><div class="bar"><i></i></div>
-      <div class="r"><span>Meta</span><b>2.200</b></div><div class="r"><span>Alimentos</span><b>1.280</b></div><div class="r"><span>Treino</span><b>+320</b></div></div>
-    <div class="chat">
-      <div class="b me">almocei arroz, feijão, frango e salada</div>
-      <div class="b vv">Almoço anotado: <b>534 kcal</b>. Restam <b>1.240</b> hoje.</div>
-      <div class="b me">bebi 500 ml de água</div>
-      <div class="b vv">Anotado. Faltam <b>1,5 L</b> pra meta.</div>
-    </div>
+
+<div class="pg f"><div class="rays"></div><div class="stripe"></div>
+  <div class="top"><div class="lg">LOGO</div>VIVA+<span class="free">É GRÁTIS</span></div>
+  <h1 class="D"><span class="a">Seu treino</span><span class="b">na palma</span><span class="c">da sua mão.</span></h1>
+  <p class="lead">Treino montado para o <b>seu objetivo</b>, no tempo que você tem. Direto no celular e no WhatsApp.</p>
+  <div class="bul">
+    <div><span>01</span>Treino da semana com séries e repetições</div>
+    <div><span>02</span>Foto do prato vira calorias</div>
+    <div><span>03</span>Água e treino anotados pelo WhatsApp</div>
+    <div><span>04</span>Personais credenciados perto de você</div>
   </div>
-</div>
-  <div class="note">Telas ilustrativas, com valores de exemplo.</div>
+  <div class="phone"><div class="scr">
+    <div class="sh"><small>Treino de hoje</small><b>Peito e tríceps</b></div>
+    <div class="ex ok">Supino reto<em>4 séries, 10 rep.</em></div>
+    <div class="ex ok">Crucifixo<em>3 séries, 12 rep.</em></div>
+    <div class="ex">Tríceps corda<em>3 séries, 12 rep.</em></div>
+    <div class="ex">Paralelas<em>3 séries, 10 rep.</em></div>
+    <div class="ex">Prancha<em>3 de 40 s</em></div>
+    <div class="wk">Meta da semana: 3 de 4 treinos<div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div></div>
+    <div class="btn">Concluir treino de hoje</div>
+  </div></div>
+  <div class="note">Tela ilustrativa.</div>
   <div class="cta"><div class="qr">QRCAD</div><div>
-    <h2 class="D">7 dias de Pro grátis.</h2>
-    <p>Sem cartão. Aponte a câmera do celular para o código e crie sua conta em 1 minuto.</p>
+    <h2 class="D">Comece hoje</h2>
+    <p>Aponte a câmera. 7 dias de Pro grátis, sem cartão.</p>
     <span class="url">vivamaiss.app.br</span></div></div>
 </div>
-<div class="pg k"><div class="safe">
-  <h3 class="D">Seu treino rende mais<br>quando <span>a rotina ajuda.</span></h3>
-  <div class="list">
-    <div class="it"><div class="no">01</div><b>Calorias pela foto do prato</b><p>Saiba na hora quanto ainda pode comer hoje.</p></div>
-    <div class="it y"><div class="no">02</div><b>Água e treino pelo WhatsApp</b><p>Manda uma mensagem e pronto. Ela anota pra você.</p></div>
-    <div class="it y"><div class="no">03</div><b>Personais e academias perto de você</b><p>Profissionais com CREF conferido pela VIVA.</p></div>
-    <div class="it"><div class="no">04</div><b>E ainda cuida do seu dinheiro</b><p>Todo dia ela te diz quanto você pode gastar.</p></div>
-  </div>
-  <div class="pro"><div class="qr">QRPAR</div><div>
-    <small>Para personal trainer</small>
-    <h4 class="D">Ganhe alunos perto da academia</h4>
-    <p>Cadastre seu CREF grátis, ganhe o selo de Credenciado VIVA+ e apareça para quem procura personal na sua região.</p></div></div>
-  <div class="foot"><div class="big">Crie sua conta grátis em <span>vivamaiss.app.br</span></div>
-    <div class="tiny">7 dias do plano Pro grátis, uma vez por conta, sem cartão e sem cobrança. A VIVA não substitui o acompanhamento de nutricionista ou de profissional de educação física.</div></div>
-</div></div>
+
+<div class="pg k"><div class="in">
+  <h3 class="D">Tem VIVA pra <span>todo mundo</span> da academia.</h3>
+  <p class="sub">Escolha o seu e aponte a câmera para o código.</p>
+  <div class="row r1"><div class="qr">QRCAD</div><div>
+    <span class="lab">Aluno</span><h4 class="D">Treine com plano, não no chute</h4>
+    <p>Treino da semana para o seu objetivo, calorias pela foto do prato, água e treino pelo WhatsApp. E ainda cuida do seu dinheiro. Conta grátis e 7 dias de Pro sem cartão.</p></div></div>
+  <div class="row r2"><div class="qr">QRPAR</div><div>
+    <span class="lab">Personal trainer</span><h4 class="D">Ganhe alunos perto de você</h4>
+    <p>Cadastre seu CREF grátis, ganhe o selo de Credenciado VIVA+ e apareça no Radar para quem procura personal na sua região.</p></div></div>
+  <div class="row r3"><div class="qr">QRACA</div><div>
+    <span class="lab">Academia</span><h4 class="D">Cadastre sua academia grátis</h4>
+    <p>Apareça para quem procura academia perto de casa, com modalidades, preço, horário e contatos. CNPJ conferido e aprovação em até 2 dias úteis.</p></div></div>
+</div>
+  <div class="foot"><b>Tudo em <span>vivamaiss.app.br</span></b>
+  Os treinos da VIVA são sugestões gerais e não substituem o acompanhamento de um profissional de educação física ou nutricionista. 7 dias do Pro grátis uma vez por conta, sem cartão e sem cobrança.</div>
+</div>
 </body></html>

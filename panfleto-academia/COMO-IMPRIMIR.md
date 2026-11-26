@@ -6,7 +6,9 @@
 
 QR codes (testados):
 - Frente: https://www.vivamaiss.app.br/cadastro?utm_source=panfleto_academia
-- Verso (personal): https://www.vivamaiss.app.br/parceiros?utm_source=panfleto_academia
+- Verso, aluno: https://www.vivamaiss.app.br/cadastro?utm_source=panfleto_academia
+- Verso, personal: https://www.vivamaiss.app.br/parceiros?utm_source=panfleto_academia
+- Verso, academia: https://www.vivamaiss.app.br/academias?utm_source=panfleto_academia
 
 O `utm_source=panfleto_academia` permite ver na Vercel Analytics quantas visitas vieram do panfleto.
 
