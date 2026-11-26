@@ -85,6 +85,7 @@ export default function HealthHub() {
   const plan = profile.personal?.onboarded ? adaptPlan(PLANS[profile.goal], { days: profile.weekly_workouts, location: profile.personal.location, minutes: profile.personal.minutes, level: profile.personal.level }) : PLANS[profile.goal];
   const [setupOpen, setSetupOpen] = useState(false);
   const [tab, setTab] = useState<"diario" | "treino" | "evolucao">("diario");
+  const [diaryDay, setDiaryDay] = useState(() => todayStr());
   useEffect(() => { try { if (new URLSearchParams(window.location.search).get("configurar") === "1") setSetupOpen(true); } catch { } }, []);
   const goalInfo = GOALS.find(g => g.id === profile.goal) ?? GOALS[3];
   const tip = TIPS[Number(today.slice(8, 10)) % TIPS.length];
@@ -95,7 +96,7 @@ export default function HealthHub() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
-      const since = addDays(today, -13);
+      const since = addDays(today, -29);
       const kinds: Kind[] = ["water", "sleep", "meal", "activity", "workout"];
       const [p, w, ...rest] = await Promise.all([
         supabase.from("viva_health_profiles").select("*").eq("user_id", user.id).maybeSingle(),
@@ -137,16 +138,16 @@ export default function HealthHub() {
   const last7 = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
 
   // ---- actions ----
-  async function addLog(kind: Kind, value: number, extra: Extra = {}) {
+  async function addLog(kind: Kind, value: number, extra: Extra = {}, on: string = today) {
     if (!userId) return false;
     const note = extra.note?.trim() || null;
     const payload: Row = { user_id: userId };
-    if (kind === "water") Object.assign(payload, { amount_ml: Math.round(value), logged_on: today });
-    if (kind === "sleep") Object.assign(payload, { sleep_hours: value, sleep_date: today });
-    if (kind === "weight") Object.assign(payload, { weight_kg: value, logged_on: today });
-    if (kind === "meal") Object.assign(payload, { meal_type: extra.meal_type || "lunch", food_name: (note || "Refeição").slice(0, 120), quantity: (extra.quantity?.trim() || "1 porção").slice(0, 40), calories: value > 0 ? Math.round(value) : null, protein_g: extra.protein || null, carbs_g: extra.carbs || null, fat_g: extra.fat || null, logged_on: today });
-    if (kind === "activity") Object.assign(payload, { activity_type: extra.activity_type || "other", intensity: extra.intensity || "moderate", duration_minutes: Math.round(value), notes: note?.slice(0, 240) ?? null, logged_on: today });
-    if (kind === "workout") Object.assign(payload, { focus: (note || "Treino").slice(0, 120), duration_minutes: Math.round(value), logged_on: today });
+    if (kind === "water") Object.assign(payload, { amount_ml: Math.round(value), logged_on: on });
+    if (kind === "sleep") Object.assign(payload, { sleep_hours: value, sleep_date: on });
+    if (kind === "weight") Object.assign(payload, { weight_kg: value, logged_on: on });
+    if (kind === "meal") Object.assign(payload, { meal_type: extra.meal_type || "lunch", food_name: (note || "Refeição").slice(0, 120), quantity: (extra.quantity?.trim() || "1 porção").slice(0, 40), calories: value > 0 ? Math.round(value) : null, protein_g: extra.protein || null, carbs_g: extra.carbs || null, fat_g: extra.fat || null, logged_on: on });
+    if (kind === "activity") Object.assign(payload, { activity_type: extra.activity_type || "other", intensity: extra.intensity || "moderate", duration_minutes: Math.round(value), notes: note?.slice(0, 240) ?? null, logged_on: on });
+    if (kind === "workout") Object.assign(payload, { focus: (note || "Treino").slice(0, 120), duration_minutes: Math.round(value), logged_on: on });
     // Sono é um registro por dia: registrar de novo atualiza as horas.
     const query = kind === "sleep" ? supabase.from(TABLE.sleep).upsert(payload, { onConflict: "user_id,sleep_date" }) : supabase.from(TABLE[kind]).insert(payload);
     const { data, error: e } = await query.select("*").single();
@@ -198,9 +199,10 @@ export default function HealthHub() {
 
   // ---- diário de calorias ----
   const num = (v: unknown) => Number(v) || 0;
-  const foodEntries: FoodEntry[] = todayLogs("meal").slice().reverse().map(l => ({ id: l.id, meal: (String(l.raw?.meal_type) as MealType) || "lunch", name: String(l.raw?.food_name ?? "Refeição"), qty: String(l.raw?.quantity ?? ""), kcal: l.value, p: num(l.raw?.protein_g), c: num(l.raw?.carbs_g), f: num(l.raw?.fat_g) }));
-  const exerciseEntries: ExerciseEntry[] = [...todayLogs("workout"), ...todayLogs("activity")].map(l => ({ id: l.id, kind: l.kind === "workout" ? "workout" : "activity", label: l.kind === "workout" ? "Treino · " + (l.note || "") : label(ACTIVITY_TYPES, String(l.raw?.activity_type)) + " · " + label(INTENSITIES, String(l.raw?.intensity)).toLowerCase(), minutes: l.value, type: String(l.raw?.activity_type ?? "other"), intensity: String(l.raw?.intensity ?? "moderate") }));
-  const recentFoods: NewFood[] = (() => { const seen = new Set<string>(); const out: NewFood[] = []; for (const l of logs) { if (l.kind !== "meal" || l.logged_on === today) continue; const name = String(l.raw?.food_name ?? ""); const key = name + "|" + l.raw?.quantity; if (!name || seen.has(key)) continue; seen.add(key); out.push({ meal: "lunch", name, qty: String(l.raw?.quantity ?? "1 porção"), kcal: l.value, p: num(l.raw?.protein_g), c: num(l.raw?.carbs_g), f: num(l.raw?.fat_g) }); if (out.length >= 12) break; } return out; })();
+  const dayLogs = (kind: Kind) => logs.filter(l => l.kind === kind && l.logged_on === diaryDay);
+  const foodEntries: FoodEntry[] = dayLogs("meal").slice().reverse().map(l => ({ id: l.id, meal: (String(l.raw?.meal_type) as MealType) || "lunch", name: String(l.raw?.food_name ?? "Refeição"), qty: String(l.raw?.quantity ?? ""), kcal: l.value, p: num(l.raw?.protein_g), c: num(l.raw?.carbs_g), f: num(l.raw?.fat_g) }));
+  const exerciseEntries: ExerciseEntry[] = [...dayLogs("workout"), ...dayLogs("activity")].map(l => ({ id: l.id, kind: l.kind === "workout" ? "workout" : "activity", label: l.kind === "workout" ? "Treino · " + (l.note || "") : label(ACTIVITY_TYPES, String(l.raw?.activity_type)) + " · " + label(INTENSITIES, String(l.raw?.intensity)).toLowerCase(), minutes: l.value, type: String(l.raw?.activity_type ?? "other"), intensity: String(l.raw?.intensity ?? "moderate") }));
+  const recentFoods: NewFood[] = (() => { const seen = new Set<string>(); const out: NewFood[] = []; for (const l of logs) { if (l.kind !== "meal" || l.logged_on === diaryDay) continue; const name = String(l.raw?.food_name ?? ""); const key = name + "|" + l.raw?.quantity; if (!name || seen.has(key)) continue; seen.add(key); out.push({ meal: "lunch", name, qty: String(l.raw?.quantity ?? "1 porção"), kcal: l.value, p: num(l.raw?.protein_g), c: num(l.raw?.carbs_g), f: num(l.raw?.fat_g) }); if (out.length >= 12) break; } return out; })();
   const removeById = (kind: Kind, id: string) => { const l = logs.find(x => x.kind === kind && x.id === id); if (l) removeLog(l); };
 
   const quick: { kind: Kind | "evolucao"; label: string; icon: typeof Droplet }[] = [
@@ -221,10 +223,11 @@ export default function HealthHub() {
       {([["diario", "Diário", Salad], ["treino", "Treino & Personal", Dumbbell], ["evolucao", "Evolução", ChartColumn]] as const).map(([id, l, Icon]) => <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "sel" : ""} onClick={() => setTab(id)}><Icon />{l}</button>)}
     </nav>
 
-    {tab === "diario" && <CalorieDiary goal={profile.goal} body={profile.body} weightKg={lastWeight} foods={foodEntries} exercises={exerciseEntries} recent={recentFoods} water={waterToday} waterGoal={profile.water_goal_ml}
-      onAddFood={f => addLog("meal", f.kcal, { note: f.name, meal_type: f.meal, quantity: f.qty, protein: f.p, carbs: f.c, fat: f.f })}
+    {tab === "diario" && <CalorieDiary goal={profile.goal} body={profile.body} weightKg={lastWeight} foods={foodEntries} exercises={exerciseEntries} recent={recentFoods} water={sum("water", diaryDay, diaryDay)}
+      date={diaryDay} today={today} minDate={addDays(today, -29)} onChangeDate={setDiaryDay} waterGoal={profile.water_goal_ml}
+      onAddFood={f => addLog("meal", f.kcal, { note: f.name, meal_type: f.meal, quantity: f.qty, protein: f.p, carbs: f.c, fat: f.f }, diaryDay)}
       onRemoveFood={id => removeById("meal", id)} onRemoveExercise={e => removeById(e.kind, e.id)}
-      onAddWater={ml => addLog("water", ml)} onAddExercise={() => setSheet("activity")}
+      onAddWater={ml => addLog("water", ml, {}, diaryDay)} onAddExercise={() => setSheet("activity")}
       onSaveBody={async b => { await saveProfile({ body: b }); if (b.current_weight_kg && b.current_weight_kg !== lastWeight) await addLog("weight", b.current_weight_kg); }} />}
 
     {tab === "treino" && <>
@@ -356,7 +359,7 @@ export default function HealthHub() {
     <p className="vh-disclaimer"><Info />O VIVA+ é um assistente de bem-estar com IA. As orientações são educativas e não substituem o acompanhamento de um profissional de saúde, educação física ou nutricionista.</p>
     {loading && <p className="vh-sub" style={{ textAlign: "center" }}>Carregando seus registros…</p>}
 
-    {sheet && <LogSheet key={sheet} sheet={sheet} profile={profile} todayLogs={sheet !== "goals" ? todayLogs(sheet) : []} todayFocus={plan[todayIdx].focus} onClose={() => setSheet(null)} onAdd={addLog} onRemove={removeLog} onSaveProfile={saveProfile} />}
+    {sheet && <LogSheet key={sheet} sheet={sheet} profile={profile} todayLogs={sheet !== "goals" ? todayLogs(sheet) : []} todayFocus={plan[todayIdx].focus} onClose={() => setSheet(null)} onAdd={(k, v, e) => addLog(k, v, e, k === "activity" && tab === "diario" ? diaryDay : today)} onRemove={removeLog} onSaveProfile={saveProfile} />}
   </div>;
 }
 

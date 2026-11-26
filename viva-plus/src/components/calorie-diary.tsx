@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Activity, ChevronLeft, Droplet, Dumbbell, Flame, Minus, Pencil, Plus, Search, Trash2, User, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Activity, Barcode, Camera, ChevronLeft, ChevronRight, Droplet, Dumbbell, Flame, Minus, Pencil, Plus, Search, Trash2, User, X } from "lucide-react";
 import type { HealthGoal } from "@/lib/health-plans";
 import { ACTIVITY_LEVELS, SUGGESTIONS, dailyTargets, exerciseKcal, foodByName, searchFoods, type Body, type Food } from "@/lib/nutrition";
 
@@ -20,7 +20,15 @@ type Props = {
   water: number; waterGoal: number;
   onAddFood: (f: NewFood) => Promise<boolean>; onRemoveFood: (id: string) => void; onRemoveExercise: (e: ExerciseEntry) => void;
   onAddWater: (ml: number) => Promise<boolean>; onAddExercise: () => void; onSaveBody: (b: Body) => Promise<void>;
+  date: string; today: string; minDate: string; onChangeDate: (d: string) => void;
 };
+const shift = (d: string, n: number) => { const x = new Date(d + "T12:00:00Z"); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+function dayLabel(d: string, today: string) {
+  if (d === today) return "Hoje";
+  if (d === shift(today, -1)) return "Ontem";
+  const s = new Date(d + "T12:00:00Z").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "short", timeZone: "UTC" });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 export default function CalorieDiary(props: Props) {
   const { goal, body, weightKg, foods, exercises, water, waterGoal } = props;
@@ -35,9 +43,16 @@ export default function CalorieDiary(props: Props) {
   const cups = Math.max(1, Math.ceil(waterGoal / CUP));
   const filled = Math.floor(water / CUP);
 
+  const { date, today, minDate } = props;
+  const isToday = date === today;
   return <div className="cd">
+    <div className="cd-daynav">
+      <button onClick={() => props.onChangeDate(shift(date, -1))} disabled={date <= minDate} aria-label="Dia anterior"><ChevronLeft /></button>
+      <div><b>{dayLabel(date, today)}</b>{!isToday && <button className="vh-inline" onClick={() => props.onChangeDate(today)}>voltar para hoje</button>}</div>
+      <button onClick={() => props.onChangeDate(shift(date, 1))} disabled={date >= today} aria-label="Próximo dia"><ChevronRight /></button>
+    </div>
     <section className="cd-card cd-cal">
-      <div className="cd-cal-head"><h3><Flame />Calorias de hoje</h3><button className="vh-chip" onClick={() => setBodyOpen(true)}><User />{t.complete ? "Meus dados" : "Calcular minha meta"}</button></div>
+      <div className="cd-cal-head"><h3><Flame />{isToday ? "Calorias de hoje" : "Calorias do dia"}</h3><button className="vh-chip" onClick={() => setBodyOpen(true)}><User />{t.complete ? "Meus dados" : "Calcular minha meta"}</button></div>
       <p className="cd-formula">Restante = Meta − Alimentos + Exercício</p>
       <div className="cd-cal-body">
         <Ring value={eaten} max={budget} over={remaining < 0}><strong>{fmt(Math.abs(remaining))}</strong><span>{remaining < 0 ? "acima" : "restantes"}</span></Ring>
@@ -82,7 +97,7 @@ export default function CalorieDiary(props: Props) {
 function Ring({ value, max, over, children }: { value: number; max: number; over: boolean; children: React.ReactNode }) {
   const r = 52, c = 2 * Math.PI * r, p = max > 0 ? Math.min(1, value / max) : 0;
   return <div className={"cd-ring" + (over ? " over" : "")}>
-    <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r={r} className="bg" /><circle cx="60" cy="60" r={r} className="fg" strokeDasharray={c} strokeDashoffset={c * (1 - p)} /></svg>
+    <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r={r} className="bg" />{p > 0 && <circle cx="60" cy="60" r={r} className="fg" strokeDasharray={c} strokeDashoffset={c * (1 - p)} />}</svg>
     <div>{children}</div>
   </div>;
 }
@@ -97,7 +112,7 @@ function useEsc(onClose: () => void) {
 
 function FoodSheet({ meal, recent, onClose, onAdd }: { meal: MealType; recent: NewFood[]; onClose: () => void; onAdd: (f: NewFood) => Promise<boolean> }) {
   useEsc(onClose);
-  const [mode, setMode] = useState<"search" | "quick">("search");
+  const [mode, setMode] = useState<"search" | "barcode" | "quick">("search");
   const [q, setQ] = useState("");
   const [picked, setPicked] = useState<Food | null>(null);
   const [servings, setServings] = useState(1);
@@ -140,8 +155,8 @@ function FoodSheet({ meal, recent, onClose, onAdd }: { meal: MealType; recent: N
         <div className="cd-nutri"><div><b>{fmt(picked.kcal * servings)}</b><small>kcal</small></div><div><b>{fmt(picked.c * servings, 1)}g</b><small>Carbo</small></div><div><b>{fmt(picked.p * servings, 1)}g</b><small>Proteína</small></div><div><b>{fmt(picked.f * servings, 1)}g</b><small>Gordura</small></div></div>
         <button className="vh-cta" disabled={busy} onClick={addPicked}>{busy ? "Salvando..." : "Adicionar " + TO[meal]}</button>
       </div> : <>
-        <div className="vh-pick cd-tabs"><button type="button" className={mode === "search" ? "sel" : ""} onClick={() => setMode("search")}>Buscar alimento</button><button type="button" className={mode === "quick" ? "sel" : ""} onClick={() => setMode("quick")}><Pencil />Adição rápida</button></div>
-        {mode === "search" ? <div className="vh-form">
+        <div className="vh-pick cd-tabs"><button type="button" className={mode === "search" ? "sel" : ""} onClick={() => setMode("search")}><Search />Buscar</button><button type="button" className={mode === "barcode" ? "sel" : ""} onClick={() => setMode("barcode")}><Barcode />Código</button><button type="button" className={mode === "quick" ? "sel" : ""} onClick={() => setMode("quick")}><Pencil />Rápida</button></div>
+        {mode === "barcode" ? <BarcodeScan onFound={f => { setPicked(f); setServings(1); setMsg(""); }} onManual={() => setMode("quick")} /> : mode === "search" ? <div className="vh-form">
           <label className="cd-search"><Search /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar: arroz, ovo, banana..." autoFocus aria-label="Buscar alimento" /></label>
           {!q.trim() && recent.length > 0 && <><b className="cd-list-title">Recentes</b><ul className="cd-results">{recent.slice(0, 6).map((f, i) => <li key={"r" + i}><button type="button" onClick={() => add({ ...f, meal })} disabled={busy}><div><b>{f.name}</b><small>{f.qty}</small></div><span>{fmt(f.kcal)} kcal</span><Plus /></button></li>)}</ul></>}
           <b className="cd-list-title">{q.trim() ? `${results.length} resultado(s)` : "Sugestões para " + mealName.toLowerCase()}</b>
@@ -201,5 +216,64 @@ function BodySheet({ body, weightKg, goal, onClose, onSave }: { body: Body; weig
         <p className="vh-sub">Estimativa pela fórmula de Mifflin-St Jeor, ajustada ao seu objetivo. Não substitui um nutricionista.</p>
       </form>
     </div>
+  </div>;
+}
+
+type Detector = { detect: (src: HTMLVideoElement) => Promise<{ rawValue: string }[]> };
+type DetectorCtor = new (o: { formats: string[] }) => Detector;
+
+// Lê o código de barras com a câmera (BarcodeDetector, Chrome/Android) ou pela digitação dos números.
+function BarcodeScan({ onFound, onManual }: { onFound: (f: Food) => void; onManual: () => void }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [supported, setSupported] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  useEffect(() => { setSupported(typeof window !== "undefined" && "BarcodeDetector" in window && Boolean(navigator.mediaDevices?.getUserMedia)); }, []);
+
+  async function lookup(raw: string) {
+    const c = raw.replace(/\D/g, "");
+    if (c.length < 8 || c.length > 14) { setMsg("O código tem de 8 a 14 números."); return; }
+    setBusy(true); setMsg("");
+    try {
+      const r = await fetch("/api/food-barcode?code=" + c);
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.food) onFound(d.food as Food); else setMsg(String(d.error || "Produto não encontrado."));
+    } catch { setMsg("Sem conexão. Tente de novo."); }
+    finally { setBusy(false); }
+  }
+
+  useEffect(() => {
+    if (!scanning) return;
+    let stream: MediaStream | null = null, stop = false, timer = 0;
+    (async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+        if (stop) { stream.getTracks().forEach(t => t.stop()); return; }
+        const v = videoRef.current!; v.srcObject = stream; await v.play();
+        const Ctor = (window as unknown as { BarcodeDetector: DetectorCtor }).BarcodeDetector;
+        const det = new Ctor({ formats: ["ean_13", "ean_8", "upc_a", "upc_e"] });
+        const tick = async () => {
+          if (stop) return;
+          try { const found = await det.detect(v); if (found[0]?.rawValue) { setScanning(false); setCode(found[0].rawValue); lookup(found[0].rawValue); return; } } catch { }
+          timer = window.setTimeout(tick, 250);
+        };
+        tick();
+      } catch { setScanning(false); setMsg("Não consegui abrir a câmera. Permita o acesso ou digite o código."); }
+    })();
+    return () => { stop = true; clearTimeout(timer); stream?.getTracks().forEach(t => t.stop()); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scanning]);
+
+  return <div className="vh-form">
+    {scanning ? <div className="cd-scan"><video ref={videoRef} playsInline muted /><i /><button type="button" className="vh-cta ghost" onClick={() => setScanning(false)}>Cancelar</button></div>
+      : supported && <button type="button" className="vh-cta" onClick={() => { setMsg(""); setScanning(true); }}><Camera />Escanear com a câmera</button>}
+    <form className="cd-code" onSubmit={e => { e.preventDefault(); lookup(code); }}>
+      <label>{supported ? "Ou digite os números do código" : "Digite os números do código de barras"}<input inputMode="numeric" value={code} onChange={e => setCode(e.target.value)} placeholder="Ex.: 7891000100103" maxLength={20} /></label>
+      <button className="vh-cta" disabled={busy}>{busy ? "Buscando..." : "Buscar produto"}</button>
+    </form>
+    {msg && <p className="vh-warn" role="status">{msg} <button type="button" className="vh-inline" onClick={onManual}>Adição rápida</button></p>}
+    <p className="vh-sub">Dados da base aberta Open Food Facts. Confira com o rótulo.</p>
   </div>;
 }

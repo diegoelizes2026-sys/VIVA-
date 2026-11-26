@@ -164,3 +164,30 @@ export function exerciseKcal(type: string, intensity: string, minutes: number, w
   const met = type === "workout" ? 5 : (MET[type] ?? MET.other)[intensity === "light" ? 0 : intensity === "vigorous" ? 2 : 1];
   return Math.round(met * (weightKg ?? 70) * (minutes / 60));
 }
+
+// Converte um produto do Open Food Facts para o formato do diário.
+// Usa a porção do rótulo quando existe; senão, 100 g/ml.
+export function parseOffProduct(code: string, product: Record<string, unknown> | null | undefined): Food | null {
+  if (!product) return null;
+  const n = (product.nutriments || {}) as Record<string, unknown>;
+  const num = (v: unknown) => { const x = Number(v); return Number.isFinite(x) && x >= 0 ? x : null; };
+  const name = String(product.product_name_pt || product.product_name || product.generic_name || "").trim();
+  const brand = String(product.brands || "").split(",")[0].trim();
+  const servingQty = num(product.serving_quantity);
+  const servingLabel = String(product.serving_size || "").trim();
+  const useServing = Boolean(servingQty && servingQty > 0 && servingQty <= 2000 && (num(n["energy-kcal_serving"]) !== null || num(n["energy-kcal_100g"]) !== null));
+  const factor = useServing ? servingQty! / 100 : 1;
+  const per = (key: string) => {
+    const serving = useServing ? num(n[`${key}_serving`]) : null;
+    if (serving !== null) return serving;
+    const hundred = num(n[`${key}_100g`]);
+    return hundred === null ? null : hundred * factor;
+  };
+  let kcal = per("energy-kcal");
+  if (kcal === null) { const kj = per("energy"); kcal = kj === null ? null : kj / 4.184; }
+  if (kcal === null) return null;
+  const r1 = (x: number | null) => Math.round((x ?? 0) * 10) / 10;
+  const full = (brand && name && !name.toLowerCase().includes(brand.toLowerCase()) ? `${name} · ${brand}` : name || brand || `Produto ${code}`).slice(0, 120);
+  const portion = (useServing ? (servingLabel || `${servingQty} g`) : "100 g").slice(0, 30);
+  return { name: full, portion, kcal: Math.round(kcal), p: r1(per("proteins")), c: r1(per("carbohydrates")), f: r1(per("fat")), tags: "codigo " + code };
+}
