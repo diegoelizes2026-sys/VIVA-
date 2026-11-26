@@ -52,7 +52,7 @@ export function cleanFoodAi(raw: unknown): FoodAiResult {
 type Ok = { ok: true; result: FoodAiResult; credits: number; sample: boolean; sample_left: number | null; wallet: unknown };
 type Fail = { ok: false; status: number; body: Record<string, unknown> };
 
-export async function runFoodAi(supabase: Supa, input: { image?: string; text?: string; note?: string; requestId?: string }): Promise<Ok | Fail> {
+export async function runFoodAi(supabase: Supa, input: { image?: string; text?: string; note?: string; requestId?: string; lang?: "pt" | "en" }): Promise<Ok | Fail> {
   if (!process.env.OPENAI_API_KEY) return { ok: false, status: 503, body: { error: "A análise de refeições está temporariamente indisponível." } };
   const photo = Boolean(input.image);
   const { data: guard, error: guardError } = await supabase.rpc("viva_reserve_ai_credits", {
@@ -78,7 +78,7 @@ export async function runFoodAi(supabase: Supa, input: { image?: string; text?: 
       ? [{ type: "input_text" as const, text: input.note ? "Observação da pessoa: " + input.note : "Analise esta refeição." }, { type: "input_image" as const, image_url: input.image!, detail: "high" as const }]
       : [{ type: "input_text" as const, text: String(input.text || "").slice(0, 1000) }];
     const response = await client.responses.create({
-      model: configuredModel.trim(), instructions: photo ? PHOTO : TEXT,
+      model: configuredModel.trim(), instructions: (photo ? PHOTO : TEXT) + (input.lang === "en" ? "\nA pessoa fala inglês: escreva name, portion e tip em inglês (ex.: \"White rice\", \"4 tablespoons\")." : ""),
       input: [{ role: "user", content }],
       text: { format: { type: "json_schema", name: "meal_items", strict: true, schema: OUTPUT as unknown as Record<string, unknown> } },
       max_output_tokens: 1200,

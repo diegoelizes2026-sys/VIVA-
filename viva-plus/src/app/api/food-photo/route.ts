@@ -11,6 +11,7 @@ const schema = z.object({
   image: z.string().regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/).max(4_000_000),
   note: z.string().trim().max(300).optional(),
   requestId: z.string().max(80).optional(),
+  lang: z.enum(["pt", "en"]).optional(),
 });
 
 export async function POST(request: Request) {

@@ -21,7 +21,7 @@ export async function POST(req:Request){
   if(!guard?.allowed){const blocked=blockedResponse(guard,"VIVA");return NextResponse.json(blocked.body,{status:blocked.status})}
   reservationId=guard.reservation_id;const client=new OpenAI({apiKey:process.env.OPENAI_API_KEY});
   const upload=await toFile(Buffer.from(await file.arrayBuffer()),file.name||"viva-voice.webm",{type:mimeType});
-  const result=await client.audio.transcriptions.create({model:"gpt-transcribe",file:upload,language:"pt",prompt:"Português brasileiro. Preserve valores em reais, números, datas, nomes próprios e termos financeiros como VIVA+, Pix, despesa, receita, cartão e fatura."});
+  const result=await client.audio.transcriptions.create({model:"gpt-transcribe",file:upload,prompt:"A pessoa fala português brasileiro ou inglês. Transcreva no idioma falado, sem traduzir. Preserve valores em reais, números, datas, nomes próprios e termos como VIVA+, Pix, despesa, receita, cartão, fatura, expense, income, bill."});
   const transcript=String(result.text||"").trim();const costUsd=(durationSeconds/60)*0.0045;const costBrl=costUsd*Number(guard.usd_brl_rate||6.5)*1.25;
   // Áudio sem fala reconhecida: nenhuma resposta válida, então a reserva é devolvida.
   if(!transcript){await supabase.rpc("viva_release_ai_reservation",{p_reservation_id:reservationId});reservationId=null;return NextResponse.json({error:"Não consegui entender o áudio. Fale mais perto do microfone e tente novamente. Nenhum crédito foi descontado."},{status:422})}
