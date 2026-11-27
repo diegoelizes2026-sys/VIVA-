@@ -42,6 +42,31 @@ export async function sendWhatsappText(to: string, body: string) {
   return true;
 }
 
+/**
+ * Mensagem de modelo aprovado pela Meta. É o único jeito de a VIVA puxar conversa
+ * com quem não falou com ela nas últimas 24h (fora da janela, texto comum não é entregue).
+ * `params` preenche {{1}}, {{2}}… do corpo do modelo, nessa ordem.
+ */
+export async function sendWhatsappTemplate(to: string, name: string, params: string[], language = "pt_BR") {
+  const token = process.env.WHATSAPP_TOKEN;
+  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  if (!token || !phoneId) { console.error("VIVA WhatsApp: WHATSAPP_TOKEN ou WHATSAPP_PHONE_NUMBER_ID não configurado"); return false; }
+  const components = params.length
+    ? [{ type: "body", parameters: params.map(p => ({ type: "text", text: p.replace(/\s+/g, " ").trim().slice(0, 1000) || "-" })) }]
+    : [];
+  const res = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${phoneId}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", to, type: "template", template: { name, language: { code: language }, components } }),
+  });
+  if (!res.ok) { console.error("VIVA WhatsApp template failed", name, res.status, (await res.text()).slice(0, 500)); return false; }
+  return true;
+}
+
+/** Comandos para ligar/desligar o "bom dia" com o valor do dia. */
+export const MORNING_STOP_RE = /^\s*(parar|desligar|cancelar|sair do)\s+(o\s+)?bom\s*dia\s*[.!]*\s*$/i;
+export const MORNING_START_RE = /^\s*(voltar|ligar|ativar|quero)\s+(o\s+)?bom\s*dia\s*[.!]*\s*$/i;
+
 // Link de conexão com um toque, enviado pela VIVA no próprio WhatsApp (assinado, vale 1 hora).
 const CONNECT_TTL_MS = 60 * 60 * 1000;
 function connectSignature(payload: string) {
@@ -64,7 +89,7 @@ export function readConnectToken(token: string | null | undefined) {
 /** Tudo o que a VIVA faz pelo WhatsApp (enviado ao conectar, ao assinar e quando a pessoa pede "ajuda"). */
 export function featuresMessage(planName?: string | null, lang: "pt" | "en" = "pt") {
   if (lang === "en") return featuresMessageEn(planName);
-  return `${planName ? `Seu plano *${planName}* está ativo e ` : "Seu WhatsApp está conectado e "}a VIVA no WhatsApp está liberada! ✅\n\nOlha tudo que eu faço por aqui:\n\n💸 *Anotar gastos e entradas*\n“gastei 35 na farmácia” · “lanche 20” · “recebi 1500 de salário”\n\n🎤 *Áudio*\nManda um áudio falando o gasto que eu entendo\n\n🧾 *Foto do comprovante*\nManda a foto (ou PDF) que eu leio e anoto\n\n🍽️ *Diário de saúde*\n“almocei arroz, feijão e frango” · manda a *foto do prato* · “bebi 2 copos de água” · “corri 30 min” · “quanto posso comer hoje?”\n\n📊 *Quanto posso gastar*\n“quanto posso gastar hoje?”\n\n🧾 *Contas a pagar*\n“o que vence essa semana?” · “conta de luz 180 dia 10”\n\n💳 *Sair das dívidas*\n“me ajuda a quitar minhas dívidas”\n\n🎯 *Planejamento e metas*\n“quero juntar 2 mil até dezembro”\n\n📊 *Relatórios* (não gastam créditos)\n“relatório da semana” · “relatório do mês”\n\n🛒 *Antes de comprar*\n“vale a pena comprar uma TV de 2 mil?”\n\n📅 *Agenda e lembretes*\n“dentista sexta às 15h”\n\n*Comandos:*\n• *desfazer* — apaga o último lançamento (até 15 min)\n• *ajuda* — mostra esta lista de novo\n• *desconectar* — desliga este WhatsApp da conta\n\nRadar de preços, Personal e o diário completo você usa no app: ${SITE_URL}/meu-dia`;
+  return `${planName ? `Seu plano *${planName}* está ativo e ` : "Seu WhatsApp está conectado e "}a VIVA no WhatsApp está liberada! ✅\n\n☀️ *Todo dia às 7h30* eu te mando aqui quanto você pode gastar no dia. (Para não receber, responda *parar bom dia*.)\n\nOlha tudo que eu faço por aqui:\n\n💸 *Anotar gastos e entradas*\n“gastei 35 na farmácia” · “lanche 20” · “recebi 1500 de salário”\n\n🎤 *Áudio*\nManda um áudio falando o gasto que eu entendo\n\n🧾 *Foto do comprovante*\nManda a foto (ou PDF) que eu leio e anoto\n\n🍽️ *Diário de saúde*\n“almocei arroz, feijão e frango” · manda a *foto do prato* · “bebi 2 copos de água” · “corri 30 min” · “quanto posso comer hoje?”\n\n📊 *Quanto posso gastar*\n“quanto posso gastar hoje?”\n\n🧾 *Contas a pagar*\n“o que vence essa semana?” · “conta de luz 180 dia 10”\n\n💳 *Sair das dívidas*\n“me ajuda a quitar minhas dívidas”\n\n🎯 *Planejamento e metas*\n“quero juntar 2 mil até dezembro”\n\n📊 *Relatórios* (não gastam créditos)\n“relatório da semana” · “relatório do mês”\n\n🛒 *Antes de comprar*\n“vale a pena comprar uma TV de 2 mil?”\n\n📅 *Agenda e lembretes*\n“dentista sexta às 15h”\n\n*Comandos:*\n• *desfazer* — apaga o último lançamento (até 15 min)\n• *ajuda* — mostra esta lista de novo\n• *desconectar* — desliga este WhatsApp da conta\n\nRadar de preços, Personal e o diário completo você usa no app: ${SITE_URL}/meu-dia`;
 }
 
 /** Mensagens grátis por semana na VIVA no WhatsApp para quem está no plano Free. */
@@ -173,5 +198,5 @@ export const FREE_WHATSAPP_NOTE_EN = `🎁 On the *Free* plan you get *${WHATSAP
 
 /** Tudo o que a VIVA faz pelo WhatsApp, em inglês. Valores continuam em reais. */
 function featuresMessageEn(planName?: string | null) {
-  return `${planName ? `Your *${planName}* plan is active and ` : "Your WhatsApp is connected and "}VIVA on WhatsApp is on! ✅\n\nHere's what I can do:\n\n💸 *Log expenses and income*\n“spent 35 at the pharmacy” · “lunch 20” · “got 1500 salary”\n\n🎤 *Voice notes*\nSend a voice note in English or Portuguese\n\n🧾 *Receipt photo*\nSend the photo (or PDF) and I'll log it\n\n🍽️ *Health diary*\n“I had rice, beans and chicken for lunch” · send a *photo of your meal* · “drank 2 glasses of water” · “ran 30 min” · “how many calories left?”\n\n📊 *How much can I spend*\n“how much can I spend today?”\n\n🧾 *Bills*\n“what's due this week?” · “electricity bill 180 on the 10th”\n\n🎯 *Goals and planning*\n“I want to save 2,000 by December”\n\n📊 *Reports* (free, no credits)\n“weekly report” · “monthly report”\n\n*Commands:*\n• *undo* — deletes the last entry (up to 15 min)\n• *help* — shows this list again\n• *disconnect* — unlinks this WhatsApp\n\nAmounts are in Brazilian reais (R$). Price radar, Personal trainer and the full diary are in the app: ${SITE_URL}/meu-dia`;
+  return `${planName ? `Your *${planName}* plan is active and ` : "Your WhatsApp is connected and "}VIVA on WhatsApp is on! ✅\n\n☀️ *Every day at 7:30 am* I'll send you here how much you can spend that day. (To stop, reply *parar bom dia*.)\n\nHere's what I can do:\n\n💸 *Log expenses and income*\n“spent 35 at the pharmacy” · “lunch 20” · “got 1500 salary”\n\n🎤 *Voice notes*\nSend a voice note in English or Portuguese\n\n🧾 *Receipt photo*\nSend the photo (or PDF) and I'll log it\n\n🍽️ *Health diary*\n“I had rice, beans and chicken for lunch” · send a *photo of your meal* · “drank 2 glasses of water” · “ran 30 min” · “how many calories left?”\n\n📊 *How much can I spend*\n“how much can I spend today?”\n\n🧾 *Bills*\n“what's due this week?” · “electricity bill 180 on the 10th”\n\n🎯 *Goals and planning*\n“I want to save 2,000 by December”\n\n📊 *Reports* (free, no credits)\n“weekly report” · “monthly report”\n\n*Commands:*\n• *undo* — deletes the last entry (up to 15 min)\n• *help* — shows this list again\n• *disconnect* — unlinks this WhatsApp\n\nAmounts are in Brazilian reais (R$). Price radar, Personal trainer and the full diary are in the app: ${SITE_URL}/meu-dia`;
 }
