@@ -60,61 +60,11 @@
     <!-- HERO -->
     <section class="hero">
       <div class="hero__bg" aria-hidden="true">
-        <svg class="hero__scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#0B1528"/><stop offset=".3" stop-color="#1D2A52"/><stop offset=".5" stop-color="#4E3A68"/>
-              <stop offset=".63" stop-color="#B0606A"/><stop offset=".71" stop-color="#E98F5E"/><stop offset=".75" stop-color="#F8C27A"/>
-            </linearGradient>
-            <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#6C5A7E"/><stop offset=".25" stop-color="#2C3A63"/><stop offset="1" stop-color="#0B1528"/>
-            </linearGradient>
-            <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE3B0" stop-opacity=".95"/><stop offset=".25" stop-color="#FFB46E" stop-opacity=".5"/><stop offset="1" stop-color="#FF9A5A" stop-opacity="0"/></radialGradient>
-            <linearGradient id="win" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE2A6"/><stop offset="1" stop-color="#E9A456"/></linearGradient>
-            <linearGradient id="pool" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2EB6C8"/><stop offset="1" stop-color="#7FE0E6"/></linearGradient>
-            <symbol id="palm" viewBox="0 0 200 400">
-              <path d="M96 400c4-90 10-180 6-262l7 1c4 82-2 172-6 261z" fill="#0A1220"/>
-              <g fill="#0A1220">
-                <path d="M104 140c-30-30-70-36-100-20 34-4 66 6 100 22z"/><path d="M104 140c-20-40-56-62-92-60 34 10 62 30 90 62z"/>
-                <path d="M104 140c4-44 30-76 64-86-26 22-44 50-60 88z"/><path d="M104 140c34-26 74-28 96-10-32-4-62 2-94 14z"/>
-                <path d="M104 140c40 0 72 20 86 46-26-20-54-32-86-42z"/><path d="M104 140c-36 6-66 30-76 60 18-28 44-44 78-56z"/>
-                <path d="M104 140c-10-34-6-70 12-96-6 30-6 62-6 96z"/>
-              </g>
-            </symbol>
-          </defs>
-          <rect width="1600" height="900" fill="url(#sky)"/>
-          <circle cx="760" cy="640" r="260" fill="url(#glow)"/>
-          <g fill="#F7B08A" opacity=".55">
-            <ellipse cx="560" cy="400" rx="160" ry="16"/><ellipse cx="660" cy="372" rx="120" ry="12"/><ellipse cx="980" cy="420" rx="190" ry="14" opacity=".7"/>
-            <ellipse cx="420" cy="470" rx="140" ry="10" opacity=".6"/><ellipse cx="880" cy="350" rx="90" ry="9" opacity=".6"/>
-          </g>
-          <circle cx="760" cy="672" r="44" fill="#FFE7BC"/>
-          <path d="M0 668c120-30 240-46 360-40 90 4 150 22 230 24 60 2 110-8 170-8v28H0z" fill="#1A1C36"/>
-          <path d="M520 676c80-24 170-30 250-14v14z" fill="#24243F"/>
-          <rect y="676" width="1600" height="224" fill="url(#sea)"/>
-          <g fill="#FFD9A0" opacity=".7"><rect x="700" y="684" width="120" height="3" rx="1.5"/><rect x="716" y="696" width="90" height="3" rx="1.5"/><rect x="690" y="710" width="140" height="2" rx="1"/><rect x="730" y="724" width="60" height="2" rx="1"/><rect x="706" y="742" width="110" height="2" rx="1" opacity=".6"/><rect x="740" y="764" width="44" height="2" rx="1" opacity=".5"/></g>
-          <path d="M0 780c140-20 300-10 420 20 70 18 120 50 150 100H0z" fill="#0E1626"/>
-          <use href="#palm" x="-30" y="430" width="200" height="420"/>
-          <use href="#palm" x="90" y="500" width="150" height="320"/>
-          <use href="#palm" x="300" y="560" width="120" height="260"/>
-          <!-- casa moderna -->
-          <g>
-            <path d="M1080 900V620h520v280z" fill="#121A2B"/>
-            <rect x="1120" y="470" width="480" height="18" fill="#2A3346"/>
-            <rect x="1170" y="488" width="430" height="130" fill="#141C2E"/>
-            <g fill="url(#win)"><rect x="1190" y="500" width="70" height="106"/><rect x="1270" y="500" width="70" height="106"/><rect x="1350" y="500" width="70" height="106"/><rect x="1430" y="500" width="70" height="106" opacity=".75"/><rect x="1510" y="500" width="90" height="106" opacity=".9"/></g>
-            <rect x="1060" y="612" width="540" height="16" fill="#2A3346"/>
-            <g fill="url(#win)"><rect x="1150" y="642" width="110" height="150"/><rect x="1270" y="642" width="110" height="150" opacity=".85"/><rect x="1390" y="642" width="100" height="150"/><rect x="1500" y="642" width="100" height="150" opacity=".8"/></g>
-            <g stroke="#121A2B" stroke-width="3"><path d="M1205 642v150M1325 642v150M1440 642v150M1550 642v150M1225 500v106M1305 500v106M1385 500v106M1465 500v106"/></g>
-            <rect x="1060" y="800" width="540" height="12" fill="#2A3346"/>
-            <path d="M1100 812h500v40h-500z" fill="url(#pool)" opacity=".85"/>
-            <path d="M1100 852h500v48h-500z" fill="#0E1626"/>
-            <rect x="1170" y="400" width="430" height="70" fill="#0F1626" opacity=".0"/>
-          </g>
-          <use href="#palm" x="960" y="420" width="190" height="400"/>
-          <use href="#palm" x="1440" y="300" width="230" height="480"/>
-        </svg>
-        <img class="hero__photo" id="heroPhoto" src="assets/img/hero.jpg" alt="" onerror="this.style.display='none'">
+        <picture>
+          <source media="(max-width: 700px)" srcset="assets/img/hero-bg-mobile.jpg">
+          <img class="hero__photo" id="heroPhoto" src="assets/img/hero-bg.jpg" alt="" fetchpriority="high">
+        </picture>
+        <div class="hero__glow"></div>
         <div class="hero__shade"></div>
       </div>
 
