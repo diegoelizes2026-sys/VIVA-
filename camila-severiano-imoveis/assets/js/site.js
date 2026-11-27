@@ -33,11 +33,6 @@
     if (img.complete && img.naturalWidth === 0 && img.getAttribute('src')) fail(); // falhou antes do script rodar
   }
   $$('img[data-ph]').forEach((img) => guardImg(img, img.dataset.ph, img.dataset.ph, true));
-  // Retrato recortado da Camila no hero (assets/img/camila-hero.png); sem ele, mostra o cartão da marca
-  const heroCam = $('#heroCamila');
-  const noHeroPhoto = () => { heroCam.hidden = true; heroCam.style.display = 'none'; $('.hero__side').classList.add('no-photo'); };
-  heroCam.addEventListener('error', noHeroPhoto, { once: true });
-  if (heroCam.complete && heroCam.naturalWidth === 0) noHeroPhoto();
   const photo = $('#camilaPhoto');
   const noPhoto = () => { if (photo.parentElement) photo.parentElement.innerHTML = '<div class="portrait-fallback"><svg viewBox="0 0 120 110" style="color:var(--gold)"><use href="#i-mark"/></svg></div>'; };
   photo.addEventListener('error', noPhoto, { once: true });

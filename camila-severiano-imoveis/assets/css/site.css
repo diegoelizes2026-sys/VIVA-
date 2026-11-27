@@ -75,16 +75,16 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--gold); font-weight: 400; 
 /* Hero cinematográfico */
 .hero { position: relative; min-height: max(720px, 100vh); display: flex; align-items: center; color: var(--ivory); overflow: hidden; background: #0B1528; padding: 130px 0 80px; }
 .hero__bg { position: absolute; inset: 0; }
-.hero__photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 58% 40%; animation: heroZoom 28s ease-in-out infinite alternate; transform-origin: 70% 60%; }
+.hero__photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 20% 40%; filter: saturate(.9); animation: heroZoom 28s ease-in-out infinite alternate; transform-origin: 70% 60%; }
 @keyframes heroZoom { from { transform: scale(1.02); } to { transform: scale(1.09) translateX(-1%); } }
-.hero__glow { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(60% 55% at 72% 78%, rgba(255, 170, 90, .16), transparent 70%); mix-blend-mode: screen; }
+.hero__glow { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(45% 50% at 22% 80%, rgba(255, 170, 90, .14), transparent 70%); mix-blend-mode: screen; }
 .hero__shade { position: absolute; inset: 0; background:
-  linear-gradient(90deg, rgba(7, 14, 30, .9) 0%, rgba(7, 14, 30, .7) 28%, rgba(7, 14, 30, .25) 50%, rgba(7, 14, 30, 0) 64%),
+  linear-gradient(90deg, rgba(7, 14, 30, .92) 0%, rgba(7, 14, 30, .8) 40%, rgba(7, 14, 30, .62) 62%, rgba(7, 14, 30, .55) 100%),
   linear-gradient(180deg, rgba(7, 14, 30, .65) 0%, rgba(7, 14, 30, 0) 20%, rgba(7, 14, 30, 0) 72%, rgba(7, 14, 30, .92) 100%); }
 .hero__in { position: relative; display: grid; grid-template-columns: 1.15fr .85fr; gap: 40px; align-items: end; width: min(1220px, 100% - 40px); }
 .hero__pre { font-family: var(--sans); font-weight: 300; font-size: clamp(16px, 2vw, 26px); letter-spacing: .5em; text-transform: uppercase; margin: 0 0 4px; color: #fff; }
 .hero__title { margin: 0; color: #fff; line-height: .92; }
-.hero__title .gold-text { display: block; font-family: var(--display); font-weight: 600; font-size: clamp(76px, 11.5vw, 168px); letter-spacing: .01em; text-transform: uppercase; }
+.hero__title .gold-text { display: block; font-family: var(--display); font-weight: 600; font-size: clamp(76px, 10.4vw, 150px); letter-spacing: .01em; text-transform: uppercase; }
 .hero__title small { display: block; font-family: var(--sans); font-weight: 300; font-size: clamp(26px, 3.6vw, 50px); letter-spacing: .07em; text-transform: uppercase; margin-top: 10px; color: #fff; }
 .gold-text { background: linear-gradient(180deg, #FFF1C4 0%, #F3D48C 28%, #C9943F 52%, #F6DC97 70%, #B07C30 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 6px 18px rgba(0, 0, 0, .45)); }
 .hero__bar { display: block; width: 86px; height: 5px; border-radius: 4px; background: var(--gold-grad); margin: 26px 0 22px; }
@@ -101,18 +101,22 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--gold); font-weight: 400; 
 .btn--glass { background: rgba(255, 255, 255, .1); color: #fff; border: 1px solid rgba(255, 255, 255, .3); backdrop-filter: blur(8px); padding: 18px 28px; font-size: 15px; }
 .btn--glass .ic { color: var(--gold-2); }
 .btn--glass:hover { background: rgba(255, 255, 255, .18); }
-.hero__side { position: relative; align-self: stretch; display: flex; align-items: flex-end; justify-content: center; min-height: 460px; }
-.hero__camila { position: absolute; bottom: -80px; right: 0; height: min(680px, calc(100% + 80px)); width: auto; object-fit: contain; filter: drop-shadow(-18px 24px 40px rgba(4, 8, 20, .55)); animation: camIn 1.4s cubic-bezier(.2,.7,.2,1) .2s both; -webkit-mask-image: linear-gradient(180deg, #000 78%, transparent 100%); mask-image: linear-gradient(180deg, #000 78%, transparent 100%); }
-.hero__side::before { content: ''; position: absolute; right: 6%; bottom: -40px; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 190, 110, .22), transparent); pointer-events: none; }
-@keyframes camIn { from { opacity: 0; transform: translateY(26px); } }
-.hero__brandcard { display: none; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 34px 38px 30px; border-radius: 26px; width: min(340px, 100%);
-  background: linear-gradient(160deg, rgba(14, 26, 46, .78), rgba(14, 26, 46, .5)); border: 1px solid rgba(226, 194, 126, .45); backdrop-filter: blur(16px) saturate(1.2); box-shadow: 0 40px 70px -30px rgba(0, 0, 0, .8); }
-.hero__side.no-photo .hero__brandcard { display: flex; }
-.hero__brandcard img { width: 118px; height: auto; margin-bottom: 8px; }
-.hero__brandcard b { font-family: var(--display); font-weight: 500; font-size: 26px; letter-spacing: .08em; text-transform: uppercase; color: #fff; }
-.hero__brandcard small { font-size: 11px; letter-spacing: .34em; text-transform: uppercase; color: var(--gold-2); font-weight: 600; }
-.hero__creci { font-size: 11px; letter-spacing: .2em; color: rgba(255, 255, 255, .6); margin-top: 4px; }
-.hero__brandcard em { font-family: var(--serif); font-size: 21px; color: rgba(255, 255, 255, .9); margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(226, 194, 126, .3); line-height: 1.25; }
+
+/* Retrato natural da Camila */
+.hero__portrait { position: absolute; top: 0; right: 0; bottom: 0; width: 46%; margin: 0; z-index: 1; overflow: hidden; }
+.hero__portrait > img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; animation: portraitIn 1.6s cubic-bezier(.2,.7,.2,1) both;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.55) 14%, #000 34%); mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.55) 14%, #000 34%); }
+.hero__portrait::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(7, 14, 30, .55) 0%, rgba(7, 14, 30, 0) 22%, rgba(7, 14, 30, 0) 70%, rgba(7, 14, 30, .75) 100%); }
+.hero__portrait::before { content: ''; position: absolute; left: 30%; top: 14%; bottom: 14%; width: 1px; z-index: 2; background: linear-gradient(180deg, transparent, rgba(226, 194, 126, .7), transparent); }
+@keyframes portraitIn { from { opacity: 0; transform: scale(1.04); } }
+.hero__name { position: absolute; right: 48px; bottom: 112px; z-index: 3; display: flex; align-items: center; gap: 14px; padding: 14px 22px 14px 16px; border-radius: 16px;
+  background: rgba(10, 19, 36, .55); border: 1px solid rgba(226, 194, 126, .45); backdrop-filter: blur(14px) saturate(1.2); color: #fff; box-shadow: 0 20px 40px -20px rgba(0, 0, 0, .6); }
+.hero__name img { width: 40px; height: auto; }
+.hero__name b { display: block; font-family: var(--display); font-weight: 500; font-size: 17px; letter-spacing: .08em; text-transform: uppercase; }
+.hero__name small { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-2); }
+.hero__in { z-index: 2; grid-template-columns: 1fr !important; }
+.hero__copy { max-width: 640px; }
 
 /* Faixa */
 .ribbon { background: var(--ink); color: var(--gold-3); overflow: hidden; padding: 18px 0; }
@@ -395,9 +399,6 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--gold); font-weight: 400; 
 @media (max-width: 900px) {
   .hero { padding: 110px 0 50px; min-height: 0; }
   .hero__in { grid-template-columns: 1fr; }
-  .hero__side { min-height: 0; }
-  .hero__camila { position: relative; bottom: auto; right: auto; height: 420px; margin: 0 auto -50px; }
-  .hero__side::before { right: 50%; transform: translateX(50%); width: 340px; height: 340px; }
   .hero__shade { background: linear-gradient(180deg, rgba(7, 14, 30, .72) 0%, rgba(7, 14, 30, .55) 40%, rgba(7, 14, 30, .6) 70%, rgba(7, 14, 30, .96) 100%); }
   .hero__photo { object-position: 72% 50%; }
   .brand__logo { height: 48px; }
@@ -410,5 +411,21 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--gold); font-weight: 400; 
   .hero__trust li:nth-child(3) { border-left: 0; }
   .hero__trust li { font-size: 12.5px; }
   .hero__cta .btn { width: 100%; }
-  .hero__brandcard { padding: 26px 22px; }
+}
+
+@media (max-width: 1180px) and (min-width: 901px) { .hero__portrait { width: 42%; } .hero__copy { max-width: 560px; } }
+@media (max-width: 900px) {
+  .hero { flex-direction: column; align-items: stretch; padding-top: 0; }
+  .hero__portrait { position: relative; width: 100%; height: min(78vh, 620px); }
+  .hero__portrait > img { object-position: 50% 20%; -webkit-mask-image: none; mask-image: none; }
+  .hero__portrait::after { background: linear-gradient(180deg, rgba(7, 14, 30, .7) 0%, rgba(7, 14, 30, 0) 24%, rgba(7, 14, 30, 0) 55%, rgba(7, 14, 30, 1) 100%); }
+  .hero__portrait::before { display: none; }
+  .hero__name { left: 16px; right: 16px; bottom: 26px; padding: 10px 14px; gap: 10px; }
+  .hero__name img { width: 32px; }
+  .hero__name b { font-size: 15px; }
+  .hero__name small { font-size: 10px; letter-spacing: .1em; }
+  .hero__photo, .hero__glow { display: none; }
+  .hero__shade { background: none; }
+  .hero { background: linear-gradient(180deg, #070E1E 0%, #0B1528 60%, #101C33 100%); }
+  .hero__in { margin-top: -10px; }
 }
