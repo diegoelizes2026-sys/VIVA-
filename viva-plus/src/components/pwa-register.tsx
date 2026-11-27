@@ -46,6 +46,8 @@ export default function PwaRegister(){
 
  // Instruções para adicionar à tela de início: aparecem ao entrar no site (celular/tablet)
  useEffect(()=>{
+  // Na página de campanha (/diagnostico, vinda do Instagram) o convite de instalar atrapalharia o quiz.
+  if(window.location.pathname.startsWith("/diagnostico"))return;
   if(isStandalone()||safeGet("local",DONE_KEY)||safeGet("session",SESSION_KEY))return;
   const platform=detectPlatform();
   const mobile=platform!=="other"||window.matchMedia("(pointer: coarse) and (max-width: 1024px)").matches;

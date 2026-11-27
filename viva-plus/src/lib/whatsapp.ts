@@ -132,6 +132,8 @@ export async function linkWhatsapp(admin: AdminClient, userId: string, waId: str
   await admin.from("viva_whatsapp_links").update({ wa_id: null, linked_at: null, history: [], updated_at: now }).eq("wa_id", waId).neq("user_id", userId);
   const { error } = await admin.from("viva_whatsapp_links").upsert({ user_id: userId, wa_id: waId, linked_at: now, link_code: null, code_expires_at: null, history: [], updated_at: now }, { onConflict: "user_id" });
   if (error) throw error;
+  // Veio do diagnóstico e criou conta: para os convites automáticos.
+  try { const { markLeadConverted } = await import("@/lib/diag-chat"); await markLeadConverted(admin as never, { whatsapp: waId, userId }); } catch (e) { console.error("VIVA diag convert", e); }
 }
 
 export function brl(value: number) {

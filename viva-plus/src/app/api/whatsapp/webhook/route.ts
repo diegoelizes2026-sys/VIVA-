@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { detectHealthIntent, exerciseReply, foodReply, loadDay, mealFor, saveExercise, saveFoods, saveWater, summaryReply, undoHealth, waterReply, type MealType } from "@/lib/health-whatsapp";
 import type { FoodAiItem } from "@/lib/food-ai";
 import { detectLang, type Lang } from "@/lib/lang";
+import { handleLeadMessage } from "@/lib/diag-chat";
 import { downloadWhatsappMedia, oggDurationSeconds, FREE_WHATSAPP_NOTE, FREE_WHATSAPP_NOTE_EN, WHATSAPP_FREE_WEEKLY, SITE_URL, activeWhatsappPlan, brl, connectUrlFor, featuresMessage, freeLeftFooter, freeLimitMessage, linkWhatsapp, notLinkedMessage, requestKeyFor, sendWhatsappText, validSignature, welcomeAfterLink } from "@/lib/whatsapp";
 
 export const runtime = "nodejs";
@@ -92,6 +93,9 @@ async function handleMessage(m: WaMessage, origin: string) {
 
   const { data: link } = await admin.from("viva_whatsapp_links").select("user_id,history,last_transaction_id,last_transaction_at").eq("wa_id", from).maybeSingle();
   if (!link) {
+    // Quem veio do Diagnóstico Financeiro: SAIR/APAGAR e conversa com a VIVA (assistente virtual) antes de criar conta.
+    const leadReply = await handleLeadMessage(admin, from, text, Boolean(mediaOf(m))).catch(e => { console.error("VIVA diag lead reply", e); return { handled: false } as { handled: boolean; reply?: string }; });
+    if (leadReply.handled) { if (leadReply.reply) await sendWhatsappText(from, leadReply.reply); return; }
     await sendWhatsappText(from, notLinkedMessage(connectUrlFor(from), detectLang(text)));
     return;
   }
