@@ -48,6 +48,28 @@ async function enqueueMorning(admin:ReturnType<typeof createAdminClient>,now:Dat
  for(const raw of settings||[]){const s=raw as Settings;if(!subscribed.has(s.user_id))continue;const tz=s.timezone||"America/Sao_Paulo";const today=localDate(now,tz);const scheduled=zonedUtc(today,s.morning_time,tz);if(now.getTime()<scheduled.getTime()||now.getTime()>scheduled.getTime()+60*60000)continue;const summary=await buildMorning(admin,s,now);const delivery=await createDelivery({user_id:s.user_id,notification_type:"morning",dedupe_key:"morning:"+s.user_id+":"+today,scheduled_for:scheduled.toISOString(),title:"Bom dia"+(summary.fullName?", "+summary.name:"")+"! ☀️",body:summary.body,target_url:"/meu-dia",payload:{type:"morning",date:today}});if(delivery)count++}
  return count;
 }
+// Liga o valor do dia ao objetivo nº 1 de quem usa o VIVA: sair das dívidas.
+// Usa só o que a pessoa contou no onboarding (total, quanto consegue pagar por mês, tipos) e o progresso da meta.
+async function debtLine(admin:ReturnType<typeof createAdminClient>,userId:string,today:string){
+ const [{data:fp},{data:goal}]=await Promise.all([
+  admin.from("viva_finance_profiles").select("has_debts,debt_total,debt_payment_capacity,debt_types").eq("user_id",userId).maybeSingle(),
+  admin.from("viva_financial_goals").select("target_amount,current_amount").eq("user_id",userId).ilike("title","%dívida%").order("created_at",{ascending:false}).limit(1).maybeSingle()
+ ]);
+ if(!fp?.has_debts)return null;
+ const total=Number(goal?.target_amount??fp.debt_total??0);const paid=Math.max(0,Number(goal?.current_amount??0));
+ const left=Math.max(0,total-paid);const per=Number(fp.debt_payment_capacity??0);
+ const lines:string[]=[];
+ if(total>0&&left===0)lines.push("🎉 Sua meta de sair das dívidas está quitada no VIVA. Agora o que sobrar pode virar reserva!");
+ else if(left>0&&per>0){const months=Math.ceil(left/per);lines.push("🎯 *Sair das dívidas:* faltam "+money(left)+". Separando "+money(per)+" por mês, você fica livre em "+months+(months===1?" mês":" meses")+". Ficar dentro do valor de hoje é o que garante essa parcela.")}
+ else if(left>0)lines.push("🎯 *Sair das dívidas:* faltam "+money(left)+". Cada dia dentro do valor é dinheiro que sobra pra ela.");
+ else lines.push("🎯 Cada dia dentro do valor é dinheiro que sobra pra sair das dívidas.");
+ // Uma vez por semana (segunda), a dica de qual dívida atacar primeiro.
+ const monday=new Date(today+"T12:00:00Z").getUTCDay()===1;
+ const types=Array.isArray(fp.debt_types)?(fp.debt_types as string[]):[];
+ if(monday&&(types.includes("cartao")||types.includes("cheque_especial")))lines.push("💡 Dica da semana: comece por "+(types.includes("cartao")?"cartão":"cheque especial")+", que tem os juros mais altos. Me pergunte \"como negociar minha dívida\" que eu te ajudo.");
+ return lines.join("\n");
+}
+
 // "Bom dia" pelo WhatsApp com o número do dia, no horário da manhã da pessoa (padrão 7h30).
 // É o ritual que traz a pessoa de volta todo dia sem ela precisar lembrar de abrir o app.
 // Regra da Meta: texto comum só chega para quem falou com a VIVA nas últimas 24h. Fora dessa janela,
@@ -78,11 +100,12 @@ async function enqueueMorningWhatsapp(admin:ReturnType<typeof createAdminClient>
    const en=Array.isArray(l.history)&&[...(l.history as {role?:string;lang?:string}[])].reverse().find(h=>h.role==="user"&&h.lang)?.lang==="en";
    let text="";let ok=false;
    if(inWindow){
+    const debt=!en&&m?.value?await debtLine(admin,l.user_id,m.today).catch(()=>null):null;
     const hi=m&&m.fullName?", "+m.name:"";
     if(m?.value){
      text=en
       ?"☀️ Good morning"+hi+"!\n\n*Today you can spend "+m.value+"* "+m.dot+(m.streak>=2?" · 🔥 "+m.streak+" days in a row":"")+"\n\nSend me today's expenses here (e.g. *coffee 8*) and I'll keep it updated 💜\n\n_To stop these messages, reply *parar bom dia*._"
-      :"☀️ Bom dia"+hi+"!\n\n*Hoje você pode gastar "+m.value+"* "+m.dot+(m.streak>=2?" · 🔥 "+m.streak+" dias seguidos":"")+(m.extras.length?"\n\n"+m.extras.join("\n"):"")+"\n\nMe manda os gastos do dia por aqui (ex.: *café 8*) que eu vou atualizando 💜\n\n_Para não receber mais, responda *parar bom dia*._";
+      :"☀️ Bom dia"+hi+"!\n\n*Hoje você pode gastar "+m.value+"* "+m.dot+(m.streak>=2?" · 🔥 "+m.streak+" dias seguidos":"")+(debt?"\n\n"+debt:"")+(m.extras.length?"\n\n"+m.extras.join("\n"):"")+"\n\nMe manda os gastos do dia por aqui (ex.: *café 8*) que eu vou atualizando 💜\n\n_Para não receber mais, responda *parar bom dia*._";
     }else{
      text=en
       ?"☀️ Good morning"+hi+"! I still don't know how much you can spend per day. Finish your 3-minute setup and I'll tell you every morning: "+SITE_URL+"/boas-vindas"
