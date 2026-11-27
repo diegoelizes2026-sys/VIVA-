@@ -7,7 +7,7 @@ import { detectHealthIntent, exerciseReply, foodReply, loadDay, mealFor, saveExe
 import type { FoodAiItem } from "@/lib/food-ai";
 import { detectLang, type Lang } from "@/lib/lang";
 import { handleLeadMessage } from "@/lib/diag-chat";
-import { downloadWhatsappMedia, oggDurationSeconds, FREE_WHATSAPP_NOTE, FREE_WHATSAPP_NOTE_EN, WHATSAPP_FREE_WEEKLY, SITE_URL, activeWhatsappPlan, brl, connectUrlFor, featuresMessage, freeLeftFooter, freeLimitMessage, linkWhatsapp, notLinkedMessage, requestKeyFor, sendWhatsappText, validSignature, welcomeAfterLink } from "@/lib/whatsapp";
+import { downloadWhatsappMedia, oggDurationSeconds, FREE_WHATSAPP_NOTE, FREE_WHATSAPP_NOTE_EN, WHATSAPP_FREE_WEEKLY, SITE_URL, activeWhatsappPlan, brl, MORNING_START_RE, MORNING_STOP_RE, connectUrlFor, featuresMessage, freeLeftFooter, freeLimitMessage, linkWhatsapp, notLinkedMessage, requestKeyFor, sendWhatsappText, validSignature, welcomeAfterLink } from "@/lib/whatsapp";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -110,6 +110,16 @@ async function handleMessage(m: WaMessage, origin: string) {
   if (/^\s*(desconectar|disconnect|unlink)\s*[.!]*\s*$/i.test(text)) {
     await admin.from("viva_whatsapp_links").update({ wa_id: null, linked_at: null, history: [], updated_at: now }).eq("user_id", link.user_id);
     await sendWhatsappText(from, tr(`Pronto, desconectei este WhatsApp da sua conta. Para conectar de novo, é só me mandar um *oi*.`, `Done, this WhatsApp is disconnected from your account. To connect again, just send me *hi*.`));
+    return;
+  }
+
+  // "parar bom dia" / "voltar bom dia": liga e desliga o aviso da manhã com o valor do dia (não gasta créditos).
+  const morningStop = MORNING_STOP_RE.test(text), morningStart = !morningStop && MORNING_START_RE.test(text);
+  if (morningStop || morningStart) {
+    await admin.from("viva_notification_settings").upsert({ user_id: link.user_id, morning_enabled: morningStart, updated_at: now }, { onConflict: "user_id" });
+    await sendWhatsappText(from, morningStop
+      ? tr("Pronto, não te mando mais o bom dia. ☀️ Se quiser de volta, é só responder *voltar bom dia*.", "Done, no more morning messages. ☀️ To get them back, reply *voltar bom dia*.")
+      : tr("Combinado! ☀️ Todo dia às 7h30 eu te mando aqui quanto você pode gastar.", "Deal! ☀️ Every day at 7:30 am I'll send you here how much you can spend."));
     return;
   }
 

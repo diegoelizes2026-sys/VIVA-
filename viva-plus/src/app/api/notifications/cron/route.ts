@@ -2,7 +2,7 @@ import {NextResponse} from "next/server";
 import {createAdminClient} from "@/lib/supabase/admin";
 import {createDelivery,sendDelivery,logDeliveryFailure} from "@/lib/notifications";
 import {loadTodayBudget} from "@/lib/daily-budget-load";
-import {SITE_URL,sendWhatsappText} from "@/lib/whatsapp";
+import {SITE_URL,sendWhatsappText,sendWhatsappTemplate} from "@/lib/whatsapp";
 import {buildReport,monthName,reportMessage,reportRange,type ReportPeriod} from "@/lib/report";
 import {emailConfigured,emailOnce} from "@/lib/email";
 import {activationEmail,reportEmail,trialEndingEmail,winbackEmail} from "@/lib/email-messages";
@@ -34,13 +34,70 @@ async function buildMorning(admin:ReturnType<typeof createAdminClient>,s:Setting
  if(b&&b.mode==="dynamic"&&b.forecast?.kind==="runs_out"&&b.forecast.daysEarly>0)sections.push("Atenção: no ritmo atual, o dinheiro acaba "+b.forecast.daysEarly+" dias antes de "+b.horizonLabel+".");
  sections.push(appointments.length?"Agenda: "+appointments.join(" · "):"Dia livre na agenda.");
  if((bills.data||[]).length)sections.push("Vence amanhã: "+(bills.data||[]).map(b=>b.name+" "+money(Number(b.amount))).join(" · "));
- return {body:sections.join(" "),fullName,today,name};
+ // Partes soltas para o "bom dia" do WhatsApp (que monta o próprio texto).
+ const value=b&&b.mode!=="setup"?money(Math.max(0,b.remaining)):null;
+ const extras:string[]=[];
+ if(b&&b.mode==="dynamic"&&b.forecast?.kind==="runs_out"&&b.forecast.daysEarly>0)extras.push("⚠️ No ritmo atual, o dinheiro acaba "+b.forecast.daysEarly+" dias antes de "+b.horizonLabel+".");
+ if(appointments.length)extras.push("📅 Agenda: "+appointments.join(" · "));
+ if((bills.data||[]).length)extras.push("🧾 Vence amanhã: "+(bills.data||[]).map(x=>x.name+" "+money(Number(x.amount))).join(" · "));
+ return {body:sections.join(" "),fullName,today,name,value,dot,streak:day?.streak||0,extras};
 }
 async function enqueueMorning(admin:ReturnType<typeof createAdminClient>,now:Date){
  const {data:profiles}=await admin.from("viva_profiles").select("id").limit(5000);if(profiles?.length)await admin.from("viva_notification_settings").upsert(profiles.map(p=>({user_id:p.id})),{onConflict:"user_id",ignoreDuplicates:true});
  const {data:settings,error}=await admin.from("viva_notification_settings").select("*").eq("morning_enabled",true);if(error)throw error;const {data:subs}=await admin.from("viva_push_subscriptions").select("user_id");const subscribed=new Set((subs||[]).map(x=>x.user_id));let count=0;
  for(const raw of settings||[]){const s=raw as Settings;if(!subscribed.has(s.user_id))continue;const tz=s.timezone||"America/Sao_Paulo";const today=localDate(now,tz);const scheduled=zonedUtc(today,s.morning_time,tz);if(now.getTime()<scheduled.getTime()||now.getTime()>scheduled.getTime()+60*60000)continue;const summary=await buildMorning(admin,s,now);const delivery=await createDelivery({user_id:s.user_id,notification_type:"morning",dedupe_key:"morning:"+s.user_id+":"+today,scheduled_for:scheduled.toISOString(),title:"Bom dia"+(summary.fullName?", "+summary.name:"")+"! ☀️",body:summary.body,target_url:"/meu-dia",payload:{type:"morning",date:today}});if(delivery)count++}
  return count;
+}
+// "Bom dia" pelo WhatsApp com o número do dia, no horário da manhã da pessoa (padrão 7h30).
+// É o ritual que traz a pessoa de volta todo dia sem ela precisar lembrar de abrir o app.
+// Regra da Meta: texto comum só chega para quem falou com a VIVA nas últimas 24h. Fora dessa janela,
+// só vai se existir um modelo aprovado (variável WHATSAPP_TEMPLATE_BOM_DIA, com {{1}} = valor do dia).
+// A resposta da pessoa ("café 8") reabre a janela, então quem responde continua recebendo por texto.
+async function enqueueMorningWhatsapp(admin:ReturnType<typeof createAdminClient>,now:Date){
+ try{
+  const {data:links,error}=await admin.from("viva_whatsapp_links").select("user_id,wa_id,last_inbound_at,history").not("wa_id","is",null).limit(5000);if(error)throw error;
+  if(!links?.length)return 0;
+  const {data:settingsRows}=await admin.from("viva_notification_settings").select("*").in("user_id",links.map(l=>l.user_id));
+  const byUser=new Map((settingsRows||[]).map(r=>[r.user_id as string,r as Settings] as const));
+  const template=(process.env.WHATSAPP_TEMPLATE_BOM_DIA||"").trim();
+  const templateLang=(process.env.WHATSAPP_TEMPLATE_BOM_DIA_LANG||"pt_BR").trim();
+  let count=0;
+  for(const l of links){
+   const s=byUser.get(l.user_id)||{user_id:l.user_id,timezone:"America/Sao_Paulo",morning_enabled:true,morning_time:"07:30",agenda_enabled:true,bills_enabled:true,silent_start:null,silent_end:null};
+   if(s.morning_enabled===false)continue;
+   const tz=s.timezone||"America/Sao_Paulo";const today=localDate(now,tz);const scheduled=zonedUtc(today,String(s.morning_time||"07:30"),tz);
+   if(now.getTime()<scheduled.getTime()||now.getTime()>scheduled.getTime()+60*60000)continue;
+   const inWindow=!!l.last_inbound_at&&now.getTime()-new Date(l.last_inbound_at).getTime()<23*3600000;
+   if(!inWindow&&!template)continue;
+   const key="morning:wa:"+l.user_id+":"+today;
+   // Reserva antes de enviar: se o cron rodar duas vezes, só um envia.
+   const {data:claimed,error:claimError}=await admin.from("viva_notification_deliveries").insert({user_id:l.user_id,notification_type:"morning",dedupe_key:key,scheduled_for:scheduled.toISOString(),title:"Bom dia (WhatsApp)",body:"",target_url:"/meu-dia",payload:{type:"morning",channel:"whatsapp",date:today,template:!inWindow},status:"processing"}).select("id").maybeSingle();
+   if(claimError){if(claimError.code==="23505")continue;throw claimError}
+   if(!claimed)continue;
+   const m=await buildMorning(admin,s,now).catch(()=>null);
+   const en=Array.isArray(l.history)&&[...(l.history as {role?:string;lang?:string}[])].reverse().find(h=>h.role==="user"&&h.lang)?.lang==="en";
+   let text="";let ok=false;
+   if(inWindow){
+    const hi=m&&m.fullName?", "+m.name:"";
+    if(m?.value){
+     text=en
+      ?"☀️ Good morning"+hi+"!\n\n*Today you can spend "+m.value+"* "+m.dot+(m.streak>=2?" · 🔥 "+m.streak+" days in a row":"")+"\n\nSend me today's expenses here (e.g. *coffee 8*) and I'll keep it updated 💜\n\n_To stop these messages, reply *parar bom dia*._"
+      :"☀️ Bom dia"+hi+"!\n\n*Hoje você pode gastar "+m.value+"* "+m.dot+(m.streak>=2?" · 🔥 "+m.streak+" dias seguidos":"")+(m.extras.length?"\n\n"+m.extras.join("\n"):"")+"\n\nMe manda os gastos do dia por aqui (ex.: *café 8*) que eu vou atualizando 💜\n\n_Para não receber mais, responda *parar bom dia*._";
+    }else{
+     text=en
+      ?"☀️ Good morning"+hi+"! I still don't know how much you can spend per day. Finish your 3-minute setup and I'll tell you every morning: "+SITE_URL+"/boas-vindas"
+      :"☀️ Bom dia"+hi+"! Ainda não sei quanto você pode gastar por dia. Termine seu planejamento (leva 3 minutos) e eu passo a te dizer toda manhã: "+SITE_URL+"/boas-vindas\n\n_Para não receber mais, responda *parar bom dia*._";
+    }
+    ok=await sendWhatsappText(l.wa_id as string,text);
+   }else if(m?.value){
+    text="[modelo "+template+"] "+m.value;
+    ok=await sendWhatsappTemplate(l.wa_id as string,template,[m.value],templateLang);
+   }
+   await admin.from("viva_notification_deliveries").update({status:ok?"sent":text?"failed":"cancelled",body:text.slice(0,1000),sent_at:ok?new Date().toISOString():null,updated_at:new Date().toISOString()}).eq("id",claimed.id);
+   if(ok)count++;
+  }
+  return count;
+ }catch(e){console.error("VIVA morning WhatsApp skipped",e);return 0}
 }
 // Lembrete da noite: quanto gastou hoje frente ao valor do dia + "esqueceu de lançar algo?".
 // Só roda depois da migração 0023 (evening_enabled precisa existir e ser true); falhas não derrubam o resto do cron.
@@ -170,6 +227,8 @@ async function enqueueActivation(admin:ReturnType<typeof createAdminClient>,now:
    if(push.has(j.user)){const d=await createDelivery({user_id:j.user,notification_type:"activation",dedupe_key:j.key,title:j.title,body:j.body,target_url:"/meu-dia",payload:{type:"activation"}});if(d)count++}
    else if(wa.has(j.user)){
     const {data:seen}=await admin.from("viva_notification_deliveries").select("id").eq("dedupe_key",j.key+":wa").maybeSingle();if(seen)continue;
+    // Já recebeu o "bom dia" com o valor do dia hoje pelo WhatsApp: não manda outra mensagem no mesmo dia.
+    const {data:morning}=await admin.from("viva_notification_deliveries").select("id").eq("dedupe_key","morning:wa:"+j.user+":"+today).eq("status","sent").maybeSingle();if(morning)continue;
     if(await sendWhatsappText(wa.get(j.user)!,j.wa))await admin.from("viva_notification_deliveries").insert({user_id:j.user,notification_type:"activation",dedupe_key:j.key+":wa",scheduled_for:now.toISOString(),title:j.title,body:j.wa,target_url:"/meu-dia",payload:{type:"activation",channel:"whatsapp"},status:"sent"});
    }
   }
@@ -198,7 +257,7 @@ async function enqueueBills(admin:ReturnType<typeof createAdminClient>,now:Date)
  }
  return count;
 }
-async function runCron(req:Request){try{const secret=process.env.CRON_SECRET;if(!secret||req.headers.get("authorization")!=="Bearer "+secret)return NextResponse.json({error:"Não autorizado."},{status:401});const admin=createAdminClient();const now=new Date();const [morningQueued,agendaQueued,billsQueued,eveningQueued,trialQueued,reportsQueued,activationQueued]=await Promise.all([enqueueMorning(admin,now),enqueueAgenda(admin,now),enqueueBills(admin,now),enqueueEvening(admin,now),enqueueTrialReminder(admin,now),enqueueReports(admin,now),enqueueActivation(admin,now)]);const {data:due,error}=await admin.from("viva_notification_deliveries").select("*").eq("status","pending").lte("scheduled_for",now.toISOString()).order("scheduled_for").limit(100);if(error)throw error;let sent=0,failed=0,skipped=0;for(const item of due||[]){const {data:claimed,error:claimError}=await admin.from("viva_notification_deliveries").update({status:"processing",attempts:Number(item.attempts||0)+1,updated_at:now.toISOString()}).eq("id",item.id).eq("status","pending").select("*").maybeSingle();if(claimError)throw claimError;if(!claimed)continue;const {data:settings}=await admin.from("viva_notification_settings").select("*").eq("user_id",item.user_id).maybeSingle();const s=(settings||{user_id:item.user_id,timezone:"America/Sao_Paulo",morning_enabled:true,agenda_enabled:true,bills_enabled:true}) as Settings;if(item.notification_type==="bill"&&item.payload?.billId){const {data:bill,error:billError}=await admin.from("viva_bills").select("status").eq("id",String(item.payload.billId)).eq("user_id",item.user_id).maybeSingle();if(billError)throw billError;if(!bill||bill.status==="paid"){await admin.from("viva_notification_deliveries").update({status:"cancelled",updated_at:now.toISOString()}).eq("id",item.id);skipped++;continue}}const enabled=item.notification_type==="morning"?s.morning_enabled:item.notification_type==="agenda"?s.agenda_enabled:item.notification_type==="bill"?s.bills_enabled:true;if(!enabled){await admin.from("viva_notification_deliveries").update({status:"cancelled",updated_at:now.toISOString()}).eq("id",item.id);skipped++;continue}if(isSilent(now,s)){await admin.from("viva_notification_deliveries").update({status:"pending",scheduled_for:nextAllowed(now,s),updated_at:now.toISOString()}).eq("id",item.id);skipped++;continue}try{await sendDelivery(claimed as Parameters<typeof sendDelivery>[0]);sent++}catch(e){await logDeliveryFailure(claimed as Parameters<typeof logDeliveryFailure>[0],e);failed++}}return NextResponse.json({ok:true,morningQueued,agendaQueued,billsQueued,eveningQueued,trialQueued,reportsQueued,activationQueued,processed:(due||[]).length,sent,failed,skipped,at:now.toISOString()})}catch(e){console.error("VIVA notification cron failed",e);return NextResponse.json({error:e instanceof Error?e.message:"Falha no agendador."},{status:500})}}
+async function runCron(req:Request){try{const secret=process.env.CRON_SECRET;if(!secret||req.headers.get("authorization")!=="Bearer "+secret)return NextResponse.json({error:"Não autorizado."},{status:401});const admin=createAdminClient();const now=new Date();const [morningQueued,agendaQueued,billsQueued,eveningQueued,trialQueued,reportsQueued,activationQueued,morningWhatsapp]=await Promise.all([enqueueMorning(admin,now),enqueueAgenda(admin,now),enqueueBills(admin,now),enqueueEvening(admin,now),enqueueTrialReminder(admin,now),enqueueReports(admin,now),enqueueActivation(admin,now),enqueueMorningWhatsapp(admin,now)]);const {data:due,error}=await admin.from("viva_notification_deliveries").select("*").eq("status","pending").lte("scheduled_for",now.toISOString()).order("scheduled_for").limit(100);if(error)throw error;let sent=0,failed=0,skipped=0;for(const item of due||[]){const {data:claimed,error:claimError}=await admin.from("viva_notification_deliveries").update({status:"processing",attempts:Number(item.attempts||0)+1,updated_at:now.toISOString()}).eq("id",item.id).eq("status","pending").select("*").maybeSingle();if(claimError)throw claimError;if(!claimed)continue;const {data:settings}=await admin.from("viva_notification_settings").select("*").eq("user_id",item.user_id).maybeSingle();const s=(settings||{user_id:item.user_id,timezone:"America/Sao_Paulo",morning_enabled:true,agenda_enabled:true,bills_enabled:true}) as Settings;if(item.notification_type==="bill"&&item.payload?.billId){const {data:bill,error:billError}=await admin.from("viva_bills").select("status").eq("id",String(item.payload.billId)).eq("user_id",item.user_id).maybeSingle();if(billError)throw billError;if(!bill||bill.status==="paid"){await admin.from("viva_notification_deliveries").update({status:"cancelled",updated_at:now.toISOString()}).eq("id",item.id);skipped++;continue}}const enabled=item.notification_type==="morning"?s.morning_enabled:item.notification_type==="agenda"?s.agenda_enabled:item.notification_type==="bill"?s.bills_enabled:true;if(!enabled){await admin.from("viva_notification_deliveries").update({status:"cancelled",updated_at:now.toISOString()}).eq("id",item.id);skipped++;continue}if(isSilent(now,s)){await admin.from("viva_notification_deliveries").update({status:"pending",scheduled_for:nextAllowed(now,s),updated_at:now.toISOString()}).eq("id",item.id);skipped++;continue}try{await sendDelivery(claimed as Parameters<typeof sendDelivery>[0]);sent++}catch(e){await logDeliveryFailure(claimed as Parameters<typeof logDeliveryFailure>[0],e);failed++}}return NextResponse.json({ok:true,morningQueued,agendaQueued,billsQueued,eveningQueued,trialQueued,reportsQueued,activationQueued,morningWhatsapp,processed:(due||[]).length,sent,failed,skipped,at:now.toISOString()})}catch(e){console.error("VIVA notification cron failed",e);return NextResponse.json({error:e instanceof Error?e.message:"Falha no agendador."},{status:500})}}
 
 export async function GET(req:Request){return runCron(req)}
 export async function POST(req:Request){return runCron(req)}
