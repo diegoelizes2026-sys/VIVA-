@@ -15,6 +15,7 @@ export default [
       "build/**",
       "next-env.d.ts",
       "VIVA-PLUS-VERCEL (2)/**",
+      "camila-severiano-imoveis/**",
     ],
   },
 ];

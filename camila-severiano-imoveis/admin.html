@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel · Camila Severiano Imóveis</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-mark" viewBox="0 0 64 80"><path d="M7 78V31a25 25 0 0 1 50 0v47" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M22 54a10 10 0 0 1 20 0z" fill="currentColor"/><path d="M15 54h34" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M17 62c2.5-2 5-2 7.5 0s5 2 7.5 0 5-2 7.5 0 5 2 7.5 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".7"/></symbol>
+    <symbol id="i-dash" viewBox="0 0 24 24"><path d="M4 4h7v9H4zM13 4h7v5h-7zM13 11h7v9h-7zM4 15h7v5H4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 20c.6-3.4 3-5 6-5s5.4 1.6 6 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c1.8.6 2.8 2.2 3 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 19.5l1.3-3.8A8 8 0 1 1 8.4 18.8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 9.2c.2 2.6 2.2 4.6 4.8 4.9l1.2-1.2 1.8.8-.3 1.6c-3.8.4-7.6-3.3-7.4-7.3l1.6-.3.8 1.8z" fill="currentColor"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4v11m-4-4 4 4 4-4M5 20h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 10h16M8 3.5v4M16 3.5v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-img" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="10" r="1.8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  </svg>
+
+  <!-- LOGIN -->
+  <section class="login" id="login" hidden>
+    <div class="login__art">
+      <svg class="login__mark"><use href="#i-mark"/></svg>
+      <h1>Conecto <em>sonhos</em><br>a endereços reais.</h1>
+      <p>Painel da corretora · imóveis, leads e CRM</p>
+    </div>
+    <form class="login__box" id="loginForm">
+      <img src="assets/img/logo.svg" alt="Camila Severiano Imóveis" width="280" height="64">
+      <h2 id="loginTitle">Entrar no painel</h2>
+      <p class="muted" id="loginHint"></p>
+      <label id="emailWrap" hidden>E-mail<input type="email" name="email" autocomplete="username"></label>
+      <label>Senha<input type="password" name="password" autocomplete="current-password" required minlength="6"></label>
+      <label id="pass2Wrap" hidden>Confirme a senha<input type="password" name="password2" autocomplete="new-password" minlength="6"></label>
+      <button class="btn btn--dark btn--block" type="submit">Entrar</button>
+      <p class="err" id="loginErr" role="alert"></p>
+      <a class="muted small" href="index.html">← Voltar ao site</a>
+    </form>
+  </section>
+
+  <!-- APP -->
+  <div class="app" id="app" hidden>
+    <aside class="side">
+      <div class="side__brand"><svg><use href="#i-mark"/></svg><div><b>Camila Severiano</b><small>Painel da corretora</small></div></div>
+      <nav class="side__nav">
+        <a href="#painel" data-view="painel"><svg class="ic"><use href="#i-dash"/></svg><span>Painel</span></a>
+        <a href="#crm" data-view="crm"><svg class="ic"><use href="#i-users"/></svg><span>CRM · Leads</span><em class="pill" id="newCount" hidden></em></a>
+        <a href="#imoveis" data-view="imoveis"><svg class="ic"><use href="#i-home"/></svg><span>Imóveis</span></a>
+        <a href="#ajustes" data-view="ajustes"><svg class="ic"><use href="#i-gear"/></svg><span>Configurações</span></a>
+      </nav>
+      <div class="side__foot">
+        <span class="mode" id="modeTag"></span>
+        <a href="index.html" target="_blank" class="side__link"><svg class="ic"><use href="#i-eye"/></svg><span>Ver site</span></a>
+        <button class="side__link" id="logout"><svg class="ic"><use href="#i-out"/></svg><span>Sair</span></button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- PAINEL -->
+      <section class="view" data-view="painel">
+        <header class="top"><div><p class="eyebrow" id="hello"></p><h1>Visão geral</h1></div>
+          <div class="top__act"><button class="btn btn--ghost" data-new-lead><svg class="ic"><use href="#i-plus"/></svg> Lead</button><button class="btn btn--dark" data-new-prop><svg class="ic"><use href="#i-plus"/></svg> Novo imóvel</button></div></header>
+        <div class="kpis" id="kpis"></div>
+        <div class="dash">
+          <div class="panel"><h3>Funil de vendas</h3><div id="funnel" class="funnel"></div></div>
+          <div class="panel"><h3>Follow-ups</h3><div id="followups"></div></div>
+          <div class="panel"><h3>Origem dos leads</h3><div id="sources" class="bars"></div></div>
+          <div class="panel"><h3>Regiões mais procuradas</h3><div id="regionsWanted" class="bars"></div></div>
+          <div class="panel panel--wide"><h3>Leads recentes</h3><div id="recent"></div></div>
+        </div>
+      </section>
+
+      <!-- CRM -->
+      <section class="view" data-view="crm" hidden>
+        <header class="top"><div><p class="eyebrow">Relacionamento</p><h1>CRM · Leads</h1></div>
+          <div class="top__act">
+            <label class="search"><svg class="ic"><use href="#i-search"/></svg><input id="leadSearch" type="search" placeholder="Buscar nome, telefone, região…"></label>
+            <select id="leadTemp"><option value="">Todos</option><option>Quente</option><option>Morno</option><option>Frio</option></select>
+            <div class="seg" role="tablist"><button class="is-on" data-lv="board">Funil</button><button data-lv="list">Lista</button></div>
+            <button class="btn btn--ghost" id="exportCsv"><svg class="ic"><use href="#i-dl"/></svg> CSV</button>
+            <button class="btn btn--dark" data-new-lead><svg class="ic"><use href="#i-plus"/></svg> Lead</button>
+          </div></header>
+        <div class="board" id="board"></div>
+        <div class="tablewrap" id="leadList" hidden></div>
+      </section>
+
+      <!-- IMÓVEIS -->
+      <section class="view" data-view="imoveis" hidden>
+        <header class="top"><div><p class="eyebrow">Portfólio</p><h1>Imóveis</h1></div>
+          <div class="top__act">
+            <label class="search"><svg class="ic"><use href="#i-search"/></svg><input id="propSearch" type="search" placeholder="Buscar título, código, região…"></label>
+            <select id="propStatus"><option value="">Todos os status</option><option>Disponível</option><option>Reservado</option><option>Vendido</option><option value="draft">Rascunhos</option></select>
+            <button class="btn btn--dark" data-new-prop><svg class="ic"><use href="#i-plus"/></svg> Novo imóvel</button>
+          </div></header>
+        <div class="plist" id="plist"></div>
+      </section>
+
+      <!-- AJUSTES -->
+      <section class="view" data-view="ajustes" hidden>
+        <header class="top"><div><p class="eyebrow">Sistema</p><h1>Configurações</h1></div></header>
+        <div class="settings">
+          <form class="panel form" id="settingsForm">
+            <h3>Dados de contato</h3>
+            <div class="row2">
+              <label>Nome<input name="name" required></label>
+              <label>WhatsApp (com DDD)<input name="whatsapp" inputmode="tel" required></label>
+            </div>
+            <div class="row2">
+              <label>CRECI<input name="creci"></label>
+              <label>Instagram (sem @)<input name="instagram"></label>
+            </div>
+            <div class="row2">
+              <label>E-mail<input name="email" type="email"></label>
+              <label>Nome da assistente IA<input name="assistantName"></label>
+            </div>
+            <label>Região de atuação<input name="city"></label>
+            <button class="btn btn--dark" type="submit">Salvar</button>
+            <p class="ok" id="settingsMsg"></p>
+          </form>
+          <div class="panel">
+            <h3>Backup e dados</h3>
+            <p class="muted" id="modeHelp"></p>
+            <div class="btnrow">
+              <button class="btn btn--ghost" id="backup"><svg class="ic"><use href="#i-dl"/></svg> Baixar backup (JSON)</button>
+              <label class="btn btn--ghost">Restaurar backup<input type="file" id="restore" accept="application/json" hidden></label>
+              <button class="btn btn--ghost" id="resetDemo">Restaurar imóveis de exemplo</button>
+            </div>
+            <div id="passBox">
+              <h3 style="margin-top:26px">Trocar senha</h3>
+              <form class="form" id="passForm">
+                <div class="row2"><label>Nova senha<input type="password" name="p1" minlength="6" required autocomplete="new-password"></label><label>Confirmar<input type="password" name="p2" minlength="6" required autocomplete="new-password"></label></div>
+                <button class="btn btn--ghost" type="submit">Atualizar senha</button>
+                <p class="ok" id="passMsg"></p>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal imóvel -->
+  <div class="modal" id="propModal" hidden>
+    <div class="modal__bg" data-close></div>
+    <form class="modal__box form" id="propForm" novalidate>
+      <header class="modal__head"><h2 id="propFormTitle">Novo imóvel</h2><button type="button" class="iconbtn" data-close aria-label="Fechar"><svg class="ic"><use href="#i-x"/></svg></button></header>
+      <div class="modal__body">
+        <label>Título do anúncio<input name="title" required placeholder="Ex.: Casa assinada no Aquiraz Riviera"></label>
+        <div class="row3">
+          <label>Tipo<select name="type" required></select></label>
+          <label>Finalidade<select name="purpose"><option>Venda</option><option>Aluguel</option><option>Temporada</option></select></label>
+          <label>Status<select name="status"><option>Disponível</option><option>Reservado</option><option>Vendido</option></select></label>
+        </div>
+        <div class="row3">
+          <label>Região<input name="region" list="regionList" required></label>
+          <label class="span2">Bairro / condomínio<input name="neighborhood"></label>
+        </div>
+        <datalist id="regionList"></datalist>
+        <div class="row3">
+          <label>Preço (R$)<input name="price" inputmode="numeric" placeholder="650.000"></label>
+          <label>Área construída (m²)<input name="area" type="number" min="0"></label>
+          <label>Terreno (m²)<input name="land" type="number" min="0"></label>
+        </div>
+        <div class="row3">
+          <label>Quartos<input name="bedrooms" type="number" min="0"></label>
+          <label>Suítes<input name="suites" type="number" min="0"></label>
+          <label>Vagas<input name="parking" type="number" min="0"></label>
+        </div>
+        <label>Descrição<textarea name="description" rows="4" placeholder="Conte a história do imóvel: luz, vista, rotina, diferenciais…"></textarea></label>
+        <label>Diferenciais (separe por vírgula)<input name="features" placeholder="Piscina, Vista mar, Energia solar"></label>
+        <div class="photos">
+          <div class="photos__head"><b>Fotos</b><span class="muted small">A primeira é a capa. Clique na estrela para definir a capa.</span></div>
+          <div class="photos__grid" id="photoGrid"></div>
+          <div class="photos__add">
+            <label class="drop" id="drop"><svg class="ic"><use href="#i-img"/></svg><span>Arraste fotos aqui ou <u>escolha arquivos</u></span><input type="file" id="photoInput" accept="image/*" multiple hidden></label>
+            <div class="row-url"><input id="photoUrl" placeholder="…ou cole o link de uma foto (https://)"><button type="button" class="btn btn--ghost" id="addUrl">Adicionar</button></div>
+          </div>
+          <p class="muted small" id="upStatus"></p>
+        </div>
+        <div class="toggles">
+          <label class="tg"><input type="checkbox" name="published" checked><span></span>Publicado no site</label>
+          <label class="tg"><input type="checkbox" name="featured"><span></span>Destaque</label>
+        </div>
+      </div>
+      <footer class="modal__foot"><p class="err" id="propErr"></p><button type="button" class="btn btn--ghost" data-close>Cancelar</button><button class="btn btn--dark" type="submit">Salvar imóvel</button></footer>
+    </form>
+  </div>
+
+  <!-- Drawer do lead -->
+  <div class="drawer" id="leadDrawer" hidden>
+    <div class="modal__bg" data-close></div>
+    <aside class="drawer__box" id="leadBox"></aside>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/store.js"></script>
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>

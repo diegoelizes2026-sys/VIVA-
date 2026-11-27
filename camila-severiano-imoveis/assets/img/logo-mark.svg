@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none" role="img" aria-label="Camila Severiano Imóveis">
+  <title>Camila Severiano Imóveis</title>
+  <path d="M7 78V31a25 25 0 0 1 50 0v47" stroke="#A47A4A" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M13 78V33a19 19 0 0 1 38 0v45" stroke="#A47A4A" stroke-width="0.9" opacity=".55"/>
+  <path d="M30 3.5l2-2.5 2 2.5-2 2.5z" fill="#A47A4A"/>
+  <path d="M22 54a10 10 0 0 1 20 0z" fill="#C9A66B"/>
+  <path d="M15 54h34" stroke="#A47A4A" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M17 61c2.5-2 5-2 7.5 0s5 2 7.5 0 5-2 7.5 0 5 2 7.5 0" stroke="#0E4A48" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M21 67.5c2.2-1.7 4.4-1.7 6.6 0s4.4 1.7 6.6 0 4.4-1.7 6.6 0" stroke="#0E4A48" stroke-width="1.2" stroke-linecap="round" opacity=".7"/>
+  <text x="32" y="44" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, 'Times New Roman', serif" font-size="17" font-style="italic" fill="#2A211B" letter-spacing="-0.5">CS</text>
+</svg>
