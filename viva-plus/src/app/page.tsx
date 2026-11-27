@@ -4,7 +4,7 @@ import { BadgeDollarSign, CalendarClock, Receipt, MessageCircleHeart, ShieldChec
 import { createClient } from "@/lib/supabase/server";
 import LandingSticky from "@/components/landing-sticky";
 import WhatsAppIcon from "@/components/whatsapp-icon";
-import { LEGAL_LINKS, companyLine } from "@/lib/legal";
+import { COMPANY, LEGAL_LINKS, companyLine } from "@/lib/legal";
 import { SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, supportEmailUrl, supportWhatsAppUrl } from "@/lib/support";
 
 export const metadata = {
@@ -213,7 +213,7 @@ export default async function Home() {
 
     <footer className="lp-foot">
       <span className="lp-logo">VIVA<span>+</span></span>
-      <p className="lp-legal">Vivamais · a VIVA+ no seu WhatsApp</p>
+      <p className="lp-legal"><b>Vivamais</b> (VIVA+) é uma marca de {COMPANY.legalName}, CNPJ {COMPANY.cnpj} · a VIVA+ no seu WhatsApp</p>
       <p><ShieldCheck size={15} aria-hidden /> Não pedimos senha de banco. Seus dados são seus.</p>
       <nav aria-label="Documentos legais" className="lp-foot-links">{LEGAL_LINKS.map(l => <Link key={l.href} href={l.href}>{l.label}</Link>)}<Link href="/login">Entrar</Link></nav>
       <small className="lp-legal">{companyLine()} · Atendimento: <a href={supportEmailUrl()}>{SUPPORT_EMAIL}</a> · WhatsApp <a href={supportWhatsAppUrl()} target="_blank" rel="noopener noreferrer">{SUPPORT_WHATSAPP_DISPLAY}</a></small><small className="lp-legal">A VIVA+ é uma assistente de organização com inteligência artificial e não substitui orientação financeira, médica ou de outros profissionais. Para maiores de 18 anos.</small>
