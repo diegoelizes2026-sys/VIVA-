@@ -18,7 +18,7 @@ Site da corretora **Camila Severiano** (@camilaseveriano_imoveis), especialista 
 2. Fotos da Camila:
    - `assets/img/camila-hero.png`: **recortada, com fundo transparente**, da cintura ou do peito para cima. Aparece em destaque no hero, à direita. Sem ela, aparece o cartão dourado da marca.
    - `assets/img/camila.jpg`: retrato vertical para a seção "Sobre mim".
-   - (Opcional) `assets/img/hero.jpg`: foto de fundo do hero (pôr do sol, praia ou casa). Substitui o cenário desenhado.
+   - `assets/img/hero-bg.jpg` e `hero-bg-mobile.jpg`: fotografia de fundo do hero (litoral ao pôr do sol e mansão com piscina). Troque por fotos próprias quando quiser.
 3. Os 8 imóveis que vêm no site são **exemplos**. Exclua e cadastre os reais pelo painel.
 
 ## Modo local x nuvem (importante)
