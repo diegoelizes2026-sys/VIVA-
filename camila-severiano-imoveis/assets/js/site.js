@@ -33,10 +33,13 @@
     if (img.complete && img.naturalWidth === 0 && img.getAttribute('src')) fail(); // falhou antes do script rodar
   }
   $$('img[data-ph]').forEach((img) => guardImg(img, img.dataset.ph, img.dataset.ph, true));
-  guardImg($('#heroImg'), 'Alto padrão', 'h1', true);
-  guardImg($('#heroImg2'), 'Litoral', 'h2', true);
+  // Retrato recortado da Camila no hero (assets/img/camila-hero.png); sem ele, mostra o cartão da marca
+  const heroCam = $('#heroCamila');
+  const noHeroPhoto = () => { heroCam.hidden = true; heroCam.style.display = 'none'; $('.hero__side').classList.add('no-photo'); };
+  heroCam.addEventListener('error', noHeroPhoto, { once: true });
+  if (heroCam.complete && heroCam.naturalWidth === 0) noHeroPhoto();
   const photo = $('#camilaPhoto');
-  const noPhoto = () => { if (photo.parentElement) photo.parentElement.innerHTML = '<div class="portrait-fallback"><svg viewBox="0 0 64 80" style="color:var(--gold)"><use href="#i-mark"/></svg></div>'; };
+  const noPhoto = () => { if (photo.parentElement) photo.parentElement.innerHTML = '<div class="portrait-fallback"><svg viewBox="0 0 120 110" style="color:var(--gold)"><use href="#i-mark"/></svg></div>'; };
   photo.addEventListener('error', noPhoto, { once: true });
   if (photo.complete && photo.naturalWidth === 0) noPhoto();
 
@@ -120,16 +123,6 @@
   $('#fBeds').addEventListener('change', (e) => setFilter('beds', e.target.value));
   $('#fSort').addEventListener('change', (e) => setFilter('sort', e.target.value));
   let t; $('#fText').addEventListener('input', (e) => { clearTimeout(t); t = setTimeout(() => setFilter('text', e.target.value.trim()), 180); });
-
-  $('#heroFinder').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const f = new FormData(e.target);
-    state.type = ''; // o chip só existe para tipos com imóveis
-    setFilter('type', f.get('type'));
-    setFilter('region', f.get('region'));
-    setFilter('max', f.get('max'));
-    $('#imoveis').scrollIntoView({ behavior: 'smooth' });
-  });
 
   const gotoRegion = (r) => { setFilter('type', ''); setFilter('region', r); $('#imoveis').scrollIntoView({ behavior: 'smooth' }); };
   $$('.region').forEach((el) => el.addEventListener('click', () => gotoRegion(el.dataset.region)));
@@ -230,7 +223,13 @@
 
   /* ---------- Navegação ---------- */
   const nav = $('.nav');
-  const onScroll = () => nav.classList.toggle('is-scrolled', scrollY > 10);
+  const secs = ['top', 'imoveis', 'metodo', 'regioes', 'sobre', 'contato'].map((id) => document.getElementById(id)).filter(Boolean);
+  const onScroll = () => {
+    nav.classList.toggle('is-scrolled', scrollY > 30);
+    let cur = 'top';
+    secs.forEach((sec) => { if (sec.id !== 'top' && sec.getBoundingClientRect().top < 140) cur = sec.id; });
+    $$('#navLinks a').forEach((a) => a.classList.toggle('is-active', a.getAttribute('href') === '#' + cur));
+  };
   addEventListener('scroll', onScroll, { passive: true }); onScroll();
   const burger = $('#burger'); const links = $('#navLinks');
   burger.addEventListener('click', () => { const o = links.classList.toggle('is-open'); burger.setAttribute('aria-expanded', o); });

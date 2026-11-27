@@ -11,11 +11,14 @@ Site da corretora **Camila Severiano** (@camilaseveriano_imoveis), especialista 
   - CRM: funil arrastável (Novo, Em contato, Visita, Proposta, Fechado, Perdido), lista, busca, filtro por temperatura e exportação para CSV (Excel). Cada lead tem pontuação, histórico, anotações, data de follow-up e mensagens prontas de WhatsApp.
   - Imóveis: cadastrar, editar, publicar/despublicar, destacar e excluir; status Disponível/Reservado/Vendido; upload de várias fotos com compressão automática, capa e reordenação.
   - Configurações: WhatsApp, CRECI, Instagram, e-mail, nome da assistente, backup/restauração e troca de senha.
-- **Identidade visual**: logo em `assets/img/logo.svg`, símbolo em `logo-mark.svg`, favicon em `favicon.svg`. O símbolo é um arco (a porta de casa) que emoldura o sol nascendo sobre o mar do litoral leste.
+- **Identidade visual**: azul-noite e ouro metálico. Monograma **CS** com telhado, chaminé e janela sobre o C (`assets/img/logo-mark.svg`), logo completa para fundo claro (`logo.svg`) e escuro (`logo-light.svg`), e favicon. O hero mostra um pôr do sol no litoral desenhado em código, com mar, coqueiros e casa moderna iluminada.
 
 ## Antes de publicar
 1. Em `assets/js/config.js`, troque **WhatsApp**, **CRECI** e **e-mail** (ou altere depois em Configurações no painel).
-2. Coloque a foto da Camila em `assets/img/camila.jpg` (retrato vertical). Enquanto ela não existir, o site mostra o monograma.
+2. Fotos da Camila:
+   - `assets/img/camila-hero.png`: **recortada, com fundo transparente**, da cintura ou do peito para cima. Aparece em destaque no hero, à direita. Sem ela, aparece o cartão dourado da marca.
+   - `assets/img/camila.jpg`: retrato vertical para a seção "Sobre mim".
+   - (Opcional) `assets/img/hero.jpg`: foto de fundo do hero (pôr do sol, praia ou casa). Substitui o cenário desenhado.
 3. Os 8 imóveis que vêm no site são **exemplos**. Exclua e cadastre os reais pelo painel.
 
 ## Modo local x nuvem (importante)

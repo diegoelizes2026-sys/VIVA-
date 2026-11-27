@@ -8,12 +8,12 @@
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/admin.css">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <symbol id="i-mark" viewBox="0 0 64 80"><path d="M7 78V31a25 25 0 0 1 50 0v47" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M22 54a10 10 0 0 1 20 0z" fill="currentColor"/><path d="M15 54h34" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M17 62c2.5-2 5-2 7.5 0s5 2 7.5 0 5-2 7.5 0 5 2 7.5 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".7"/></symbol>
+    <symbol id="i-mark" viewBox="0 0 120 110"><path d="M68.5 38.5A31 31 0 1 0 70 83" fill="none" stroke="currentColor" stroke-width="7.5"/><path d="M28 30 58 6l38 30.5" fill="none" stroke="currentColor" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 27v-9h7v14.5" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linejoin="round"/><g fill="currentColor"><rect x="52.5" y="20" width="5" height="5"/><rect x="59" y="20" width="5" height="5"/><rect x="52.5" y="26.5" width="5" height="5"/><rect x="59" y="26.5" width="5" height="5"/></g><path d="M95 51.5c-2.8-6.6-8.6-9.5-15-9.5-8.4 0-14.5 5-14.5 12 0 15.5 31 10.5 31 27.5 0 8-7.2 14-17 14-7.6 0-13.6-3.4-16.5-10" fill="none" stroke="currentColor" stroke-width="7"/></symbol>
     <symbol id="i-dash" viewBox="0 0 24 24"><path d="M4 4h7v9H4zM13 4h7v5h-7zM13 11h7v9h-7zM4 15h7v5H4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
     <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
     <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 20c.6-3.4 3-5 6-5s5.4 1.6 6 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c1.8.6 2.8 2.2 3 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
@@ -40,7 +40,7 @@
       <p>Painel da corretora · imóveis, leads e CRM</p>
     </div>
     <form class="login__box" id="loginForm">
-      <img src="assets/img/logo.svg" alt="Camila Severiano Imóveis" width="280" height="64">
+      <img src="assets/img/logo.svg" alt="Camila Severiano Imóveis" width="280" height="73">
       <h2 id="loginTitle">Entrar no painel</h2>
       <p class="muted" id="loginHint"></p>
       <label id="emailWrap" hidden>E-mail<input type="email" name="email" autocomplete="username"></label>
@@ -55,7 +55,7 @@
   <!-- APP -->
   <div class="app" id="app" hidden>
     <aside class="side">
-      <div class="side__brand"><svg><use href="#i-mark"/></svg><div><b>Camila Severiano</b><small>Painel da corretora</small></div></div>
+      <div class="side__brand"><img src="assets/img/logo-light.svg" alt="Camila Severiano" width="200" height="52"><small>Painel da corretora</small></div>
       <nav class="side__nav">
         <a href="#painel" data-view="painel"><svg class="ic"><use href="#i-dash"/></svg><span>Painel</span></a>
         <a href="#crm" data-view="crm"><svg class="ic"><use href="#i-users"/></svg><span>CRM · Leads</span><em class="pill" id="newCount" hidden></em></a>

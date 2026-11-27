@@ -55,8 +55,8 @@
     /* Ilustração de reserva elegante quando não há foto ou a foto falha. */
     placeholder(type, seed, bare) {
       const palettes = [
-        ['#F3E7D3', '#E2C9A2', '#0E4A48'], ['#EEE4D6', '#C9A66B', '#1F5F5B'],
-        ['#F6EDE1', '#D9B98A', '#123B3A'], ['#ECE3D5', '#BF9A62', '#2A6662']
+        ['#F3E7D3', '#E2C9A2', '#14233D'], ['#EEE4D6', '#C9A66B', '#1B2C4A'],
+        ['#F6EDE1', '#D9B98A', '#0E1A2E'], ['#ECE3D5', '#BF9A62', '#22355A']
       ];
       const p = palettes[Math.abs(String(seed || type || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % palettes.length];
       const label = bare ? '' : U.esc((type || 'Imóvel').toUpperCase());
