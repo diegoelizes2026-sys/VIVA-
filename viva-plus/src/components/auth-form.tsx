@@ -43,7 +43,8 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
             terms_and_privacy_accepted: true,
             terms_of_use_version: TERMS_VERSION,
             privacy_policy_version: PRIVACY_VERSION,
-            terms_accepted_at: acceptedAt
+            terms_accepted_at: acceptedAt,
+            ...(/^[0-9a-f-]{36}$/.test(params.get("lead") || "") ? { diag_lead_id: params.get("lead") } : {})
           }, emailRedirectTo: location.origin + "/auth/callback?next=" + encodeURIComponent("/assinar" + proQuery) }
         });
         if (error) {
