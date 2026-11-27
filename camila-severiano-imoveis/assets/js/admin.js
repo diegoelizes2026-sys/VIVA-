@@ -13,6 +13,23 @@
   const toast = (m) => { const t = $('#toast'); t.textContent = m; t.classList.add('is-on'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('is-on'), 2600); };
   const guard = async (fn, okMsg) => { try { const r = await fn(); if (okMsg) toast(okMsg); return r; } catch (e) { console.error(e); toast(e.message || 'Algo deu errado.'); throw e; } };
 
+  /* Diálogo de confirmação do próprio painel (confirm() nativo é bloqueado em alguns navegadores/apps) */
+  function ask(msg, okLabel = 'Confirmar', danger = true) {
+    return new Promise((res) => {
+      const d = document.createElement('div');
+      d.className = 'modal'; d.style.zIndex = 95;
+      d.innerHTML = `<div class="modal__bg" data-a="0"></div><div class="modal__box confirm" role="alertdialog" aria-modal="true">
+        <div class="modal__body"><h2 class="confirm__t">${U.esc(msg)}</h2></div>
+        <footer class="modal__foot"><button class="btn btn--ghost" data-a="0">Cancelar</button><button class="btn ${danger ? 'btn--danger-solid' : 'btn--dark'}" data-a="1">${U.esc(okLabel)}</button></footer></div>`;
+      document.body.appendChild(d);
+      const done = (v) => { document.removeEventListener('keydown', onKey); d.parentNode && d.parentNode.removeChild(d); res(v); };
+      const onKey = (e) => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } };
+      document.addEventListener('keydown', onKey);
+      d.addEventListener('click', (e) => { const b = e.target.closest('[data-a]'); if (b) done(b.dataset.a === '1'); });
+      d.querySelector('[data-a="1"]').focus();
+    });
+  }
+
   /* ---------------- LOGIN ---------------- */
   async function boot() {
     if (await store.isSignedIn()) return enter();
@@ -270,7 +287,7 @@
       await guard(() => store.saveLead(d), 'Anotação salva'); renderAll(); openLead(d.id);
     });
     $('#delLead').addEventListener('click', async () => {
-      if (!confirm(`Excluir o lead ${d.name}? Esta ação não pode ser desfeita.`)) return;
+      if (!(await ask(`Excluir o lead ${d.name}? Esta ação não pode ser desfeita.`, 'Excluir lead'))) return;
       await guard(() => store.deleteLead(d.id), 'Lead excluído'); dw.hidden = true; reload();
     });
   }
@@ -310,7 +327,7 @@
     const p = props.find((x) => x.id === b.dataset.id); if (!p) return;
     if (b.dataset.act === 'edit') return openProp(p);
     if (b.dataset.act === 'del') {
-      if (!confirm(`Excluir “${p.title}”?`)) return;
+      if (!(await ask(`Excluir “${p.title}”? Esta ação não pode ser desfeita.`, 'Excluir imóvel'))) return;
       await guard(() => store.deleteProperty(p.id), 'Imóvel excluído');
     }
     if (b.dataset.act === 'pub') { p.published = p.published === false; await guard(() => store.saveProperty(p), p.published ? 'Publicado no site' : 'Movido para rascunho'); }
@@ -437,13 +454,13 @@
     const file = e.target.files[0]; if (!file) return;
     try {
       const d = JSON.parse(await file.text());
-      if (!confirm('Restaurar este backup? Os dados atuais serão substituídos/mesclados.')) return;
+      if (!(await ask('Restaurar este backup? Os dados atuais serão substituídos ou mesclados.', 'Restaurar', false))) { e.target.value = ''; return; }
       await guard(() => store.importAll(d), 'Backup restaurado'); reload();
     } catch (ex) { toast('Arquivo de backup inválido.'); }
     e.target.value = '';
   });
   $('#resetDemo').addEventListener('click', async () => {
-    if (!confirm('Restaurar os imóveis de exemplo? Os imóveis atuais do modo local serão substituídos.')) return;
+    if (!(await ask('Restaurar os imóveis de exemplo? Os imóveis atuais do modo local serão substituídos.', 'Restaurar exemplos'))) return;
     await guard(() => store.resetDemo(), 'Imóveis de exemplo restaurados'); reload();
   });
 

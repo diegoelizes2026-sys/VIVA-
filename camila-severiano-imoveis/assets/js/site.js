@@ -179,8 +179,7 @@
       const win = window.open('', '_blank'); // abre já no clique (evita bloqueio de pop-up)
       await saveLead({ name, phone, source: 'Site · Imóvel', propertyId: p.id, propertyTitle: `${p.code} · ${p.title}`, interest: { type: p.type, region: p.region, maxPrice: p.price, bedrooms: p.bedrooms } });
       const msg = `Olá, Camila! Sou ${name}. Vi no seu site o imóvel *${p.code} · ${p.title}* (${p.region}, ${U.brl(p.price)}) e tenho interesse. Podemos conversar?`;
-      const url = U.wa(settings.whatsapp, msg);
-      if (win) win.location.href = url; else location.href = url;
+      openWa(win, U.wa(settings.whatsapp, msg), f);
     });
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
@@ -193,6 +192,16 @@
   modal.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeModal(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
   $('#grid').addEventListener('click', (e) => { const c = e.target.closest('.pcard'); if (c) openProperty(c.dataset.id); });
+
+  /* Abre o WhatsApp na aba já aberta no clique; se o navegador bloquear, mostra um botão */
+  function openWa(win, url, where) {
+    if (win) { win.location.href = url; return; }
+    const old = where.querySelector('.wa-fallback'); if (old) old.parentNode.removeChild(old);
+    const a = document.createElement('a');
+    a.className = 'btn btn--wa btn--block wa-fallback'; a.href = url; a.target = '_blank'; a.rel = 'noopener';
+    a.innerHTML = '<svg class="ic"><use href="#i-chat"/></svg> Abrir conversa no WhatsApp';
+    where.appendChild(a); a.focus();
+  }
 
   /* ---------- Leads ---------- */
   async function saveLead(data) {
@@ -215,10 +224,9 @@
     await saveLead({ name, phone, message: f.message.value.trim(), source: 'Site · Formulário', interest });
     const parts = [interest.type || 'um imóvel', interest.region ? 'em ' + interest.region : '', interest.maxPrice ? 'até ' + U.brlShort(interest.maxPrice) : '', 'para ' + interest.purpose.toLowerCase()].filter(Boolean).join(' ');
     const text = `Olá, Camila! Sou ${name}. Procuro ${parts}.${f.message.value.trim() ? ' ' + f.message.value.trim() : ''}`;
-    const url = U.wa(settings.whatsapp, text);
-    if (win) win.location.href = url; else location.href = url;
-    msg.textContent = 'Recebido! Abrimos o WhatsApp para você falar com a Camila.';
     f.reset();
+    msg.textContent = win ? 'Recebido! Abrimos o WhatsApp para você falar com a Camila.' : 'Recebido! Toque no botão abaixo para falar com a Camila no WhatsApp.';
+    openWa(win, U.wa(settings.whatsapp, text), f);
   });
 
   /* ---------- Navegação ---------- */
