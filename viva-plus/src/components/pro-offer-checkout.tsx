@@ -71,7 +71,7 @@ export default function ProOfferCheckout({ deadline, expiredAt, regular, firstNa
       <button type="button" className="dq-btn ghost" disabled={!!loading} onClick={() => pay("card")}><CreditCard aria-hidden />{loading === "card" ? "Abrindo o cartão…" : `Assinar no cartão · ${brl(price)}/mês`}</button>
       {error && <p className="dq-err" role="alert">{error}</p>}
       <div className="lv-guarantee big"><ShieldCheck aria-hidden /><span><b>Garantia de 7 dias</b>Use o Pro à vontade. Se não gostar, peça o reembolso em até 7 dias e devolvemos 100% do valor, sem perguntas.</span></div>
-      <p className="lv-fine">No Pix, vale por 30 dias e não renova sozinho. No cartão, {brl(price)} por mês, renovação automática; cancele quando quiser, sem multa.{promo && deadline ? ` Preço promocional para assinaturas feitas até ${clock(deadline)}.` : ""} Ao assinar, você concorda com os <a href="/termos" target="_blank" rel="noopener noreferrer">Termos de Uso</a> e a <a href="/reembolso" target="_blank" rel="noopener noreferrer">Política de Reembolso</a>.</p>
+      <p className="lv-fine">No Pix, vale por 30 dias e não renova sozinho. No cartão, {brl(price)} por mês, renovação automática{promo ? ": o preço não aumenta enquanto você mantiver a assinatura" : ""}; cancele quando quiser, sem multa.{promo && deadline ? ` Preço promocional para assinaturas feitas até ${clock(deadline)}.` : ""} Ao assinar, você concorda com os <a href="/termos" target="_blank" rel="noopener noreferrer">Termos de Uso</a> e a <a href="/reembolso" target="_blank" rel="noopener noreferrer">Política de Reembolso</a>.</p>
     </section>
 
     <p className="lv-skip"><Sparkles aria-hidden /><Link href="/meu-dia">Agora não, quero conhecer o plano grátis</Link></p>
