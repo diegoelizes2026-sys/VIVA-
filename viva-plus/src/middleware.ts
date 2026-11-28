@@ -45,6 +45,8 @@ export async function middleware(request: NextRequest) {
     const target = request.nextUrl.clone(); target.pathname = "/login"; target.searchParams.set("next", pathname);
     return NextResponse.redirect(target);
   }
+  // Já tem conta e veio do Diagnóstico da Vida: pula o cadastro e vai direto para a oferta do Pro.
+  if (user && pathname === "/cadastro" && request.nextUrl.searchParams.get("origem") === "pro1990") return NextResponse.redirect(new URL("/oferta-pro", request.url));
   if (user && ["/login", "/cadastro"].includes(pathname)) return NextResponse.redirect(new URL("/meu-dia", request.url));
   return response;
 }

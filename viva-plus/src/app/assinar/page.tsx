@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ensureWelcomeTrial } from "@/lib/welcome-trial";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { markLeadConverted } from "@/lib/diag-chat";
+import { FUNNEL_OFFER } from "@/lib/life-diagnostic";
 export const metadata = { title: "Bem-vindo", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,8 @@ export default async function SignupWelcomePage({ searchParams }: { searchParams
   const { data: current } = await supabase.from("viva_subscriptions").select("plan_id").eq("user_id", user.id)
     .in("status", ["active", "trialing"]).neq("plan_id", "free").gt("current_period_end", new Date().toISOString()).limit(1).maybeSingle();
   if (current) redirect(proPage ?? "/boas-vindas");
+  // Funil do tráfego pago: em vez do teste grátis de 7 dias, vai para o pagamento do Pro por R$19,90.
+  if (!proPage && user.user_metadata?.funnel === FUNNEL_OFFER) redirect("/oferta-pro");
   await ensureWelcomeTrial(supabase, user.id);
   redirect(proPage ?? "/boas-vindas?presente=pro");
 }

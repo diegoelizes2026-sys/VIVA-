@@ -5,7 +5,8 @@ type Msg = { direction: "in" | "out"; kind: string; step: number | null; body: s
 type Lead = { id: string; name: string; whatsapp: string; goal: string; wants_health: string; result: { level?: string; daily?: number | null }; marketing_opt_in: boolean; consent_at: string | null; consent_text: string | null;
   utm_source: string | null; utm_medium: string | null; utm_campaign: string | null; followup_status: string; followup_step: number; next_send_at: string | null; last_sent_at: string | null;
   opted_out_at: string | null; converted_at: string | null; replies_count: number; last_reply_at: string | null; needs_human: boolean; created_at: string; messages: Msg[] };
-type Data = { days: number; funnel: Record<string, number>; bySource: Record<string, Record<string, number>>; totals: Record<string, number>; leads: Lead[];
+type Compare = { trialsEnded: number; trialsRunning: number; paidAfterTrial: number; funnelBuyers: number; funnelRevenue: number };
+type Data = { days: number; compare?: Compare; funnel: Record<string, number>; bySource: Record<string, Record<string, number>>; totals: Record<string, number>; leads: Lead[];
   settings: { paused: boolean; testWhatsapp: string | null }; templates: { name: string; step: number; goal: string | null; category: string; body: string }[] };
 
 const SITE = "https://www.vivamaiss.app.br/diagnostico";
@@ -71,6 +72,16 @@ export default function AdminDiagnostic() {
         <tr style={{ fontWeight: 800 }}><td style={{ padding: 6 }}>Total</td>{steps.map(([k]) => <td key={k} style={{ padding: 6, textAlign: "center" }}>{f[k] || 0}<br /><small style={{ color: "#6f6680", fontWeight: 500 }}>{k === "quiz_start" ? "" : pct(f[k] || 0, start)}</small></td>)}</tr>
         {Object.entries(d.bySource).sort((a, b) => (b[1].quiz_start || 0) - (a[1].quiz_start || 0)).map(([s, m]) => <tr key={s} style={{ borderTop: "1px solid #eee6f8" }}><td style={{ padding: 6 }}>{s}</td>{steps.map(([k]) => <td key={k} style={{ padding: 6, textAlign: "center" }}>{m[k] || 0}</td>)}</tr>)}
       </tbody></table></div>
+
+    <h3 style={{ marginTop: 18 }}>Tráfego pago: Diagnóstico da Vida → Pro por R$19,90</h3>
+    <p style={{ margin: "0 0 8px", fontSize: 13, color: "#6f6680" }}>Página <b>/diagnostico-vida</b> → resultado parcial → cadastro → <b>/oferta-pro</b> (sem teste grátis). Visitas únicas por etapa.</p>
+    {(() => { const v: [string, string][] = [["vida_start", "Começaram"], ["vida_result", "Viram o resultado"], ["vida_cta", "Clicaram no Pro"], ["offer_view", "Viram o pagamento"], ["offer_checkout", "Iniciaram pagamento"]]; const base = f.vida_start || 0; const c = d.compare;
+      return <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 8 }}>
+        {v.map(([k, l]) => <div key={k} style={box}><small style={{ color: "#6f6680" }}>{l}</small><b style={{ display: "block", fontSize: 24 }}>{f[k] || 0}</b>{k !== "vida_start" && <small>{pct(f[k] || 0, base)}</small>}</div>)}
+        {c && <div style={{ ...box, borderColor: "#b7ecd0", background: "#f1fbf5" }}><small style={{ color: "#6f6680" }}>Pagaram R$19,90</small><b style={{ display: "block", fontSize: 24 }}>{c.funnelBuyers}</b><small>{pct(c.funnelBuyers, base)} de quem começou · {c.funnelRevenue.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</small></div>}
+        {c && <div style={{ ...box, borderColor: "#f5c26b", background: "#fffaf0" }}><small style={{ color: "#6f6680" }}>Teste grátis 7 dias → pagaram</small><b style={{ display: "block", fontSize: 24 }}>{pct(c.paidAfterTrial, c.trialsEnded)}</b><small>{c.paidAfterTrial} de {c.trialsEnded} testes encerrados · {c.trialsRunning} em andamento</small></div>}
+      </div>; })()}
+    <div style={{ ...box, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 8 }}><b style={{ minWidth: 160 }}>Link do anúncio (Instagram)</b><code style={{ flex: 1, fontSize: 12, overflowWrap: "anywhere" }}>{SITE}-vida?utm_source=instagram&amp;utm_medium=paid&amp;utm_campaign=vida_pro1990</code><button className="viva-admin-save" onClick={() => copy(`${SITE}-vida?utm_source=instagram&utm_medium=paid&utm_campaign=vida_pro1990`)}>Copiar</button></div>
 
     <h3 style={{ marginTop: 18 }}>Links com tags de campanha</h3>
     <div style={{ display: "grid", gap: 6 }}>{UTMS.map(([l, q]) => <div key={l} style={{ ...box, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}><b style={{ minWidth: 160 }}>{l}</b><code style={{ flex: 1, fontSize: 12, overflowWrap: "anywhere" }}>{SITE}?{q}</code><button className="viva-admin-save" onClick={() => copy(`${SITE}?${q}`)}>Copiar</button></div>)}</div>
