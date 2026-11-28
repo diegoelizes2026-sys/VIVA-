@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: { default: "VIVA+ (Vivamais) · Chega de o mês acabar antes do salário", template: "%s · VIVA+" },
   description: DESCRIPTION,
   applicationName: "Vivamais",
-  keywords: ["controle financeiro", "controle de gastos pelo WhatsApp", "app de finanças pessoais", "organizar dinheiro", "quanto posso gastar por dia", "planilha de gastos", "orçamento pessoal", "sair das dívidas", "VIVA+", "Vivamais"],
+  keywords: ["controle financeiro", "controle de gastos pelo WhatsApp", "app de finanças pessoais", "organizar dinheiro", "quanto posso gastar por dia", "planilha de gastos", "orçamento pessoal", "sair das dívidas", "controle financeiro pelo WhatsApp", "app para controlar gastos", "regra 50 30 20", "VIVA+", "Vivamais", "Viva Mais"],
   authors: [{ name: "VIVA+ (Vivamais)" }],
   creator: "VIVA+ (Vivamais)",
   alternates: { canonical: "/" },
@@ -29,7 +29,6 @@ export const metadata: Metadata = {
   icons: {
     icon: [{ url: "/icons/viva-192.svg", type: "image/svg+xml" }],
     shortcut: "/favicon.svg",
-    apple: [{ url: "/icons/apple-touch-icon.svg", sizes: "180x180", type: "image/svg+xml" }],
   },
   appleWebApp: {
     capable: true,
