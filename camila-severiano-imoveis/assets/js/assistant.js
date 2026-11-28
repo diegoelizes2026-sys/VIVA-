@@ -420,7 +420,7 @@
       el.fab.classList.add('is-calling');
     }, 1300);
     clearTimeout(inviteTimer);
-    inviteTimer = setTimeout(() => { inviteIdx++; showInvite(); }, 14000);
+    inviteTimer = setTimeout(() => { inviteIdx++; showInvite(); }, isMobile() ? 22000 : 14000);
   }
   function hideTeaser(forever) {
     clearTimeout(inviteTimer); clearTimeout(typingTimer);
@@ -436,8 +436,8 @@
     // primeira chamada: depois de 5s ou quando o visitante rolar além do topo
     let fired = false;
     const fire = () => { if (fired) return; fired = true; showInvite(); };
-    setTimeout(fire, 5000);
-    addEventListener('scroll', () => { if (scrollY > innerHeight * 0.8) fire(); }, { passive: true });
+    setTimeout(fire, isMobile() ? 9000 : 5000);
+    addEventListener('scroll', () => { if (scrollY > innerHeight * (isMobile() ? 1.6 : 0.8)) fire(); }, { passive: true });
   }
 
   window.CS_AI = { open, parse, search };

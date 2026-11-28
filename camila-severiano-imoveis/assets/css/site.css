@@ -575,3 +575,30 @@ html.ai-lock .ai *, html.ai-lock .ai *::before, html.ai-lock .ai *::after { anim
 .ai__teaser-quick button:hover { background: var(--sage-deep); color: #fff; }
 .ai__quick button { border-color: var(--sage); }
 .ai__quick button:hover { background: var(--sage-deep); border-color: var(--sage-deep); }
+
+/* Assistente mais discreta no celular */
+@media (max-width: 620px) {
+  .ai { right: 12px; bottom: 12px; }
+  .ai__fab { padding: 4px 13px 4px 4px; gap: 8px; box-shadow: 0 16px 30px -14px rgba(52, 38, 28, .7); }
+  .ai__face, .ai__ring { width: 44px; height: 44px; }
+  .ai__ring { left: 4px; top: 4px; }
+  .ai__ring::after { inset: -5px; }
+  .ai__face img { width: 39px; height: 39px; }
+  .ai__online { width: 11px; height: 11px; right: 1px; bottom: 2px; }
+  .ai__fab-txt b { font-size: 12.5px; }
+  .ai__fab-txt small { display: none; }
+  .ai__badge { left: 34px; top: -5px; min-width: 19px; height: 19px; font-size: 11px; }
+  .ai__teaser { width: min(268px, calc(100vw - 24px)); bottom: calc(100% + 12px); padding: 11px 12px 10px; border-radius: 16px 16px 5px 16px; }
+  .ai__teaser::after { right: 20px; width: 12px; height: 12px; bottom: -6px; }
+  .ai__teaser-head { margin-bottom: 6px; gap: 8px; }
+  .ai__teaser-head img { width: 30px; height: 30px; }
+  .ai__teaser-head b { font-size: 16px; }
+  .ai__teaser-head small { font-size: 10.5px; }
+  .ai__teaser-x { width: 24px; height: 24px; top: 6px; right: 6px; }
+  .ai__teaser-msg { font-size: 13px; line-height: 1.45; }
+  .ai__teaser-quick { margin-top: 8px; gap: 5px; }
+  .ai__teaser-quick button { padding: 5px 10px; font-size: 11.5px; }
+  .ai__teaser-quick button:nth-child(3) { display: none; }
+}
+.ai__fab-txt .sm { display: none; }
+@media (max-width: 620px) { .ai__fab-txt .lg { display: none; } .ai__fab-txt .sm { display: inline; } }
