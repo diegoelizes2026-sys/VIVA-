@@ -3,7 +3,7 @@
   <g transform="translate(0 6)">
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#F6E3A8"/><stop offset=".35" stop-color="#D9B064"/><stop offset=".6" stop-color="#B8893C"/><stop offset=".8" stop-color="#E8C77D"/><stop offset="1" stop-color="#A97A2F"/>
+      <stop offset="0" stop-color="#F6E3A8"/><stop offset=".35" stop-color="#D9B064"/><stop offset=".6" stop-color="#B8893C"/><stop offset=".8" stop-color="#E8C77D"/><stop offset="1" stop-color="#A87B45"/>
     </linearGradient>
   </defs>
   <path d="M68.5 38.5A31 31 0 1 0 70 83" fill="none" stroke="url(#g)" stroke-width="7.5"/>
@@ -14,7 +14,7 @@
   <path d="M95 51.5c-2.8-6.6-8.6-9.5-15-9.5-8.4 0-14.5 5-14.5 12 0 15.5 31 10.5 31 27.5 0 8-7.2 14-17 14-7.6 0-13.6-3.4-16.5-10" fill="none" stroke="url(#g)" stroke-width="7" stroke-linecap="butt"/>
 </g>
   <path d="M134 22v76" stroke="url(#g)" stroke-width="1.6"/>
-  <text x="152" y="54" font-family="Cinzel, 'Trajan Pro', Georgia, serif" font-size="33" font-weight="500" fill="#0E1A2E" letter-spacing="3">CAMILA</text>
-  <text x="152" y="88" font-family="Cinzel, 'Trajan Pro', Georgia, serif" font-size="33" font-weight="500" fill="#0E1A2E" letter-spacing="3">SEVERIANO</text>
-  <text x="153" y="108" font-family="Manrope, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#A97A2F" letter-spacing="4.6">CORRETORA DE IMÓVEIS</text>
+  <text x="152" y="54" font-family="Cinzel, 'Trajan Pro', Georgia, serif" font-size="33" font-weight="500" fill="#6A4A30" letter-spacing="3">CAMILA</text>
+  <text x="152" y="88" font-family="Cinzel, 'Trajan Pro', Georgia, serif" font-size="33" font-weight="500" fill="#6A4A30" letter-spacing="3">SEVERIANO</text>
+  <text x="153" y="108" font-family="Manrope, 'Helvetica Neue', Arial, sans-serif" font-size="10.5" font-weight="600" fill="#A87B45" letter-spacing="4.6">CORRETORA DE IMÓVEIS</text>
 </svg>
