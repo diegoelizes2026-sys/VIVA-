@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdmin } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
+import { OFFER_COOKIE, offerDeadline, offerOpen } from "@/lib/funnel-offer";
+import { FUNNEL_OFFER, FUNNEL_PRICE_BRL } from "@/lib/life-diagnostic";
 export const runtime = "nodejs";
 export async function POST(req: Request) {
   try {
@@ -15,8 +18,16 @@ export async function POST(req: Request) {
     if (!planId || !["pix", "card"].includes(method)) return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
     const { data: plan } = await db.from("viva_plans").select("id,name,monthly_price_brl,annual_price_brl,enabled").eq("id", planId).eq("enabled", true).single();
     if (!plan) return NextResponse.json({ error: "Plano indisponível." }, { status: 404 });
-    const amount = Number(interval === "annual" ? plan.annual_price_brl : plan.monthly_price_brl);
+    // Oferta do funil do tráfego pago (Pro mensal por R$19,90): só vale com o prazo assinado e ainda aberto.
+    const offer = body.offer === FUNNEL_OFFER ? FUNNEL_OFFER : null;
+    if (offer) {
+      if (plan.id !== "pro" || interval !== "monthly") return NextResponse.json({ error: "Oferta válida só para o Pro mensal." }, { status: 400 });
+      const deadline = offerDeadline((await cookies()).get(OFFER_COOKIE)?.value, user.user_metadata?.funnel_offer_token);
+      if (!offerOpen(deadline)) return NextResponse.json({ error: "A promoção especial terminou. O Pro segue disponível pelo preço normal." }, { status: 410 });
+    }
+    const amount = offer ? FUNNEL_PRICE_BRL : Number(interval === "annual" ? plan.annual_price_brl : plan.monthly_price_brl);
     if (!Number.isFinite(amount) || amount <= 0) return NextResponse.json({ error: "Preço inválido." }, { status: 400 });
+    const planLabel = offer ? `${plan.name} (oferta especial)` : plan.name;
     const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     // Em testes, use o e-mail da conta compradora de teste do Mercado Pago.
@@ -28,11 +39,11 @@ export async function POST(req: Request) {
     // Não reabrir INSERT para usuários autenticados nas tabelas de cobrança.
     const adminDb = createAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const origin = new URL(req.url).origin;
-    const external_reference = `viva_${user.id}_${randomUUID()}`;
+    const external_reference = `viva_${user.id}_${randomUUID()}${offer ? "_" + offer : ""}`;
     const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
     if (method === "card") {
       const mp = await fetch("https://api.mercadopago.com/preapproval", { method: "POST", headers, cache: "no-store", body: JSON.stringify({
-        reason: `VIVA+ - Plano ${plan.name}`, external_reference, payer_email: payerEmail,
+        reason: `VIVA+ - Plano ${planLabel}`, external_reference, payer_email: payerEmail,
         back_url: `${origin}/planos?checkout=return`, status: "pending",
         auto_recurring: { frequency: interval === "annual" ? 12 : 1, frequency_type: "months", transaction_amount: amount, currency_id: "BRL" },
         notification_url: `${origin}/api/billing/webhook`
@@ -51,13 +62,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ paymentId: String(open.gateway_payment_id), pixCopyPaste: open.pix_qr_code, qrCodeBase64: open.pix_qr_code_base64 || null, expiresAt: open.pix_expires_at || null, planName: plan.name, amount, reused: true });
     }
     const mp = await fetch("https://api.mercadopago.com/v1/payments", { method: "POST", headers: { ...headers, "X-Idempotency-Key": external_reference }, cache: "no-store", body: JSON.stringify({
-      transaction_amount: amount, description: `VIVA+ - Plano ${plan.name}`, payment_method_id: "pix",
+      transaction_amount: amount, description: `VIVA+ - Plano ${planLabel}`, payment_method_id: "pix",
       payer: { email: payerEmail }, external_reference, notification_url: `${origin}/api/billing/webhook`
     })});
     const payment = await mp.json();
     const tx = payment.point_of_interaction?.transaction_data;
     if (!mp.ok || !payment.id || !tx?.qr_code) { console.error("MP pix", payment); return NextResponse.json({ error: "Não foi possível gerar o Pix." }, { status: 502 }); }
-    const { error } = await adminDb.from("viva_payments").insert({ user_id: user.id, plan_id: plan.id, gateway: "mercadopago", gateway_payment_id: String(payment.id), external_reference, payment_method: "pix", billing_interval: "one_time", status: "pending", amount_brl: amount, pix_qr_code: tx.qr_code, pix_qr_code_base64: tx.qr_code_base64 || null, pix_expires_at: payment.date_of_expiration || null, metadata: { plan_name: plan.name, requested_interval: interval } });
+    const { error } = await adminDb.from("viva_payments").insert({ user_id: user.id, plan_id: plan.id, gateway: "mercadopago", gateway_payment_id: String(payment.id), external_reference, payment_method: "pix", billing_interval: "one_time", status: "pending", amount_brl: amount, pix_qr_code: tx.qr_code, pix_qr_code_base64: tx.qr_code_base64 || null, pix_expires_at: payment.date_of_expiration || null, metadata: { plan_name: plan.name, requested_interval: interval, ...(offer ? { offer } : {}) } });
     if (error) { console.error(error); return NextResponse.json({ error: "Pix gerado, mas não foi possível salvar o pedido." }, { status: 500 }); }
     return NextResponse.json({ paymentId: String(payment.id), pixCopyPaste: tx.qr_code, qrCodeBase64: tx.qr_code_base64 || null, expiresAt: payment.date_of_expiration || null, planName: plan.name, amount });
   } catch (e) { console.error("checkout", e); return NextResponse.json({ error: "Erro ao iniciar pagamento." }, { status: 500 }); }

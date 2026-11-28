@@ -8,8 +8,10 @@ export const runtime = "nodejs";
 // Não guarda dados pessoais: só um id aleatório da visita. Nunca atrapalha a página.
 const Body = z.object({
   session: z.string().regex(/^[A-Za-z0-9]{8,64}$/),
-  event: z.enum(["quiz_start", "question", "lead", "result", "cta_signup", "cta_whatsapp", "share"]),
-  step: z.number().int().min(1).max(7).optional(),
+  event: z.enum(["quiz_start", "question", "lead", "result", "cta_signup", "cta_whatsapp", "share",
+    // Diagnóstico da Vida (tráfego pago) e tela de pagamento do Pro por R$19,90.
+    "vida_start", "vida_question", "vida_result", "vida_cta", "offer_view", "offer_checkout"]),
+  step: z.number().int().min(1).max(12).optional(),
   utm_source: z.string().max(80).optional(), utm_medium: z.string().max(80).optional(), utm_campaign: z.string().max(80).optional(),
 });
 const perSession = new Map<string, number>();

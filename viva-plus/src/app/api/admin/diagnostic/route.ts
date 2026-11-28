@@ -40,8 +40,10 @@ export async function GET(request: Request) {
   const msgByLead: Record<string, unknown[]> = {};
   for (const m of msgs.data || []) { const a = (msgByLead[m.lead_id] ||= []); if (a.length < 12) a.push(m); }
   const L = leads.data || [];
+  const compare = await trialVsFunnel(g.admin, since);
   return NextResponse.json({
     days,
+    compare,
     funnel: count(funnel),
     bySource: Object.fromEntries(Object.entries(bySource).map(([s, m]) => [s, count(m)])),
     totals: {
@@ -93,4 +95,26 @@ export async function POST(request: Request) {
   if (v.action === "resolve") { await g.admin.from("viva_diag_leads").update({ needs_human: false, updated_at: now }).eq("id", v.id); return NextResponse.json({ ok: true }); }
   if (v.action === "delete") { await g.admin.from("viva_diag_leads").delete().eq("id", v.id); return NextResponse.json({ ok: true }); }
   return NextResponse.json({ error: "Ação desconhecida." }, { status: 400 });
+}
+
+// Comparação para decidir o modelo: teste grátis de 7 dias (quantos acabam pagando) x funil pago do tráfego (Pro por R$19,90).
+async function trialVsFunnel(admin: ReturnType<typeof createAdminClient>, since: string) {
+  const now = new Date().toISOString();
+  const [trials, funnelPays] = await Promise.all([
+    admin.from("viva_subscriptions").select("user_id,current_period_end").eq("gateway", "trial").gte("current_period_start", since).limit(20000),
+    admin.from("viva_payments").select("user_id,amount_brl").eq("status", "approved").like("external_reference", "%_pro1990%").gte("created_at", since).limit(20000),
+  ]);
+  const T = trials.data || [];
+  const ended = [...new Set(T.filter(t => t.current_period_end && t.current_period_end <= now).map(t => t.user_id as string))];
+  const running = new Set(T.filter(t => t.current_period_end && t.current_period_end > now).map(t => t.user_id as string)).size;
+  let paidAfterTrial = 0;
+  for (let i = 0; i < ended.length; i += 500) {
+    const { data } = await admin.from("viva_payments").select("user_id").eq("status", "approved").gt("amount_brl", 0).in("user_id", ended.slice(i, i + 500)).limit(5000);
+    paidAfterTrial += new Set((data || []).map(r => r.user_id)).size;
+  }
+  const F = funnelPays.data || [];
+  return {
+    trialsEnded: ended.length, trialsRunning: running, paidAfterTrial,
+    funnelBuyers: new Set(F.map(r => r.user_id)).size, funnelRevenue: Math.round(F.reduce((t, r) => t + Number(r.amount_brl || 0), 0) * 100) / 100,
+  };
 }

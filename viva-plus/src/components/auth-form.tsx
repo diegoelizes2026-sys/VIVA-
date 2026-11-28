@@ -7,6 +7,7 @@ import CredentialSeal from "@/components/credential-seal";
 import { createClient } from "@/lib/supabase/client";
 import { InviteStore } from "@/components/growth";
 import { PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal";
+import { FUNNEL_OFFER, FUNNEL_PRICE_BRL, brl } from "@/lib/life-diagnostic";
 
 export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" }) {
   const router = useRouter();
@@ -16,6 +17,9 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
   const pro: "personal" | "gym" | null = nextParam.startsWith("/parceiros") ? "personal" : nextParam.startsWith("/academias") ? "gym" : null;
   const proNext = pro === "personal" ? "/parceiros" : pro === "gym" ? "/academias" : "";
   const proQuery = proNext ? "?next=" + encodeURIComponent(proNext) : "";
+  // Veio do Diagnóstico da Vida (tráfego pago): depois do cadastro vai direto para o pagamento do Pro, sem teste grátis.
+  const funnel = !pro && params.get("origem") === FUNNEL_OFFER;
+  const afterSignup = funnel ? "/oferta-pro" : "/assinar" + proQuery;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,6 +40,8 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
       const supabase = createClient(mode === "login" ? remember : true);
       if (mode === "signup") {
         const acceptedAt = new Date().toISOString();
+        // Prazo assinado da promoção: vai junto na conta para valer mesmo se o e-mail for confirmado em outro aparelho.
+        const offerToken = funnel ? await fetch("/api/funnel/offer", { cache: "no-store" }).then(r => r.json()).then(d => (typeof d.token === "string" ? d.token : null)).catch(() => null) : null;
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(), password,
           options: { data: {
@@ -44,8 +50,9 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
             terms_of_use_version: TERMS_VERSION,
             privacy_policy_version: PRIVACY_VERSION,
             terms_accepted_at: acceptedAt,
-            ...(/^[0-9a-f-]{36}$/.test(params.get("lead") || "") ? { diag_lead_id: params.get("lead") } : {})
-          }, emailRedirectTo: location.origin + "/auth/callback?next=" + encodeURIComponent("/assinar" + proQuery) }
+            ...(/^[0-9a-f-]{36}$/.test(params.get("lead") || "") ? { diag_lead_id: params.get("lead") } : {}),
+            ...(funnel ? { funnel: FUNNEL_OFFER, ...(offerToken ? { funnel_offer_token: offerToken } : {}) } : {})
+          }, emailRedirectTo: location.origin + "/auth/callback?next=" + encodeURIComponent(afterSignup) }
         });
         if (error) {
           const normalized = error.message.toLowerCase();
@@ -59,21 +66,20 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
           setMessage("Este e-mail já está cadastrado. Entre com sua conta ou recupere sua senha.");
           return;
         }
-        const signupNext = proQuery;
         if (data.session) {
-          router.replace("/assinar" + signupNext);
+          router.replace(afterSignup);
           router.refresh();
           return;
         }
         const { error: loginError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (!loginError) {
-          router.replace("/assinar" + signupNext);
+          router.replace(afterSignup);
           router.refresh();
           return;
         }
         const loginReason = loginError.message.toLowerCase();
         if (loginReason.includes("email_not_confirmed") || loginReason.includes("email not confirmed")) {
-          setMessage("Sua conta foi criada. Para liberar o primeiro acesso, confirme o e-mail enviado pelo VIVA+ e abra o link recebido. Depois disso, você entrará diretamente na conversa com a VIVA.");
+          setMessage("Sua conta foi criada. Para liberar o primeiro acesso, confirme o e-mail enviado pelo VIVA+ e abra o link recebido. Depois disso, " + (funnel ? "você volta direto para a assinatura do Pro." : "você entrará diretamente na conversa com a VIVA.") + "");
           return;
         }
         throw new Error("Sua conta foi criada, mas não foi possível iniciar a sessão: " + loginError.message);
@@ -147,7 +153,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" | "reset" 
       </section>
       <section className="auth-form-panel p-6 sm:p-10 md:p-14">
         <Link href="/" className="auth-back inline-flex items-center gap-2 text-sm font-semibold text-neutral-500 hover:text-neutral-900"><ArrowLeft size={16}/> Voltar ao início</Link>
-        <div className="auth-heading mt-9 md:mt-12"><span className="auth-eyebrow">{pro && mode !== "reset" ? (pro === "gym" ? "ACADEMIAS CREDENCIADAS VIVA+" : "REDE DE PERSONAIS VIVA+") : mode === "signup" ? "COMECE POR VOCÊ" : mode === "reset" ? "ACESSO SEGURO" : "SEU ESPAÇO VIVA+"}</span><h1 className="mt-3 text-3xl font-black tracking-tight text-neutral-900">{pro && mode !== "reset" ? (pro === "gym" ? (mode === "signup" ? "Criar acesso da academia" : "Entrar para cadastrar a academia") : (mode === "signup" ? "Criar acesso de personal" : "Entrar para cadastro de personal")) : mode === "login" ? "Acesse sua conta" : mode === "signup" ? "Crie sua conta grátis" : title}</h1><p className="mt-2 text-sm leading-6 text-neutral-500">{pro && mode !== "reset" ? (mode === "signup" ? `Passo 1 de 2: seu acesso (grátis). Depois você ${pro === "gym" ? "cadastra a academia" : "completa seu perfil de personal"} e nós conferimos ${pro === "gym" ? "o CNPJ" : "o CREF"} em até 2 dias úteis.` : `Use o e-mail e a senha da sua conta. Em seguida você vai para o ${pro === "gym" ? "cadastro da academia" : "cadastro de personal"}.`) : mode === "login" ? "Use o e-mail e a senha do seu cadastro." : mode === "signup" ? "Grátis e sem cartão. Você já começa com 20 créditos para usar a VIVA." : "Informe seu e-mail para receber o link de recuperação."}</p></div>
+        <div className="auth-heading mt-9 md:mt-12"><span className="auth-eyebrow">{pro && mode !== "reset" ? (pro === "gym" ? "ACADEMIAS CREDENCIADAS VIVA+" : "REDE DE PERSONAIS VIVA+") : mode === "signup" ? "COMECE POR VOCÊ" : mode === "reset" ? "ACESSO SEGURO" : "SEU ESPAÇO VIVA+"}</span><h1 className="mt-3 text-3xl font-black tracking-tight text-neutral-900">{pro && mode !== "reset" ? (pro === "gym" ? (mode === "signup" ? "Criar acesso da academia" : "Entrar para cadastrar a academia") : (mode === "signup" ? "Criar acesso de personal" : "Entrar para cadastro de personal")) : mode === "login" ? "Acesse sua conta" : mode === "signup" && funnel ? "Crie sua conta e libere o Pro" : mode === "signup" ? "Crie sua conta grátis" : title}</h1><p className="mt-2 text-sm leading-6 text-neutral-500">{pro && mode !== "reset" ? (mode === "signup" ? `Passo 1 de 2: seu acesso (grátis). Depois você ${pro === "gym" ? "cadastra a academia" : "completa seu perfil de personal"} e nós conferimos ${pro === "gym" ? "o CNPJ" : "o CREF"} em até 2 dias úteis.` : `Use o e-mail e a senha da sua conta. Em seguida você vai para o ${pro === "gym" ? "cadastro da academia" : "cadastro de personal"}.`) : mode === "login" ? "Use o e-mail e a senha do seu cadastro." : mode === "signup" && funnel ? `Passo 1 de 2: crie seu acesso. No próximo passo você assina o Pro por ${brl(FUNNEL_PRICE_BRL)} e libera seu diagnóstico completo.` : mode === "signup" ? "Grátis e sem cartão. Você já começa com 20 créditos para usar a VIVA." : "Informe seu e-mail para receber o link de recuperação."}</p></div>
         <form onSubmit={submit} onKeyDown={e => { if (mode === "signup" && e.key === "Enter" && !termsAccepted) { e.preventDefault(); setTermsAttempted(true); setMessage("Marque para continuar"); termsRef.current?.focus(); } }} className="auth-form mt-8 space-y-5">
           {mode === "signup" && <label className="auth-field-label block text-sm font-semibold text-neutral-800">{pro === "gym" ? "Seu nome (responsável pela academia)" : pro === "personal" ? "Seu nome completo" : "Como podemos chamar você?"}<input className="field mt-2" autoComplete="name" required value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome completo"/></label>}
           <label className="auth-field-label block text-sm font-semibold text-neutral-800">Seu e-mail<span className="relative mt-2 block"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={17}/><input className="field pl-10" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="maria@email.com"/></span></label>
