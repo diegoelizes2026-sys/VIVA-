@@ -1,11 +1,12 @@
-import DiagnosticQuiz from "@/components/diagnostic-quiz";
+import LifeDiagnostic from "@/components/life-diagnostic";
 
+// /diagnostico agora abre o diagnóstico do funil de venda (o mesmo de /diagnostico-vida),
+// que termina na oferta do Pro. O quiz antigo (components/diagnostic-quiz) ficou sem uso.
 export const metadata = {
-  title: { absolute: "Diagnóstico Financeiro Grátis · VIVA+" },
-  description: "Em 2 minutos você descobre quanto pode gastar por dia sem faltar dinheiro até o salário. Grátis, sem cartão e sem senha de banco.",
+  title: { absolute: "Diagnóstico Grátis · VIVA+" },
+  description: "9 perguntas rápidas sobre dinheiro, tempo, rotina, alimentação e sono. Descubra onde a sua vida está desequilibrada. Grátis, resultado na hora.",
   alternates: { canonical: "/diagnostico" },
-  openGraph: { title: "Faça seu diagnóstico financeiro grátis", description: "Em 2 minutos você descobre quanto pode gastar por dia sem faltar dinheiro até o salário.", url: "/diagnostico" },
+  openGraph: { title: "Faça seu diagnóstico grátis", description: "Descubra onde a sua vida está desequilibrada. Grátis, em 1 minuto.", url: "/diagnostico" },
 };
 
-// Página estática (carrega rápido no celular); todo o quiz roda no navegador.
-export default function Page() { return <DiagnosticQuiz />; }
+export default function Page() { return <LifeDiagnostic />; }
