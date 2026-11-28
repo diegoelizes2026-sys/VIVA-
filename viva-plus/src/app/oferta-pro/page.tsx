@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { OFFER_COOKIE, offerDeadline, offerOpen } from "@/lib/funnel-offer";
 import { FUNNEL_OFFER, FUNNEL_REGULAR_BRL } from "@/lib/life-diagnostic";
 import ProOfferCheckout from "@/components/pro-offer-checkout";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { computeLife } from "@/lib/life-diagnostic";
 
 export const metadata = { title: "Assine o Pro", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -20,6 +22,12 @@ export default async function Page() {
   const deadline = offerDeadline((await cookies()).get(OFFER_COOKIE)?.value, user.user_metadata?.funnel_offer_token);
   const { data: plan } = await supabase.from("viva_plans").select("monthly_price_brl").eq("id", "pro").maybeSingle();
   const regular = Number(plan?.monthly_price_brl) > 0 ? Number(plan!.monthly_price_brl) : FUNNEL_REGULAR_BRL;
+  // Registra a visita à tela de pagamento (para o lembrete de quem não pagou). Só a primeira visita conta.
+  try {
+    const raw = user.user_metadata?.life_answers as Record<string, string> | undefined;
+    const worst = raw && typeof raw === "object" && Object.keys(raw).length >= 8 ? computeLife(raw).worst : null;
+    await createAdminClient().from("viva_funnel_checkouts").upsert({ user_id: user.id, offer_until: offerOpen(deadline) ? deadline : null, worst_area: worst }, { onConflict: "user_id", ignoreDuplicates: true });
+  } catch (e) { console.error("VIVA funnel checkout view", e); }
   const firstName = String(user.user_metadata?.full_name || "").trim().split(" ")[0] || "";
-  return <ProOfferCheckout deadline={offerOpen(deadline) ? deadline : null} expiredAt={deadline && !offerOpen(deadline) ? deadline : null} regular={regular} firstName={firstName} />;
+  return <ProOfferCheckout deadline={offerOpen(deadline) ? deadline : null} expiredAt={deadline && !offerOpen(deadline) ? deadline : null} regular={regular} firstName={firstName} hasAnswers={!!user.user_metadata?.life_answers} />;
 }
