@@ -2326,3 +2326,50 @@ html:has(.dq),body:has(.dq){background:#f6f2fc}
 @media(prefers-reduced-motion:reduce){.lv-spin,.lv-clock>svg{animation:none}}
 @media(max-width:360px){.lv-clock time{font-size:17px}.lv-areas li{grid-template-columns:minmax(0,1fr) 70px 30px;font-size:13.5px}}
 .dq-cta .lv-guarantee,.dq-cta .lv-guarantee span{color:#eadbff}
+/* Funil v2: cadastro dentro da página, plano bloqueado, prova social, botão fixo e "antes de sair" */
+.fs-layer{position:fixed;inset:0;z-index:60;display:grid;align-items:end;justify-items:center}
+.fs-backdrop{position:absolute;inset:0;border:0;background:rgba(20,6,46,.55);cursor:pointer}
+.fs-sheet{position:relative;display:grid;gap:12px;width:100%;max-width:560px;max-height:92svh;overflow-y:auto;box-sizing:border-box;padding:22px 20px calc(22px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;background:#fff;color:var(--dq-text,#1d1426);box-shadow:0 -20px 50px rgba(20,6,46,.25);animation:fs-up .24s ease-out}
+@media(min-width:620px){.fs-layer{align-items:center}.fs-sheet{border-radius:26px}}
+@keyframes fs-up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+.fs-close{position:absolute;top:12px;right:12px;display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:50%;background:#f3ebfd;color:#6410C9;cursor:pointer}.fs-close svg{width:20px;height:20px}
+.fs-step{justify-self:start;padding:5px 11px;border-radius:99px;background:#fff4e6;color:#a04a00;font-size:12.5px;font-weight:900}
+.fs-sheet h2{margin:0;padding-right:40px;font-size:clamp(22px,6vw,26px);line-height:1.15;font-weight:950;letter-spacing:-.03em}
+.fs-sub{margin:0;color:#5f566b;line-height:1.5}
+.fs-pass{position:relative;display:block}.fs-pass input{width:100%;padding-right:52px!important}
+.fs-pass button{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:44px;height:44px;border:0;background:transparent;color:#6410C9;cursor:pointer}.fs-pass svg{width:20px;height:20px}
+.fs-sheet .dq-check a,.fs-sheet .dq-err a{color:#6410C9;font-weight:800}
+.fs-trust{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 8px;margin:0;font-size:12.5px;font-weight:700;color:#5f566b}.fs-trust svg{width:15px;height:15px;color:#0b8a43}
+.lv-steps{display:grid;gap:8px;margin:4px 0 0;padding:0;list-style:none;text-align:left;justify-self:center}
+.lv-steps li{display:flex;align-items:center;gap:9px;font-weight:800;color:#9d93ab;transition:color .2s}.lv-steps li.done{color:#1d1426}
+.lv-steps svg{width:18px;height:18px;color:#0b8a43}.lv-steps i{width:18px;height:18px;border-radius:50%;border:2px solid #e6dcf5;box-sizing:border-box}
+.lv-plan-preview h2{font-size:clamp(20px,5.4vw,23px)}
+.lv-plan-preview ol,.lv-plan-full ol{display:grid;gap:10px;margin:0;padding:0;list-style:none;counter-reset:p}
+.lv-plan-preview li,.lv-plan-full li{position:relative;display:grid;gap:5px;padding:14px 14px 14px 52px;border-radius:18px;background:#faf7fe;counter-increment:p}
+.lv-plan-preview li::before,.lv-plan-full li::before{content:counter(p);position:absolute;left:14px;top:14px;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#6410C9;color:#fff;font-weight:900;font-size:13.5px}
+.lv-plan-preview li b,.lv-plan-full li b{font-size:15.5px;line-height:1.3}
+.lv-plan-preview li span,.lv-plan-full li span{font-size:14.5px;line-height:1.5;color:#5f566b}
+.lv-fade{-webkit-mask-image:linear-gradient(#000 35%,transparent);mask-image:linear-gradient(#000 35%,transparent);max-height:3.2em;overflow:hidden}
+.lv-blur-text{filter:blur(5px);user-select:none;pointer-events:none;max-height:3em;overflow:hidden}
+.lv-plan-preview li em{display:inline-flex;align-items:center;gap:5px;font-style:normal;font-size:12.5px;font-weight:900;color:#6410C9}.lv-plan-preview li em svg{width:14px;height:14px}
+.lv-plan-preview li.is-locked::before{background:#b99be6}
+.lv-plan-preview.compact li{padding-top:12px;padding-bottom:12px}
+.lv-plan-full li a{display:inline-flex;align-items:center;gap:5px;justify-self:start;margin-top:2px;color:#6410C9;font-weight:900;font-size:14.5px;text-decoration:none}.lv-plan-full li a svg{width:16px;height:16px}
+.lv-plan-head{display:flex;align-items:center;gap:10px}.lv-plan-head h2{font-size:clamp(19px,5.2vw,22px)}
+.lv-badge{flex:none;padding:5px 10px;border-radius:99px;font-size:13px;font-weight:950;font-variant-numeric:tabular-nums}
+.lv-badge.t-low{background:#fde8e0;color:#b4380b}.lv-badge.t-mid{background:#fff4e0;color:#9a5b00}.lv-badge.t-ok{background:#e4f7ec;color:#0b6b37}
+.lv-areas.full li.t-low i b{background:linear-gradient(90deg,#e2541b,#f59e0b)}.lv-areas.full li.t-mid i b{background:linear-gradient(90deg,#f59e0b,#facc15)}.lv-areas.full li.t-ok i b{background:linear-gradient(90deg,#16a34a,#4ade80)}
+.lv-areas.full li{background:#faf7fe}.lv-areas.full em{color:#1d1426}
+.lv-proof{display:flex;align-items:center;justify-content:center;gap:8px;margin:0;font-size:14px;color:#5f566b;text-align:center}.lv-proof svg{flex:none;width:18px;height:18px;color:#e2541b}.lv-proof b{color:#1d1426}
+.lv-proof.in-card{font-size:13.5px!important}
+.lv-price small{font-size:13px;opacity:.85}
+.lv-plan span small{display:block;font-size:12.5px;font-weight:700;color:#0b8a43}
+.lv.has-sticky{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+.lv-sticky{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;align-items:center;gap:12px;padding:12px max(16px,calc((100% - 560px) / 2)) calc(12px + env(safe-area-inset-bottom));background:#fff;box-shadow:0 -10px 30px rgba(61,10,134,.16);animation:fs-up .2s ease-out}
+.lv-sticky div{display:grid;flex:1;min-width:0}.lv-sticky b{font-size:18px;font-weight:950;color:#6410C9}.lv-sticky span{font-size:12.5px;font-weight:700;color:#a04a00}
+.lv-sticky button{display:inline-flex;align-items:center;gap:6px;flex:none;min-height:50px;padding:0 18px;border:0;border-radius:999px;background:#6410C9;color:#fff;font-size:15.5px;font-weight:900;cursor:pointer;box-shadow:0 10px 22px rgba(100,16,201,.28)}.lv-sticky button svg{width:18px;height:18px}
+.lv-skip button{border:0;background:none;padding:6px;color:#5f566b;font-weight:700;font-size:14px;text-decoration:underline;cursor:pointer}
+.lv-get.dark li{color:#1d1426}.lv-get.dark svg{color:#0b8a43}
+.lv-exit-no{border:0;background:none;padding:8px;color:#5f566b;font-weight:700;font-size:14px;text-decoration:underline;cursor:pointer}
+.lv-on-dark{color:#eadbff!important}
+@media(prefers-reduced-motion:reduce){.fs-sheet,.lv-sticky{animation:none}}

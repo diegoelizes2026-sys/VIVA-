@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     if (method === "card") {
       const mp = await fetch("https://api.mercadopago.com/preapproval", { method: "POST", headers, cache: "no-store", body: JSON.stringify({
         reason: `VIVA+ - Plano ${planLabel}`, external_reference, payer_email: payerEmail,
-        back_url: `${origin}/planos?checkout=return`, status: "pending",
+        back_url: offer ? `${origin}/meu-diagnostico?checkout=return` : `${origin}/planos?checkout=return`, status: "pending",
         auto_recurring: { frequency: interval === "annual" ? 12 : 1, frequency_type: "months", transaction_amount: amount, currency_id: "BRL" },
         notification_url: `${origin}/api/billing/webhook`
       })});

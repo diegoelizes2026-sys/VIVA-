@@ -94,3 +94,34 @@ export const FUNNEL_OFFER_MINUTES = 60;
 export const LIFE_KEY = "viva-vida-v1";
 export const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 export const clock = (iso: string) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+// Plano de ação por área (entregue no diagnóstico completo, depois da assinatura). Cada passo usa uma função do app.
+export type PlanStep = { title: string; text: string; href: string; cta: string };
+export const PLAN: Record<Area, PlanStep[]> = {
+  dinheiro: [
+    { title: "Descubra para onde o dinheiro vai", text: "Por 7 dias, anote cada gasto na hora, até o cafezinho. Mande no WhatsApp da VIVA: \"gastei 12 no lanche\". Ela organiza por categoria para você.", href: "/financas", cta: "Abrir finanças" },
+    { title: "Use o seu número do dia", text: "A VIVA calcula quanto você pode gastar por dia até o salário. Gastou menos hoje? A sobra passa para amanhã. Gastou mais? Ela avisa antes de faltar.", href: "/meu-dia", cta: "Ver meu número do dia" },
+    { title: "Corte o vazamento invisível", text: "Cadastre as contas fixas e assinaturas. A VIVA te avisa antes de vencer (adeus multa e juros) e mostra o que pode ser cancelado.", href: "/contas", cta: "Cadastrar contas" },
+  ],
+  tempo: [
+    { title: "Escolha 3 prioridades por dia", text: "Toda manhã, diga à VIVA as 3 coisas que precisam acontecer hoje. Ela lembra você na hora certa e cobra no fim do dia.", href: "/agenda", cta: "Abrir agenda" },
+    { title: "Troque rolagem por blocos de foco", text: "Marque na agenda 2 blocos de 50 minutos sem celular. O lembrete da VIVA toca no início e no fim de cada bloco.", href: "/agenda", cta: "Criar bloco de foco" },
+    { title: "Revise o dia em 2 minutos", text: "À noite a VIVA pergunta como foi o dia. Você vê o que fez, o que ficou e já deixa o amanhã pronto.", href: "/meu-dia", cta: "Ver meu dia" },
+  ],
+  organizacao: [
+    { title: "Tire tudo da cabeça", text: "Mande para a VIVA cada compromisso, conta e tarefa assim que lembrar, por texto ou áudio no WhatsApp. Ela guarda e organiza.", href: "/agenda", cta: "Abrir agenda" },
+    { title: "Nunca mais perca um vencimento", text: "Cadastre as contas do mês uma vez. A VIVA avisa alguns dias antes e no dia do vencimento.", href: "/contas", cta: "Cadastrar contas" },
+    { title: "Lista de compras que se organiza sozinha", text: "Fale os itens como lembrar. A VIVA monta a lista e compara preços perto de você.", href: "/lista-de-compras", cta: "Abrir lista" },
+  ],
+  saude: [
+    { title: "Saiba o que está comendo", text: "Tire foto do prato e a VIVA calcula calorias e macros na hora. Em uma semana você enxerga o padrão que está te atrapalhando.", href: "/saude", cta: "Abrir diário de saúde" },
+    { title: "Comece com 3 treinos curtos", text: "Registre 3 treinos de 20 minutos na semana. Pode ser caminhada. A VIVA soma o gasto e mostra sua evolução.", href: "/saude", cta: "Registrar treino" },
+    { title: "Água e meta diária", text: "A VIVA calcula sua meta de calorias e de água e lembra você ao longo do dia.", href: "/saude", cta: "Ver minha meta" },
+  ],
+  energia: [
+    { title: "Horário fixo para dormir", text: "Defina a hora de deitar e um lembrete 30 minutos antes para largar o celular. Constância vale mais que dormir muito no fim de semana.", href: "/agenda", cta: "Criar lembrete" },
+    { title: "Proteja a primeira hora do dia", text: "Nada de redes sociais ao acordar. Use esse tempo para as 3 prioridades do dia que a VIVA te mostra de manhã.", href: "/meu-dia", cta: "Ver meu dia" },
+    { title: "Energia vem da rotina inteira", text: "Alimentação e movimento mexem direto no sono. Use o diário de saúde para ajustar os dois juntos.", href: "/saude", cta: "Abrir saúde" },
+  ],
+};
+export const pricePerDay = (monthly: number) => (Math.floor((monthly / 30) * 100) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { runFunnelRecovery } from "@/lib/funnel-recovery";
 import { sendWebPush } from "@/lib/web-push";
 import { sendWhatsappText, SITE_URL, brl } from "@/lib/whatsapp";
 export const runtime = "nodejs";
@@ -56,6 +57,8 @@ export async function POST(req: Request) {
         if (await sendWhatsappText(wa.wa_id, text)) sent++;
       }
     }
-    return NextResponse.json({ ok: true, checked: rows?.length || 0, sent });
+    // Funil do tráfego pago: quem criou a conta e não assinou.
+    let funnel = 0; try { funnel = await runFunnelRecovery(admin); } catch (e) { console.error("VIVA funnel recovery", e); }
+    return NextResponse.json({ ok: true, checked: rows?.length || 0, sent, funnel });
   } catch (e) { console.error("VIVA pix recovery failed", e); return NextResponse.json({ error: "Falha na recuperação de Pix." }, { status: 500 }); }
 }

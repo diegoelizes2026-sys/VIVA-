@@ -6,7 +6,7 @@ function Spinner(){return <span className="viva-pay-spinner" aria-hidden="true"/
 export type PixData={paymentId:string;pixCopyPaste:string;qrCodeBase64?:string|null;expiresAt?:string|null;planName?:string;amount?:number;reused?:boolean};
 const money=(v?:number)=>typeof v==="number"?v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"}):"";
 function timeLeft(iso?:string|null){if(!iso)return "";const ms=new Date(iso).getTime()-Date.now();if(ms<=0)return "expirado";const h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000);return h>0?`${h}h ${m}min`:`${m} min`;}
-export function PixSheet({pix,onClose,onCard}:{pix:PixData;onClose:()=>void;onCard?:()=>void}){
+export function PixSheet({pix,onClose,onCard,successHref="/meu-dia",successLabel="Começar a usar"}:{pix:PixData;onClose:()=>void;onCard?:()=>void;successHref?:string;successLabel?:string}){
  const [copied,setCopied]=useState(false),[status,setStatus]=useState("pending"),[,tick]=useState(0);
  useEffect(()=>{let alive=true;const check=async()=>{try{const r=await fetch("/api/billing/checkout?paymentId="+encodeURIComponent(pix.paymentId),{cache:"no-store"});const d=await r.json();if(alive&&d.status)setStatus(d.status);}catch{}};
   const id=setInterval(()=>{if(document.visibilityState==="visible")check();tick(x=>x+1);},4000);const onVis=()=>{if(document.visibilityState==="visible")check();};document.addEventListener("visibilitychange",onVis);check();
@@ -14,7 +14,7 @@ export function PixSheet({pix,onClose,onCard}:{pix:PixData;onClose:()=>void;onCa
  async function copy(){try{await navigator.clipboard.writeText(pix.pixCopyPaste);}catch{const t=document.querySelector<HTMLTextAreaElement>(".viva-pix-sheet textarea");t?.select();document.execCommand?.("copy");}setCopied(true);setTimeout(()=>setCopied(false),2500);}
  const paid=status==="approved";
  return <div className="viva-pix-layer" role="dialog" aria-modal="true" aria-label="Pagamento Pix"><button type="button" className="viva-pix-backdrop" onClick={onClose} aria-label="Fechar Pix"/><section className={"viva-pix-sheet"+(paid?" is-paid":"")}><button type="button" className="viva-pix-close" onClick={onClose} aria-label="Fechar">×</button>
- {paid?<div className="viva-pix-success" role="status"><span className="viva-pix-party" aria-hidden="true">🎉</span><h2>Pagamento confirmado!</h2><p>Seu plano {pix.planName} está sendo liberado agora. Se você conectou o WhatsApp, a VIVA já vai te mandar uma mensagem por lá. 💜</p><a className="viva-pix-go" href="/meu-dia">Começar a usar</a></div>
+ {paid?<div className="viva-pix-success" role="status"><span className="viva-pix-party" aria-hidden="true">🎉</span><h2>Pagamento confirmado!</h2><p>Seu plano {pix.planName} está sendo liberado agora. Se você conectou o WhatsApp, a VIVA já vai te mandar uma mensagem por lá. 💜</p><a className="viva-pix-go" href={successHref}>{successLabel}</a></div>
  :<>{pix.reused&&<span className="viva-pix-resume">Seu Pix continua te esperando</span>}<h2>Falta só o Pix</h2>{pix.planName&&<p className="viva-pix-plan">Plano <b>{pix.planName}</b>{pix.amount?<> · <b>{money(pix.amount)}</b></>:null}</p>}
  <ol className="viva-pix-steps"><li>Toque em <b>Copiar código Pix</b></li><li>Abra o app do seu banco → <b>Pix</b> → <b>Copia e Cola</b></li><li>Cole o código e confirme. <b>Pronto!</b> Seu plano ativa sozinho</li></ol>
  <button type="button" className={"viva-pix-copy"+(copied?" is-copied":"")} onClick={copy}>{copied?"✓ Código copiado! Agora abra seu banco":"Copiar código Pix"}</button>
