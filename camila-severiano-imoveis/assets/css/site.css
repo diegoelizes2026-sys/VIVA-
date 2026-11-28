@@ -13,6 +13,10 @@
   --ocean-2: #8E6A44;
   --bronze: #6A4A30;
   --muted: #857565;
+  --sage: #8FA382;
+  --sage-deep: #56684B;
+  --sage-dark: #43523A;
+  --sage-soft: #EDF1E8;
   --line: rgba(52, 38, 28, .12);
   --ok: #2E7D4F;
   --display: 'Cinzel', 'Trajan Pro', Georgia, serif;
@@ -545,3 +549,29 @@ html.ai-lock .ai *, html.ai-lock .ai *::before, html.ai-lock .ai *::after { anim
   .ai__teaser { width: min(320px, calc(100vw - 24px)); right: 0; padding: 14px 14px 12px; }
   .ai__teaser-msg { font-size: 14px; }
 }
+
+/* ===== Toque de verde sálvia ===== */
+.ribbon { background: var(--sage-deep); color: #F4F1E8; }
+.ribbon i { color: #E5D2A8; }
+.sec--sand { background: linear-gradient(180deg, var(--sage-soft), #F3F2EA); }
+.sec--sand .eyebrow { color: var(--sage-deep); }
+.sec--sand h2 em { color: var(--sage-deep); }
+.region { background: var(--sage-deep); }
+.region::after { background: linear-gradient(180deg, transparent 35%, rgba(52, 64, 44, .86)); }
+.region__txt small { color: #DCE6D2; }
+.sec--ink { background: linear-gradient(160deg, var(--sage-dark), #3A4732); }
+.sec--ink .eyebrow { color: #E5D2A8; }
+.steps span { color: #E5D2A8; }
+.chip.is-on { background: var(--sage-deep); border-color: var(--sage-deep); }
+.chip:hover { border-color: var(--sage); }
+.msg--me { background: var(--sage-deep); }
+.hero__shade { background: radial-gradient(55% 65% at 14% 30%, rgba(143, 163, 130, .16), transparent 70%), radial-gradient(60% 70% at 30% 85%, rgba(201, 160, 102, .1), transparent 70%); }
+.hero__trust svg { color: var(--sage-deep); }
+.hero__lead b { color: var(--sage-deep); }
+.pcard__loc { color: var(--sage-deep); }
+.about__list b { color: var(--sage-deep); }
+.contact__meta .ic { color: var(--sage-deep); }
+.ai__teaser-quick button { border-color: var(--sage); }
+.ai__teaser-quick button:hover { background: var(--sage-deep); color: #fff; }
+.ai__quick button { border-color: var(--sage); }
+.ai__quick button:hover { background: var(--sage-deep); border-color: var(--sage-deep); }

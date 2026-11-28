@@ -256,3 +256,8 @@ tbody tr:hover { background: var(--ivory); }
 .btn--danger-solid { background: var(--red); color: #fff; }
 .btn--danger-solid:hover { background: #962F1F; }
 @media (max-width: 860px) { .modal .confirm { margin: auto 16px; } }
+
+/* Toque de verde sálvia no painel */
+.side__nav a.is-on { background: #56684B; color: #fff; }
+.kpi--gold { background: #56684B; border-color: #56684B; }
+.kpi--gold b { color: #F1E5D1; }
