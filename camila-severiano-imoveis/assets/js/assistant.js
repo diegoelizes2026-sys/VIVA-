@@ -161,7 +161,7 @@
       b.innerHTML = `<img src="${U.esc(U.cover(p))}" alt=""><div><b>${U.esc(p.title)}</b><small>${U.esc(p.region)}${p.bedrooms ? ' · ' + p.bedrooms + ' qtos' : ''}${(p.area || p.land) ? ' · ' + (p.area || p.land) + 'm²' : ''}</small><span>${U.brl(p.price)}</span></div>`;
       const img = b.querySelector('img');
       img.addEventListener('error', () => { img.src = U.placeholder(p.type, p.id); }, { once: true });
-      b.onclick = () => { S.liked = p; api() && api().openProperty(p.id); };
+      b.onclick = () => { S.liked = p; el.text.blur(); api() && api().openProperty(p.id); };
       wrap.appendChild(b);
     });
     addNode(wrap);
@@ -338,16 +338,54 @@
     quick([{ label: 'Quero morar', value: 'morar' }, { label: 'Quero investir', value: 'investir' }, { label: 'Casa de praia', value: 'veraneio casa de praia' }, { label: 'Lote para construir', value: 'lote' }, { label: 'Falar com a Camila', value: 'falar com a camila' }]);
   }
 
+  /* Celular: chat em tela cheia que acompanha o teclado, página de trás travada e pausada */
+  const isMobile = () => window.matchMedia('(max-width: 620px)').matches;
+  const isTouch = () => window.matchMedia('(pointer: coarse)').matches;
+  const vv = window.visualViewport;
+  let scrollY0 = 0;
+  function fitViewport() {
+    if (!isMobile() || el.panel.hidden) return;
+    const h = vv ? vv.height : window.innerHeight;
+    const top = vv ? vv.offsetTop : 0;
+    el.panel.style.height = h + 'px';
+    el.panel.style.top = top + 'px';
+    el.log.scrollTop = el.log.scrollHeight;
+  }
+  if (vv) { vv.addEventListener('resize', fitViewport); vv.addEventListener('scroll', fitViewport); }
+  window.addEventListener('resize', fitViewport);
+  el.text.addEventListener('focus', () => setTimeout(fitViewport, 60));
+
+  function lockPage(on) {
+    const html = document.documentElement;
+    if (on && isMobile()) {
+      scrollY0 = window.scrollY;
+      html.classList.add('ai-lock');
+      document.body.style.top = -scrollY0 + 'px';
+    } else if (!on && html.classList.contains('ai-lock')) {
+      html.classList.remove('ai-lock');
+      document.body.style.top = '';
+      window.scrollTo(0, scrollY0);
+    }
+  }
+
   function open() {
     el.root.classList.add('is-open'); el.panel.hidden = false; el.fab.setAttribute('aria-expanded', 'true');
-    start(); setTimeout(() => el.text.focus(), 250);
+    lockPage(true); fitViewport();
+    start();
+    if (!isTouch()) setTimeout(() => el.text.focus(), 250); // no celular, o teclado só abre quando a pessoa tocar no campo
   }
-  function close() { el.root.classList.remove('is-open'); el.panel.hidden = true; el.fab.setAttribute('aria-expanded', 'false'); el.fab.focus(); }
+  function close() {
+    el.text.blur();
+    el.root.classList.remove('is-open'); el.panel.hidden = true; el.fab.setAttribute('aria-expanded', 'false');
+    el.panel.style.height = ''; el.panel.style.top = '';
+    lockPage(false);
+    if (!isTouch()) el.fab.focus();
+  }
 
   el.fab.addEventListener('click', open);
   el.close.addEventListener('click', close);
   el.reset.addEventListener('click', () => { el.log.innerHTML = ''; quick([]); restart(true); });
-  el.form.addEventListener('submit', (e) => { e.preventDefault(); const v = el.text.value; el.text.value = ''; handle(v); });
+  el.form.addEventListener('submit', (e) => { e.preventDefault(); const v = el.text.value; el.text.value = ''; if (isTouch()) el.text.blur(); handle(v); });
   document.addEventListener('click', (e) => { if (e.target.closest('[data-open-assistant]')) open(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !el.panel.hidden && document.getElementById('propModal').hidden) close(); });
 

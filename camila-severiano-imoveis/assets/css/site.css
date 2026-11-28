@@ -252,7 +252,7 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--gold); font-weight: 400; 
 .foot__admin:hover { opacity: 1; color: var(--gold); }
 
 /* Modal do imóvel */
-.modal { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 20px; }
+.modal { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 20px; }
 .modal[hidden] { display: none; }
 .modal__bg { position: absolute; inset: 0; background: rgba(8, 15, 30, .6); backdrop-filter: blur(6px); animation: fade .3s; }
 .modal__box { position: relative; background: var(--ivory); width: min(1100px, 100%); max-height: calc(100vh - 40px); overflow: auto; border-radius: 26px; box-shadow: var(--shadow); animation: rise .45s var(--ease); }
@@ -429,3 +429,20 @@ h1 em, h2 em, h3 em { font-style: italic; color: var(--gold); font-weight: 400; 
   .hero { background: linear-gradient(180deg, #070E1E 0%, #0B1528 60%, #101C33 100%); }
   .hero__in { margin-top: -10px; }
 }
+
+/* Assistente no celular: tela cheia, sem zoom do iPhone e sem animações pesadas atrás */
+@media (max-width: 620px) {
+  .ai.is-open { inset: 0; right: 0; bottom: 0; }
+  .ai__panel { position: fixed; left: 0; right: 0; top: 0; width: 100%; height: 100%; height: 100dvh; border-radius: 0; border: 0; animation: none; }
+  .ai__head { padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
+  .ai__input { padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .ai__input input { font-size: 16px; }
+  .ai__log { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .msg { animation: none; }
+}
+html.ai-lock, html.ai-lock body { overflow: hidden; }
+html.ai-lock body { position: fixed; left: 0; right: 0; width: 100%; }
+html.ai-lock main, html.ai-lock .foot, html.ai-lock .nav { visibility: hidden; }
+html.ai-lock *, html.ai-lock *::before, html.ai-lock *::after { animation-play-state: paused !important; }
+html.ai-lock .ai *, html.ai-lock .ai *::before, html.ai-lock .ai *::after { animation-play-state: running !important; }
+@media (max-width: 620px) { .ai__head small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 52vw; } }
