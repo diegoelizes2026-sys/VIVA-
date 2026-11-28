@@ -488,3 +488,60 @@ html.ai-lock .ai *, html.ai-lock .ai *::before, html.ai-lock .ai *::after { anim
   .hero { background: linear-gradient(180deg, #F6F0E8 0%, #FBF8F3 60%, #F4EDE3 100%); }
   .hero__portrait::after { background: linear-gradient(180deg, rgba(251, 248, 243, .55) 0%, rgba(251, 248, 243, 0) 22%, rgba(251, 248, 243, 0) 60%, #FBF8F3 100%); }
 }
+
+/* ===== Assistente em destaque ===== */
+.ai__fab { padding: 6px 22px 6px 6px; gap: 12px; background: linear-gradient(135deg, #3B2A1F, #2A1E16); border: 1px solid rgba(201, 160, 102, .6); box-shadow: 0 22px 44px -16px rgba(52, 38, 28, .75), 0 0 0 6px rgba(201, 160, 102, .12); animation: fabFloat 4.5s ease-in-out infinite; }
+.ai__fab:hover { transform: translateY(-4px) scale(1.02); animation-play-state: paused; }
+.ai__fab .ai__pulse, .ai__fab-ic { display: none; }
+@keyframes fabFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.ai__face { position: relative; width: 56px; height: 56px; flex: none; display: grid; place-items: center; }
+.ai__face img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; position: relative; z-index: 1; }
+.ai__ring { position: absolute; left: 6px; top: 6px; width: 56px; height: 56px; border-radius: 50%; background: conic-gradient(from 0deg, #EBD3A4, #A87B45, #F3E3C3, #8C6232, #EBD3A4); animation: ringSpin 3.2s linear infinite; }
+.ai__ring::after { content: ''; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid rgba(201, 160, 102, .55); animation: ringPulse 2.4s ease-out infinite; }
+@keyframes ringSpin { to { transform: rotate(360deg); } }
+@keyframes ringPulse { 0% { transform: scale(.9); opacity: .9; } 100% { transform: scale(1.35); opacity: 0; } }
+.ai__online { position: absolute; right: 2px; bottom: 3px; z-index: 2; width: 13px; height: 13px; border-radius: 50%; background: #3BB273; border: 2px solid #2A1E16; }
+.ai__fab-txt { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; text-align: left; }
+.ai__fab-txt b { font-size: 15px; color: #fff; }
+.ai__fab-txt small { font-size: 11.5px; font-weight: 600; color: var(--gold-2); letter-spacing: .02em; }
+.ai__badge { position: absolute; top: -4px; left: 46px; z-index: 3; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 99px; background: #D9443A; color: #fff; font-size: 12px; font-weight: 800; display: grid; place-items: center; border: 2px solid #fff; animation: badgePop .5s cubic-bezier(.3, 1.6, .5, 1); }
+.ai__badge[hidden] { display: none; }
+@keyframes badgePop { from { transform: scale(0); } }
+.ai__fab.is-calling { animation: fabCall 2.6s ease-in-out infinite; }
+@keyframes fabCall { 0%, 100% { transform: translateY(0) rotate(0); } 8% { transform: translateY(-4px) rotate(-3deg); } 16% { transform: translateY(-4px) rotate(3deg); } 24% { transform: translateY(0) rotate(0); } }
+
+.ai__teaser { position: absolute; right: 0; bottom: calc(100% + 16px); width: 330px; background: #fff; border-radius: 20px 20px 6px 20px; padding: 16px 16px 14px; box-shadow: 0 30px 60px -24px rgba(52, 38, 28, .55), 0 0 0 1px rgba(168, 123, 69, .22); cursor: pointer; transform-origin: 90% 100%; animation: teaserIn .55s cubic-bezier(.2, 1.3, .4, 1) both; }
+.ai__teaser[hidden] { display: none; }
+.ai__teaser.is-out { animation: teaserOut .25s ease-in forwards; }
+@keyframes teaserIn { from { opacity: 0; transform: translateY(14px) scale(.85); } }
+@keyframes teaserOut { to { opacity: 0; transform: translateY(10px) scale(.9); } }
+.ai__teaser::after { content: ''; position: absolute; right: 26px; bottom: -8px; width: 16px; height: 16px; background: #fff; transform: rotate(45deg); box-shadow: 4px 4px 8px -4px rgba(52, 38, 28, .2); }
+.ai__teaser-x { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; border: 0; background: var(--sand); color: var(--ink-2); cursor: pointer; display: grid; place-items: center; }
+.ai__teaser-x .ic { width: 14px; height: 14px; }
+.ai__teaser-head { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; padding-right: 26px; }
+.ai__teaser-head img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold-2); }
+.ai__teaser-head b { display: block; font-family: var(--serif); font-size: 20px; line-height: 1; color: var(--bronze); }
+.ai__teaser-head small { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+.ai__teaser-head .dot { width: 7px; height: 7px; }
+.ai__teaser-msg { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--ink-2); min-height: 26px; }
+.ai__teaser-msg b { color: var(--bronze); }
+.ai__teaser-msg .typing { padding: 6px 0; }
+.ai__teaser-msg.is-new { animation: msgIn .4s ease both; }
+@keyframes msgIn { from { opacity: 0; transform: translateY(6px); } }
+.ai__teaser-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.ai__teaser-quick[hidden] { display: none; }
+.ai__teaser-quick button { border: 1px solid var(--gold-2); background: var(--ivory); color: var(--bronze); border-radius: 99px; padding: 7px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all .2s; }
+.ai__teaser-quick button:hover { background: var(--gold-grad); color: #fff; border-color: transparent; }
+.ai__avatar { overflow: hidden; border: 2px solid var(--gold-2); }
+.ai__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.btn--ai { position: relative; }
+.btn--ai-dot { width: 8px; height: 8px; border-radius: 50%; background: #3BB273; box-shadow: 0 0 0 0 rgba(59, 178, 115, .6); animation: liveDot 1.8s infinite; }
+@keyframes liveDot { 0% { box-shadow: 0 0 0 0 rgba(59, 178, 115, .55); } 70% { box-shadow: 0 0 0 9px rgba(59, 178, 115, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 178, 115, 0); } }
+@media (max-width: 620px) {
+  .ai__fab { padding: 5px 16px 5px 5px; gap: 10px; }
+  .ai__fab-txt { display: flex; }
+  .ai__fab-txt b { font-size: 13.5px; }
+  .ai__fab-txt small { font-size: 10.5px; }
+  .ai__teaser { width: min(320px, calc(100vw - 24px)); right: 0; padding: 14px 14px 12px; }
+  .ai__teaser-msg { font-size: 14px; }
+}

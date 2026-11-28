@@ -336,6 +336,7 @@
       'Em menos de 1 minuto eu encontro imóveis que combinam com você. Pode escrever do seu jeito ou tocar nas opções.');
     S.step = 'start';
     quick([{ label: 'Quero morar', value: 'morar' }, { label: 'Quero investir', value: 'investir' }, { label: 'Casa de praia', value: 'veraneio casa de praia' }, { label: 'Lote para construir', value: 'lote' }, { label: 'Falar com a Camila', value: 'falar com a camila' }]);
+    if (S.pending) { const m = S.pending; S.pending = null; handle(m.value, m.label); }
   }
 
   /* Celular: chat em tela cheia que acompanha o teclado, página de trás travada e pausada */
@@ -368,7 +369,9 @@
     }
   }
 
-  function open() {
+  function open(first) {
+    hideTeaser(false);
+    if (first && first.value) { if (S.started && S.step !== 'start' && !S.done) { /* conversa em andamento */ } else if (S.started) { setTimeout(() => handle(first.value, first.label), 200); } else { S.pending = first; } }
     el.root.classList.add('is-open'); el.panel.hidden = false; el.fab.setAttribute('aria-expanded', 'true');
     lockPage(true); fitViewport();
     start();
@@ -382,19 +385,60 @@
     if (!isTouch()) el.fab.focus();
   }
 
-  el.fab.addEventListener('click', open);
+  el.fab.addEventListener('click', () => open());
   el.close.addEventListener('click', close);
   el.reset.addEventListener('click', () => { el.log.innerHTML = ''; quick([]); restart(true); });
   el.form.addEventListener('submit', (e) => { e.preventDefault(); const v = el.text.value; el.text.value = ''; if (isTouch()) el.text.blur(); handle(v); });
   document.addEventListener('click', (e) => { if (e.target.closest('[data-open-assistant]')) open(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !el.panel.hidden && document.getElementById('propModal').hidden) close(); });
 
-  // Convite discreto depois de alguns segundos
-  setTimeout(() => {
-    if (S.started) return;
-    const t = el.fab.querySelector('.ai__fab-txt');
-    if (t) t.textContent = 'Posso te ajudar a encontrar?';
-  }, 9000);
+  /* ---------- Convite proativo: balão chamando o visitante ---------- */
+  const T = { box: $('#aiTeaser'), msg: $('#aiTeaserMsg'), quick: $('#aiTeaserQuick'), x: $('#aiTeaserX'), badge: $('#aiBadge') };
+  const INVITES = [
+    'Oi! Sou a <b>Aurora</b>, assistente da Camila. Quer que eu encontre o imóvel ideal pra você em 1 minuto?',
+    'Procurando casa no <b>Aquiraz Riviera</b> ou no <b>Eusébio</b>? Me diga o que você busca que eu te mostro as melhores opções.',
+    'Muitas oportunidades chegam para a Camila <b>antes de serem anunciadas</b>. Quer receber uma seleção no seu WhatsApp?',
+    'Casa de praia, lote ou alto padrão? Escreva do seu jeito, por exemplo: <b>“casa 3 quartos até 900 mil”</b>.'
+  ];
+  const ssGet = (k) => { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
+  const ssSet = (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) { /* sem armazenamento */ } };
+  let inviteIdx = 0, inviteTimer = null, typingTimer = null;
+  const modalOpen = () => { const m = document.getElementById('propModal'); return m && !m.hidden; };
+  const canInvite = () => T.box && !S.started && el.panel.hidden && !modalOpen() && ssGet('cs_ai_invite_off') !== '1';
+
+  function showInvite() {
+    if (!canInvite()) return;
+    T.box.hidden = false; T.box.classList.remove('is-out');
+    T.quick.hidden = true;
+    T.msg.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(() => {
+      T.msg.innerHTML = INVITES[inviteIdx % INVITES.length];
+      T.msg.classList.remove('is-new'); void T.msg.offsetWidth; T.msg.classList.add('is-new');
+      T.quick.hidden = false;
+      T.badge.hidden = false;
+      el.fab.classList.add('is-calling');
+    }, 1300);
+    clearTimeout(inviteTimer);
+    inviteTimer = setTimeout(() => { inviteIdx++; showInvite(); }, 14000);
+  }
+  function hideTeaser(forever) {
+    clearTimeout(inviteTimer); clearTimeout(typingTimer);
+    if (T.box && !T.box.hidden) { T.box.classList.add('is-out'); setTimeout(() => { T.box.hidden = true; }, 250); }
+    if (T.badge) T.badge.hidden = true;
+    el.fab.classList.remove('is-calling');
+    if (forever) ssSet('cs_ai_invite_off', '1');
+  }
+  if (T.box) {
+    T.x.addEventListener('click', (e) => { e.stopPropagation(); hideTeaser(true); });
+    T.quick.addEventListener('click', (e) => { const b = e.target.closest('[data-q]'); if (b) { e.stopPropagation(); open({ value: b.dataset.q, label: b.dataset.l }); } });
+    T.box.addEventListener('click', (e) => { if (!e.target.closest('button')) open(); });
+    // primeira chamada: depois de 5s ou quando o visitante rolar além do topo
+    let fired = false;
+    const fire = () => { if (fired) return; fired = true; showInvite(); };
+    setTimeout(fire, 5000);
+    addEventListener('scroll', () => { if (scrollY > innerHeight * 0.8) fire(); }, { passive: true });
+  }
 
   window.CS_AI = { open, parse, search };
 })();

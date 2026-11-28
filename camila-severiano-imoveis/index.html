@@ -92,7 +92,7 @@
 
           <div class="hero__cta reveal">
             <a href="#imoveis" class="btn btn--goldpill"><svg class="ic"><use href="#i-search"/></svg> Buscar imóveis</a>
-            <button class="btn btn--glass" data-open-assistant><svg class="ic"><use href="#i-spark"/></svg> Pedir à assistente</button>
+            <button class="btn btn--glass btn--ai" data-open-assistant><span class="btn--ai-dot"></span><svg class="ic"><use href="#i-spark"/></svg> Falar com a assistente IA</button>
           </div>
         </div>
 
@@ -307,14 +307,25 @@
 
   <!-- Assistente IA -->
   <div class="ai" id="ai">
+    <div class="ai__teaser" id="aiTeaser" hidden role="dialog" aria-label="Convite da assistente">
+      <button class="ai__teaser-x" id="aiTeaserX" aria-label="Fechar convite"><svg class="ic"><use href="#i-x"/></svg></button>
+      <div class="ai__teaser-head"><img src="assets/img/camila-avatar.jpg" alt="" width="40" height="40"><div><b>Aurora</b><small><span class="dot"></span> Assistente da Camila · online</small></div></div>
+      <p class="ai__teaser-msg" id="aiTeaserMsg"><span class="typing"><i></i><i></i><i></i></span></p>
+      <div class="ai__teaser-quick" id="aiTeaserQuick" hidden>
+        <button type="button" data-q="morar" data-l="Quero morar">Quero morar</button>
+        <button type="button" data-q="investir" data-l="Quero investir">Quero investir</button>
+        <button type="button" data-q="veraneio casa de praia" data-l="Casa de praia">Casa de praia</button>
+      </div>
+    </div>
     <button class="ai__fab" id="aiFab" aria-label="Abrir assistente de imóveis" aria-expanded="false">
-      <span class="ai__pulse"></span>
-      <svg class="ic ai__fab-ic"><use href="#i-spark"/></svg>
-      <span class="ai__fab-txt">Encontre seu imóvel</span>
+      <span class="ai__ring" aria-hidden="true"></span>
+      <span class="ai__face"><img src="assets/img/camila-avatar.jpg" alt="" width="56" height="56"><span class="ai__online"></span></span>
+      <span class="ai__fab-txt"><b>Encontre seu imóvel</b><small>Assistente IA · online agora</small></span>
+      <span class="ai__badge" id="aiBadge" hidden>1</span>
     </button>
     <section class="ai__panel" id="aiPanel" aria-label="Assistente de imóveis" hidden>
       <header class="ai__head">
-        <div class="ai__avatar"><svg><use href="#i-mark"/></svg></div>
+        <div class="ai__avatar"><img src="assets/img/camila-avatar.jpg" alt="" width="44" height="44"></div>
         <div><b id="aiName">Aurora</b><small><span class="dot"></span> Assistente da Camila · responde na hora</small></div>
         <button class="ai__reset" id="aiReset" title="Recomeçar" aria-label="Recomeçar conversa">↺</button>
         <button class="ai__close" id="aiClose" aria-label="Fechar"><svg class="ic"><use href="#i-x"/></svg></button>
