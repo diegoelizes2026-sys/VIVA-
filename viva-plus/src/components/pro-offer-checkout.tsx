@@ -52,7 +52,7 @@ export default function ProOfferCheckout({ deadline, expiredAt, regular, firstNa
       <h1>Para ter o controle total da sua vida, assine o Pro.</h1>
       {result ? <div className="lv-alert"><small>Seu ponto mais desequilibrado: {AREA_LABEL[result.worst]}</small><b>{result.headline}</b>
         <p className="lv-teaser"><Lock aria-hidden /><span>O diagnóstico completo das 5 áreas e o plano para corrigir cada uma são liberados assim que o pagamento confirmar.</span></p></div>
-        : <p>Diagnóstico completo, a VIVA no seu WhatsApp e tudo do Pro liberado assim que o pagamento confirmar.</p>}
+        : <p>Seu número do dia, a VIVA no seu WhatsApp e tudo do Pro liberados assim que o pagamento confirmar.</p>}
     </section>
 
     <section className="dq-card lv-pay">

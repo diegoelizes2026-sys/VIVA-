@@ -17,7 +17,7 @@ async function facts(admin: Admin) {
 - Anota gastos e entradas por mensagem, áudio ou foto do comprovante, avisa antes das contas vencerem, ajuda com metas e com plano para sair das dívidas.
 - Funciona no WhatsApp e no app pelo navegador do celular. Não pede senha de banco nem acesso à conta bancária.
 - VIVA Saúde: diário de calorias com foto do prato, água, treinos, Personal com IA e Radar Fitness com personais e academias credenciados.
-- Criar conta é grátis e sem cartão, em ${SITE}/cadastro. Ao criar a conta, a pessoa ganha 7 dias do Pro grátis, sem cartão e sem cobrança automática.
+- Quem faz o diagnóstico em ${SITE}/diagnostico vê uma promoção do Pro por R$ 19,90/mês que vale por tempo limitado (preço normal R$ 29,90). Toda assinatura tem garantia de 7 dias: reembolso de 100% sem perguntas. Não ofereça teste grátis e não prometa o preço promocional fora do prazo.
 - No plano grátis, a VIVA no WhatsApp tem 10 mensagens por semana.
 - Planos:
 ${plans || "- (consultar em " + SITE + "/planos)"}
