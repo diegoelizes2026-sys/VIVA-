@@ -1,8 +1,10 @@
 "use client";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, Camera, HeartPulse, Lock, Share2, ShieldCheck, Trash2 } from "lucide-react";
 import WhatsAppIcon from "@/components/whatsapp-icon";
+import OfferCountdown from "@/components/offer-countdown";
+import { FUNNEL_OFFER, FUNNEL_PRICE_BRL, FUNNEL_REGULAR_BRL, LIFE_KEY } from "@/lib/life-diagnostic";
 import { CONSENT_TEXT, CONTROL, DEBTS, GOALS, HEALTH, LEVEL_LABEL, VIVA_WHATSAPP, brl, computeResult, normalizeWhatsapp, parseMoney, type Answers, type Result } from "@/lib/diagnostic";
 
 type Stage = "intro" | 1 | 2 | 3 | 4 | 5 | 6 | 7 | "contact" | "result";
@@ -38,6 +40,9 @@ export default function DiagnosticQuiz() {
   const [deleted, setDeleted] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
   const [shared, setShared] = useState("");
+  const [offer, setOffer] = useState<string | null>(null);
+  const [offerOver, setOfferOver] = useState(false);
+  const onOfferExpire = useCallback(() => setOfferOver(true), []);
   const session = useRef("");
   const device = useRef("");
   const utm = useRef<Utm>({});
@@ -89,6 +94,10 @@ export default function DiagnosticQuiz() {
     } catch { /* sem rede: mostra o resultado mesmo assim */ }
     finally { setBusy(false); }
     event("lead");
+    // Liga o relógio da oferta do Pro por R$19,90 (prazo controlado pelo servidor).
+    try { const o = await fetch("/api/funnel/offer", { method: "POST" }).then(r => r.json()); if (o.expiresAt) setOffer(o.expiresAt); } catch { /* sem rede: sem relógio */ }
+    // A tela de pagamento mostra o resumo do diagnóstico da vida se houver: aqui o diagnóstico é o financeiro.
+    try { localStorage.removeItem(LIFE_KEY); if (Object.keys(utm.current).length) localStorage.setItem(LIFE_KEY + ":utm", JSON.stringify(utm.current)); } catch { /* navegação privada */ }
     setResult(computeResult(a)); setStage("result"); event("result");
   }
 
@@ -179,16 +188,24 @@ export default function DiagnosticQuiz() {
       <section className="dq-card"><h2>3 dicas para você</h2><ol className="dq-tips">{result.tips.map(t => <li key={t}>{t}</li>)}</ol></section>
 
       <section className="dq-card dq-cta">
-        <h2>Quer receber seu número do dia todo dia no WhatsApp? Teste o Pro grátis por 7 dias.</h2>
-        <Link href={"/cadastro?origem=diagnostico" + (lead ? "&lead=" + lead.id : "")} className="dq-btn light" onClick={() => event("cta_signup")}>Criar minha conta grátis <ArrowRight aria-hidden /></Link>
-        <a href={waLink} target="_blank" rel="noopener noreferrer" className="dq-btn wa" onClick={() => event("cta_whatsapp")}><WhatsAppIcon size={20} />Falar com a VIVA no WhatsApp</a>
-        <ul className="dq-trust on-dark"><li><Check aria-hidden />Sem cartão</li><li><Check aria-hidden />Não pede senha de banco</li></ul>
+        <h2>Para ter o controle total do seu dinheiro, assine o Pro.</h2>
+        <ul className="lv-get">
+          <li><Check aria-hidden />Seu número do dia, todo dia, no WhatsApp</li>
+          <li><Check aria-hidden />Aviso antes das contas vencerem</li>
+          <li><Check aria-hidden />Plano para sair das dívidas e juntar dinheiro</li>
+          <li><Check aria-hidden />VIVA no WhatsApp sem limite de mensagens</li>
+        </ul>
+        {offer && <OfferCountdown expiresAt={offer} onExpire={onOfferExpire} />}
+        <Link href={"/cadastro?origem=" + FUNNEL_OFFER + (lead ? "&lead=" + lead.id : "")} className="dq-btn light" onClick={() => event("cta_signup")}>Quero o controle total <ArrowRight aria-hidden /></Link>
+        <p className="lv-price">{offer && !offerOver ? <><s>{brl(FUNNEL_REGULAR_BRL)}</s> <b>{brl(FUNNEL_PRICE_BRL)}</b>/mês</> : <><b>{brl(FUNNEL_REGULAR_BRL)}</b>/mês</>}</p>
+        <p className="lv-guarantee"><ShieldCheck aria-hidden /><span><b>Garantia de 7 dias.</b> Não gostou? Devolvemos 100% do valor, sem perguntas.</span></p>
+        <a href={waLink} target="_blank" rel="noopener noreferrer" className="dq-btn wa" onClick={() => event("cta_whatsapp")}><WhatsAppIcon size={20} />Tirar dúvidas com a VIVA no WhatsApp</a>
       </section>
 
       {result && health === "sim" && <section className="dq-card dq-health">
         <span className="dq-hic"><HeartPulse aria-hidden /></span>
         <div><h2>Cuide da saúde junto</h2><p>No <b>VIVA Saúde</b> você manda a <b>foto do prato</b> e a VIVA calcula as calorias. Também registra água e treinos pelo WhatsApp e encontra personais e academias credenciados perto de você.</p>
-          <p className="dq-hint"><Camera aria-hidden />Já vem na sua conta grátis.</p></div>
+          <p className="dq-hint"><Camera aria-hidden />Já vem no Pro.</p></div>
       </section>}
 
       <section className="dq-actions">

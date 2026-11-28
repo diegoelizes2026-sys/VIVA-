@@ -2325,3 +2325,4 @@ html:has(.dq),body:has(.dq){background:#f6f2fc}
 .lv-skip{display:flex;justify-content:center;align-items:center;gap:6px;margin:0;font-size:14px}.lv-skip a{color:var(--dq-muted);font-weight:700}.lv-skip svg{width:15px;height:15px;color:var(--dq-muted)}
 @media(prefers-reduced-motion:reduce){.lv-spin,.lv-clock>svg{animation:none}}
 @media(max-width:360px){.lv-clock time{font-size:17px}.lv-areas li{grid-template-columns:minmax(0,1fr) 70px 30px;font-size:13.5px}}
+.dq-cta .lv-guarantee,.dq-cta .lv-guarantee span{color:#eadbff}
