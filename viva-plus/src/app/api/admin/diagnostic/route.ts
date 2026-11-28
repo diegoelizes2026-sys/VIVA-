@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DIAG_TEMPLATES, renderTemplate, sendTemplate, templateFor } from "@/lib/diag-followup";
 import { normalizeWhatsapp } from "@/lib/diagnostic";
+import { notifySale } from "@/lib/sale-alert";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -15,7 +16,7 @@ async function guard() {
   if (!user) return { res: NextResponse.json({ error: "Não autenticado." }, { status: 401 }) };
   const { data: ok } = await supabase.rpc("viva_is_admin");
   if (!ok) return { res: NextResponse.json({ error: "Acesso restrito." }, { status: 403 }) };
-  return { admin: createAdminClient() };
+  return { admin: createAdminClient(), userId: user.id };
 }
 
 export async function GET(request: Request) {
@@ -41,9 +42,11 @@ export async function GET(request: Request) {
   for (const m of msgs.data || []) { const a = (msgByLead[m.lead_id] ||= []); if (a.length < 12) a.push(m); }
   const L = leads.data || [];
   const compare = await trialVsFunnel(g.admin, since);
+  const { count: myDevices } = await g.admin.from("viva_push_subscriptions").select("id", { count: "exact", head: true }).eq("user_id", g.userId);
   return NextResponse.json({
     days,
     compare,
+    saleAlertDevices: myDevices || 0,
     funnel: count(funnel),
     bySource: Object.fromEntries(Object.entries(bySource).map(([s, m]) => [s, count(m)])),
     totals: {
@@ -64,6 +67,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("send_test"), goal: z.enum(["dividas", "reserva", "comprar", "organizar"]).default("dividas") }),
   z.object({ action: z.literal("resolve"), id: z.string().uuid() }),
   z.object({ action: z.literal("delete"), id: z.string().uuid() }),
+  z.object({ action: z.literal("sale_test") }),
 ]);
 
 export async function POST(request: Request) {
@@ -91,6 +95,11 @@ export async function POST(request: Request) {
       out.push({ step, template: t.name, text: renderTemplate(t, "Teste"), ok: r.ok, error: r.ok ? null : r.error });
     }
     return NextResponse.json({ ok: true, results: out });
+  }
+  if (v.action === "sale_test") {
+    const sent = await notifySale(g.admin, { key: "test:" + Date.now(), userId: g.userId, planId: "pro", amount: 19.9, method: "pix", offer: true, test: true, onlyAdminId: g.userId });
+    if (!sent) return NextResponse.json({ error: "Não chegou em nenhum aparelho. Ative as notificações do VIVA+ neste celular (Configurações > Notificações) e tente de novo." }, { status: 400 });
+    return NextResponse.json({ ok: true, sent });
   }
   if (v.action === "resolve") { await g.admin.from("viva_diag_leads").update({ needs_human: false, updated_at: now }).eq("id", v.id); return NextResponse.json({ ok: true }); }
   if (v.action === "delete") { await g.admin.from("viva_diag_leads").delete().eq("id", v.id); return NextResponse.json({ ok: true }); }

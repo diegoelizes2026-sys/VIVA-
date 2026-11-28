@@ -6,7 +6,7 @@ type Lead = { id: string; name: string; whatsapp: string; goal: string; wants_he
   utm_source: string | null; utm_medium: string | null; utm_campaign: string | null; followup_status: string; followup_step: number; next_send_at: string | null; last_sent_at: string | null;
   opted_out_at: string | null; converted_at: string | null; replies_count: number; last_reply_at: string | null; needs_human: boolean; created_at: string; messages: Msg[] };
 type Compare = { trialsEnded: number; trialsRunning: number; paidAfterTrial: number; funnelBuyers: number; funnelRevenue: number };
-type Data = { days: number; compare?: Compare; funnel: Record<string, number>; bySource: Record<string, Record<string, number>>; totals: Record<string, number>; leads: Lead[];
+type Data = { days: number; compare?: Compare; saleAlertDevices?: number; funnel: Record<string, number>; bySource: Record<string, Record<string, number>>; totals: Record<string, number>; leads: Lead[];
   settings: { paused: boolean; testWhatsapp: string | null }; templates: { name: string; step: number; goal: string | null; category: string; body: string }[] };
 
 const SITE = "https://www.vivamaiss.app.br/diagnostico";
@@ -81,6 +81,10 @@ export default function AdminDiagnostic() {
         {c && <div style={{ ...box, borderColor: "#b7ecd0", background: "#f1fbf5" }}><small style={{ color: "#6f6680" }}>Pagaram R$19,90</small><b style={{ display: "block", fontSize: 24 }}>{c.funnelBuyers}</b><small>{pct(c.funnelBuyers, base)} de quem começou · {c.funnelRevenue.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</small></div>}
         {c && <div style={{ ...box, borderColor: "#f5c26b", background: "#fffaf0" }}><small style={{ color: "#6f6680" }}>Teste grátis 7 dias → pagaram</small><b style={{ display: "block", fontSize: 24 }}>{pct(c.paidAfterTrial, c.trialsEnded)}</b><small>{c.paidAfterTrial} de {c.trialsEnded} testes encerrados · {c.trialsRunning} em andamento</small></div>}
       </div>; })()}
+    <div style={{ ...box, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginTop: 8, borderColor: "#b7ecd0", background: "#f1fbf5" }}>
+      <div style={{ flex: 1, minWidth: 220, fontSize: 13 }}><b style={{ fontSize: 15 }}>Aviso de venda no celular</b><br />Cada pagamento aprovado chega como “Venda aprovada!” com o valor e o total do dia. {d.saleAlertDevices ? <>Este usuário tem <b>{d.saleAlertDevices}</b> {d.saleAlertDevices === 1 ? "aparelho" : "aparelhos"} com notificações ligadas.</> : <b style={{ color: "#b42318" }}>Nenhum aparelho seu com notificações ligadas: ative em Configurações &gt; Notificações no celular.</b>}</div>
+      <button className="viva-admin-save" disabled={busy === "sale_test"} onClick={() => act({ action: "sale_test" }, "Notificação de teste enviada. Confira o celular.")}>{busy === "sale_test" ? "Enviando…" : "Testar aviso de venda"}</button>
+    </div>
     <div style={{ ...box, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 8 }}><b style={{ minWidth: 160 }}>Link do anúncio (Instagram)</b><code style={{ flex: 1, fontSize: 12, overflowWrap: "anywhere" }}>{SITE}-vida?utm_source=instagram&amp;utm_medium=paid&amp;utm_campaign=vida_pro1990</code><button className="viva-admin-save" onClick={() => copy(`${SITE}-vida?utm_source=instagram&utm_medium=paid&utm_campaign=vida_pro1990`)}>Copiar</button></div>
 
     <h3 style={{ marginTop: 18 }}>Links com tags de campanha</h3>

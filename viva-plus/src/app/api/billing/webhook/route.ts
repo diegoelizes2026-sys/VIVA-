@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient as createAdmin } from "@supabase/supabase-js";
 import { notifyWhatsappPlanActive } from "@/lib/whatsapp";
+import { notifySale } from "@/lib/sale-alert";
 export const runtime = "nodejs";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AdminDb = { rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ error: any }> };
@@ -72,6 +73,8 @@ export async function POST(req: Request) {
           await grantCycle(db, subscriptionId!);
           // Plano liberado: se a pessoa já ligou o WhatsApp, a VIVA avisa por lá e lembra todas as funções.
           await notifyWhatsappPlanActive(db, paymentRow.user_id);
+          // "Venda aprovada!" no celular dos administradores.
+          await notifySale(db, { key: "pay:" + p.id, userId: paymentRow.user_id, planId: paymentRow.plan_id, amount: Number(p.transaction_amount || 0), method: "pix", offer: String(paymentRow.external_reference || "").includes("_pro1990") });
         }
         if (status === "approved" && paymentRow.subscription_id) await grantCycle(db, paymentRow.subscription_id);
         if (status === "refunded" && paymentRow.subscription_id) {
@@ -114,6 +117,8 @@ export async function POST(req: Request) {
         await grantCycle(db, sub.id);
         // Primeira cobrança aprovada (não as renovações): avisa no WhatsApp e lembra todas as funções.
         if (sub.status !== "active") await notifyWhatsappPlanActive(db, sub.user_id);
+        // "Venda aprovada!" (ou "Assinatura renovada!") no celular dos administradores.
+        await notifySale(db, { key: "card:" + invoice.id, userId: sub.user_id, planId: sub.plan_id, amount: Number.isFinite(amount) ? amount : 0, method: "card", offer: String(sub.external_reference || "").includes("_pro1990"), renewal: sub.status === "active" });
       }
     }
     await db.from("viva_payment_webhook_events").update({processed_at:new Date().toISOString(),processing_error:null}).eq("gateway","mercadopago").eq("gateway_event_id",eventId);
