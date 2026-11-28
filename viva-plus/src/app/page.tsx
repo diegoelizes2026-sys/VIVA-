@@ -59,7 +59,8 @@ export default async function Home() {
   // Dados estruturados para o Google (empresa, site, aplicativo e perguntas frequentes).
   const site = "https://www.vivamaiss.app.br";
   const jsonLd = [
-    { "@context": "https://schema.org", "@type": "Organization", "@id": site + "/#org", name: "VIVA+ (Vivamais)", alternateName: ["Vivamais", "VIVA+"], url: site, logo: site + "/icons/viva-512.svg", email: SUPPORT_EMAIL,
+    { "@context": "https://schema.org", "@type": "Organization", "@id": site + "/#org", name: "VIVA+ (Vivamais)", alternateName: ["Vivamais", "VIVA+", "Viva Mais"], url: site, logo: site + "/apple-icon", email: SUPPORT_EMAIL,
+      contactPoint: { "@type": "ContactPoint", contactType: "customer support", telephone: "+55-85-98825-2048", email: SUPPORT_EMAIL, availableLanguage: "pt-BR" },
       address: { "@type": "PostalAddress", streetAddress: "Rua Tibúrcio Targino, 389", addressLocality: "Aquiraz", addressRegion: "CE", addressCountry: "BR" } },
     { "@context": "https://schema.org", "@type": "WebSite", "@id": site + "/#site", name: "Vivamais", alternateName: "VIVA+", url: site, inLanguage: "pt-BR", publisher: { "@id": site + "/#org" } },
     { "@context": "https://schema.org", "@type": "SoftwareApplication", name: "VIVA+", applicationCategory: "FinanceApplication", applicationSubCategory: "Finanças pessoais e saúde", operatingSystem: "Web, Android, iOS (navegador) e WhatsApp", url: site, inLanguage: "pt-BR",
@@ -215,6 +216,7 @@ export default async function Home() {
       <span className="lp-logo">VIVA<span>+</span></span>
       <p className="lp-legal"><b>Vivamais</b> (VIVA+) é uma marca de {COMPANY.legalName}, CNPJ {COMPANY.cnpj} · a VIVA+ no seu WhatsApp</p>
       <p><ShieldCheck size={15} aria-hidden /> Não pedimos senha de banco. Seus dados são seus.</p>
+      <nav aria-label="Conteúdo grátis" className="lp-foot-links"><Link href="/quanto-posso-gastar-por-dia">Calculadora: quanto posso gastar por dia</Link><Link href="/guia/como-fazer-o-salario-durar-o-mes-todo">Como fazer o salário durar</Link><Link href="/guia/controle-de-gastos-pelo-whatsapp">Controle de gastos pelo WhatsApp</Link><Link href="/guia/como-dividir-o-salario-regra-50-30-20">Regra 50-30-20</Link><Link href="/guia/como-sair-das-dividas">Como sair das dívidas</Link><Link href="/guia">Todos os guias</Link></nav>
       <nav aria-label="Documentos legais" className="lp-foot-links">{LEGAL_LINKS.map(l => <Link key={l.href} href={l.href}>{l.label}</Link>)}<Link href="/login">Entrar</Link></nav>
       <small className="lp-legal">{companyLine()} · Atendimento: <a href={supportEmailUrl()}>{SUPPORT_EMAIL}</a> · WhatsApp <a href={supportWhatsAppUrl()} target="_blank" rel="noopener noreferrer">{SUPPORT_WHATSAPP_DISPLAY}</a></small><small className="lp-legal">A VIVA+ é uma assistente de organização com inteligência artificial e não substitui orientação financeira, médica ou de outros profissionais. Para maiores de 18 anos.</small>
     </footer>
